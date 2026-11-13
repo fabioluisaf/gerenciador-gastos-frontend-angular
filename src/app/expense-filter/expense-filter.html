@@ -1,0 +1,23 @@
+<div class="filter-chip" [class.payment-tag]="!!filter().payment"
+  [ngStyle]="paymentStyles()"
+  role="group" aria-label="Filtro ativo">
+  <button type="button" class="filter-remove"
+    [attr.aria-label]="'Remover filtro de ' + (filter().field === 'category' ? 'categoria' : 'pagamento') + ': ' + filter().label"
+    (click)="removed.emit()">
+    <svg lucideX aria-hidden="true"></svg>
+  </button>
+  @if (filter().payment; as payment) {
+    @if (institutionIcon(payment); as icon) {
+      <img class="payment-icon" [src]="icon" alt="" aria-hidden="true">
+    }
+    @switch (paymentMethodIcon(payment.paymentMethod)) {
+      @case ('barcode') { <svg class="payment-icon" lucideBarcode aria-hidden="true"></svg> }
+      @case ('qr-code') { <svg class="payment-icon" lucideQrCode aria-hidden="true"></svg> }
+      @case ('credit-card') { <svg class="payment-icon" lucideCreditCard aria-hidden="true"></svg> }
+      @case ('wallet') { <svg class="payment-icon" lucideWallet aria-hidden="true"></svg> }
+      @case ('arrow-left-right') { <svg class="payment-icon" lucideArrowLeftRight aria-hidden="true"></svg> }
+      @case ('landmark') { <svg class="payment-icon" lucideLandmark aria-hidden="true"></svg> }
+    }
+  }
+  <span>{{ filter().field === 'category' ? 'Categoria' : 'Pagamento' }}: {{ filter().label }}</span>
+</div>

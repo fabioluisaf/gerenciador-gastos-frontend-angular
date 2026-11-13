@@ -1,0 +1,58 @@
+:host {
+  display: block;
+}
+
+.filter-chip {
+  align-items: center;
+  background: var(--payment-tag-background, var(--color-surface));
+  border: 1px solid var(--payment-tag-border, var(--color-primary));
+  border-radius: 9999px;
+  box-sizing: border-box;
+  display: inline-flex;
+  gap: 0.25rem;
+  max-width: 100%;
+  padding-right: 0.75rem;
+}
+
+.filter-chip > span {
+  font-style: italic;
+  overflow-wrap: anywhere;
+}
+
+.filter-chip.payment-tag {
+  gap: 0.5rem;
+}
+
+.payment-icon {
+  flex-shrink: 0;
+  height: 1rem;
+  width: 1rem;
+}
+
+.filter-remove {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 2.625rem;
+  justify-content: center;
+  width: 2.75rem;
+}
+
+.filter-remove:hover {
+  background-color: var(--color-hover);
+}
+
+.filter-remove:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
+}
+
+svg {
+  height: 1rem;
+  width: 1rem;
+}

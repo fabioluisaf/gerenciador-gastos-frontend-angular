@@ -1,0 +1,48 @@
+<app-card class="content-area" role="region" [attr.aria-labelledby]="headingId()">
+  <div class="summary-header data-header">
+    <h2 [id]="headingId()">{{ heading() }}</h2>
+    <span class="planned-total" aria-hidden="true">Planejado</span>
+    <span aria-hidden="true">Realizado</span>
+  </div>
+  <dl class="summary-list">
+    @for (total of totals(); track total.value) {
+      <div class="summary-item" [class.selected]="isSelected(total)">
+        <dt>
+          <button type="button" class="summary-filter"
+            [class.summary-payment-tag]="filterField() === 'paymentMethod'"
+            [class.payment-tag]="filterField() === 'paymentMethod'"
+            [ngStyle]="filterField() === 'paymentMethod' ? paymentTagStyles(total) : null"
+            [attr.aria-pressed]="isSelected(total)"
+            [attr.aria-label]="'Filtrar por ' + heading().toLowerCase() + ': ' + total.name"
+            (click)="select(total)">
+            @if (filterField() === 'paymentMethod') {
+              @if (institutionIconForTotal(total); as icon) {
+                <img class="payment-icon" [src]="icon" alt="" aria-hidden="true">
+              }
+              @switch (paymentMethodIconForTotal(total)) {
+                @case ('barcode') { <svg class="payment-icon" lucideBarcode aria-hidden="true"></svg> }
+                @case ('qr-code') { <svg class="payment-icon" lucideQrCode aria-hidden="true"></svg> }
+                @case ('credit-card') { <svg class="payment-icon" lucideCreditCard aria-hidden="true"></svg> }
+                @case ('wallet') { <svg class="payment-icon" lucideWallet aria-hidden="true"></svg> }
+                @case ('arrow-left-right') { <svg class="payment-icon" lucideArrowLeftRight aria-hidden="true"></svg> }
+                @case ('landmark') { <svg class="payment-icon" lucideLandmark aria-hidden="true"></svg> }
+              }
+              <span class="summary-cell-value">{{ total.name }}</span>
+            } @else {
+              <span class="highlight-reveal summary-row-highlight" aria-hidden="true"></span>
+              <span class="summary-cell-value">{{ total.name }}</span>
+            }
+          </button>
+        </dt>
+        <dd class="planned-total"><span class="visually-hidden">Planejado: </span>{{ formatCurrency(total.planned / 100) }}</dd>
+        <dd><span class="visually-hidden">Realizado: </span>{{ formatCurrency(total.realized / 100) }}</dd>
+      </div>
+    } @empty {
+      <div class="summary-item">
+        <dt>Total</dt>
+        <dd class="planned-total"><span class="visually-hidden">Planejado: </span>{{ formatCurrency(0) }}</dd>
+        <dd><span class="visually-hidden">Realizado: </span>{{ formatCurrency(0) }}</dd>
+      </div>
+    }
+  </dl>
+</app-card>

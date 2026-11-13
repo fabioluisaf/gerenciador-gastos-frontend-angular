@@ -1,0 +1,147 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.content-area {
+  overflow: hidden;
+  padding: 0;
+}
+
+h2 {
+  font-size: 1em;
+  margin: 0;
+}
+
+.summary-list {
+  margin: 0;
+  padding: 0 0.75rem 0.75rem;
+}
+
+.summary-header {
+  align-items: baseline;
+  border-bottom: 1px solid var(--color-border);
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem;
+}
+
+.summary-header .planned-total {
+  color: inherit;
+}
+
+.summary-header h2 {
+  flex: 1;
+  white-space: nowrap;
+}
+
+.summary-header > span,
+.summary-item dd {
+  box-sizing: border-box;
+  flex: 0 0 5rem;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.planned-total {
+  color: var(--color-text-muted);
+}
+
+.summary-item {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  position: relative;
+}
+
+.summary-item dt {
+  flex: 1;
+  min-width: 0;
+}
+
+.summary-item + .summary-item {
+  border-top: 1px solid var(--color-border);
+}
+
+.summary-item dd {
+  margin: 0;
+  position: relative;
+}
+
+.summary-row-highlight {
+  background-color: var(--color-hover);
+  border-radius: 0.5rem;
+  inset: 0 -0.5rem;
+}
+
+.summary-item.selected .summary-row-highlight {
+  background-color: var(--color-selected);
+  clip-path: circle(150% at 50% 50%);
+}
+
+.summary-filter:hover .summary-row-highlight {
+  background-color: var(--color-hover);
+  clip-path: circle(150% at 50% 50%);
+}
+
+.summary-cell-value {
+  pointer-events: none;
+  position: relative;
+}
+
+.summary-filter.summary-payment-tag {
+  align-items: center;
+  background: var(--payment-tag-background, var(--color-selected));
+  border: 1px solid var(--payment-tag-border, var(--color-primary));
+  border-radius: 9999px;
+  box-sizing: border-box;
+  display: inline-flex;
+  gap: 0.5rem;
+  line-height: 1rem;
+  max-width: 100%;
+  padding: 0.25rem 0.5rem;
+}
+
+.summary-payment-tag .payment-icon {
+  flex-shrink: 0;
+  height: 1rem;
+  width: 1rem;
+}
+
+.summary-payment-tag .summary-cell-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.summary-filter {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  text-align: left;
+}
+
+.summary-filter:not(.summary-payment-tag)::after {
+  border-radius: 0.5rem;
+  content: '';
+  inset: 0 -0.5rem;
+  position: absolute;
+  z-index: 1;
+}
+
+.summary-filter:focus-visible {
+  outline: none;
+}
+
+.summary-filter:focus-visible::after {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
+}
+
+.summary-payment-tag:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
