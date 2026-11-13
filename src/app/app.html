@@ -1,4 +1,57 @@
-<main>
-  <h1>{{ title() }}</h1>
-  <router-outlet />
-</main>
+<div class="app-layout">
+  <app-top-bar>
+    <div totals-content class="summary-areas" [attr.aria-busy]="totalsRequest.isLoading()">
+      @if (totalsRequest.error()) {
+        <p role="alert">Não foi possível carregar os totalizadores.
+          <button type="button" (click)="totalsRequest.reload()">Tentar novamente</button>
+        </p>
+      } @else if (totalsRequest.isLoading()) {
+        <p role="status">Carregando totalizadores...</p>
+      } @else if (totalsRequest.hasValue()) {
+        <app-expense-summary [totals]="totalsRequest.value().payment"
+          heading="Pagamento" headingId="totais-metodo" filterField="paymentMethod"
+          [selectedFilter]="selectedFilter()" (filterSelected)="selectFilter($event)" />
+        <app-expense-summary [totals]="totalsRequest.value().category"
+          heading="Categoria" headingId="totais-categoria" filterField="category"
+          [selectedFilter]="selectedFilter()" (filterSelected)="selectFilter($event)" />
+      }
+    </div>
+  </app-top-bar>
+  <app-card class="workspace-card">
+    <app-period-selector [periods]="metadata()?.periods ?? {}"
+      [(selectedYear)]="selectedYear" [(selectedMonth)]="selectedMonth" />
+    <main #mainContent tabindex="0" aria-label="Área principal de gastos"
+      (scroll)="expenseList.requestVisiblePages()">
+      <h1 class="visually-hidden">Gastos</h1>
+      <div>
+        <p id="expense-period" class="visually-hidden">Gastos de {{ periodLabel() }}</p>
+        @if (metadataRequest.error()) {
+          <p role="alert">Não foi possível carregar os períodos.
+            <button type="button" (click)="metadataRequest.reload()">Tentar novamente</button>
+          </p>
+        } @else if (metadataRequest.isLoading()) {
+          <p role="status">Carregando períodos...</p>
+        }
+      </div>
+      <div class="content-layout">
+        <div class="expense-toolbar" role="group" aria-label="Filtros de gastos">
+          <button type="button" class="filter-toggle" aria-label="Filtros" title="Filtros (disponível em breve)">
+            <svg lucideListFilter aria-hidden="true"></svg>
+          </button>
+          @if (selectedFilter(); as filter) {
+            <app-expense-filter [filter]="filter" (removed)="selectedFilter.set(null)" />
+          }
+        </div>
+        <div class="expense-list-area" [attr.aria-busy]="expensesLoading()">
+          <app-expense-list #expenseList [expenses]="expenses()" [scrollContainer]="mainContent"
+            [period]="{ year: selectedYear(), month: selectedMonth() }"
+            [loading]="metadataRequest.isLoading() || expensesLoading()"
+            [failed]="expensesError()"
+            [ready]="!!metadata()"
+            (pagesRequested)="requestPages($event)" (retry)="retryExpenses()"
+            (filterSelected)="filterExpense($event)" />
+        </div>
+      </div>
+    </main>
+  </app-card>
+</div>
