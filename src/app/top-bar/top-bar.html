@@ -1,0 +1,45 @@
+<header class="top-bar">
+  <nav class="top-navigation" aria-label="Navegação principal">
+    <button type="button" class="top-nav-button totals-toggle" aria-haspopup="dialog" aria-label="Totais"
+      title="Totais"
+      aria-controls="totals-dialog" [attr.aria-expanded]="totalsOpen()" (click)="openTotals()">
+      <span class="highlight-reveal top-nav-selected-highlight" aria-hidden="true"></span>
+      <span class="highlight-reveal top-nav-hover-highlight" aria-hidden="true"></span>
+      <svg lucideChartNoAxesCombined aria-hidden="true"></svg>
+    </button>
+    <button type="button" class="top-nav-button" disabled aria-label="Criar" title="Criar (disponível em breve)">
+      <svg lucidePlus aria-hidden="true"></svg>
+    </button>
+  </nav>
+  <button type="button" class="theme-toggle"
+    [attr.aria-label]="isDark() ? 'Ativar tema claro' : 'Ativar tema escuro'"
+    [attr.title]="isDark() ? 'Ativar tema claro' : 'Ativar tema escuro'"
+    (click)="toggleTheme()">
+    <span class="highlight-reveal theme-highlight" aria-hidden="true"></span>
+    @if (isDark()) {
+      <svg lucideSun aria-hidden="true"></svg>
+    } @else {
+      <svg lucideMoon aria-hidden="true"></svg>
+    }
+  </button>
+</header>
+<dialog #totalsDialog id="totals-dialog" class="totals-dialog" aria-labelledby="totals-dialog-title"
+  (close)="totalsOpen.set(false)" (click)="$event.target === totalsDialog && totalsDialog.close()"
+  (keydown.escape)="totalsDialog.close(); $event.preventDefault()">
+  <div class="totals-appendix">
+    <button type="button" class="top-nav-button totals-close" aria-label="Fechar totais"
+      title="Fechar totais" autofocus
+      (click)="totalsDialog.close()">
+      <span class="highlight-reveal top-nav-selected-highlight" aria-hidden="true"></span>
+      <span class="highlight-reveal top-nav-hover-highlight" aria-hidden="true"></span>
+      <svg lucideChartNoAxesCombined class="totals-open-icon" aria-hidden="true"></svg>
+      <svg lucideX class="totals-close-icon" aria-hidden="true"></svg>
+    </button>
+  </div>
+  <div class="totals-panel">
+    <div class="totals-dialog-header">
+      <h2 id="totals-dialog-title">Totais</h2>
+    </div>
+    <ng-content select="[totals-content]" />
+  </div>
+</dialog>

@@ -1,0 +1,187 @@
+:host {
+  display: block;
+}
+
+.top-bar {
+  align-items: center;
+  background-color: var(--color-background);
+  box-sizing: border-box;
+  color: var(--color-text);
+  display: flex;
+  height: var(--top-bar-height);
+  justify-content: space-between;
+  padding: 0.125rem 0.5rem;
+}
+
+.top-navigation {
+  align-items: center;
+  display: flex;
+  gap: 0.75rem;
+}
+
+.top-nav-button {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 9999px;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  font: inherit;
+  height: 2.75rem;
+  justify-content: center;
+  padding: 0;
+  position: relative;
+  width: 2.75rem;
+}
+
+.top-nav-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.top-nav-button:focus-visible,
+.theme-toggle:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.totals-close:focus-visible {
+  outline-offset: -2px;
+}
+
+.totals-close {
+  z-index: 1;
+}
+
+.top-nav-selected-highlight,
+.top-nav-hover-highlight,
+.theme-highlight {
+  border-radius: inherit;
+  inset: 10%;
+}
+
+.top-nav-selected-highlight {
+  background-color: var(--color-selected);
+}
+
+.top-nav-hover-highlight,
+.theme-highlight {
+  background-color: var(--color-primary-hover);
+}
+
+.top-nav-button svg,
+.theme-toggle svg {
+  position: relative;
+}
+
+.theme-toggle {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 50%;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  height: 2.75rem;
+  justify-content: center;
+  position: relative;
+  width: 2.75rem;
+}
+
+.top-nav-button svg,
+.theme-toggle svg {
+  height: 1.2rem;
+  width: 1.2rem;
+}
+
+.top-nav-button:not(:disabled):hover,
+.theme-toggle:hover {
+  color: var(--color-text-inverse);
+}
+
+.totals-close .top-nav-selected-highlight,
+.top-nav-button[aria-expanded='true'] .top-nav-selected-highlight,
+.top-nav-button:not(:disabled):hover .top-nav-hover-highlight,
+.theme-toggle:hover .theme-highlight {
+  clip-path: circle(150% at 50% 50%);
+}
+
+.totals-dialog {
+  background: transparent;
+  border: 0;
+  box-sizing: border-box;
+  color: var(--color-text);
+  font: inherit;
+  left: calc(1rem - 1px);
+  margin: 0;
+  max-height: calc(100dvh - 1.25rem);
+  max-width: calc(100vw - 2rem);
+  min-width: min(46rem, calc(100vw - 2rem));
+  outline: none;
+  overflow: visible;
+  padding: 0;
+  position: fixed;
+  top: calc(0.625rem - 1px);
+  width: fit-content;
+}
+
+.totals-dialog::backdrop {
+  background: rgb(0 0 0 / 0.35);
+}
+
+.totals-appendix {
+  background: var(--color-surface);
+  border: 1px solid transparent;
+  border-bottom: 0;
+  border-radius: 0.75rem 0.75rem 0 0;
+  box-sizing: border-box;
+  display: flex;
+  height: 3rem;
+  margin-bottom: -1px;
+  position: relative;
+  width: calc(2.75rem + 2px);
+  z-index: 1;
+}
+
+.totals-appendix::after {
+  border-bottom-left-radius: 0.75rem;
+  bottom: 0;
+  box-shadow: -0.375rem 0.375rem 0 0.375rem var(--color-surface);
+  content: '';
+  height: 0.75rem;
+  position: absolute;
+  right: -0.75rem;
+  width: 0.75rem;
+}
+
+.totals-panel {
+  background: var(--color-surface);
+  border: 1px solid transparent;
+  border-radius: 0 0.75rem 0.75rem;
+  box-sizing: border-box;
+  max-height: calc(100dvh - 4rem);
+  max-width: 100%;
+  overflow: auto;
+  padding: 0.5rem;
+  width: max-content;
+}
+
+.totals-dialog-header {
+  margin-bottom: 0.5rem;
+}
+
+.totals-dialog-header h2 {
+  font-size: 1.125rem;
+  margin: 0;
+}
+
+.totals-close-icon,
+.totals-close:hover .totals-open-icon {
+  display: none;
+}
+
+.totals-close:hover .totals-close-icon {
+  display: block;
+}
