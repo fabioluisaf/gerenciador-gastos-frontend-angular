@@ -1,0 +1,45 @@
+<aside class="year-sidebar" aria-label="Seleção de período">
+  <button type="button" class="year-selector" aria-haspopup="dialog"
+    [attr.aria-label]="'Selecionar ano, ano selecionado: ' + selectedYear()"
+    (click)="openYearSelector(yearDialog)">{{ selectedYear() }}</button>
+  <dialog #yearDialog class="year-dialog" aria-label="Selecionar ano"
+    (click)="closeOnBackdrop($event, yearDialog)"
+    (keydown.escape)="yearDialog.close(); $event.preventDefault()">
+    <div class="year-dialog-header">
+      <button type="button" class="year-page-button" aria-label="Página anterior"
+        [disabled]="yearPageStart() === firstYear" (click)="yearPageStart.set(yearPageStart() - 9)">
+        <svg lucideChevronLeft aria-hidden="true"></svg>
+      </button>
+      <span aria-live="polite">{{ yearPageStart() }}–{{ yearPageStart() + 8 }}</span>
+      <button type="button" class="year-page-button" aria-label="Próxima página"
+        (click)="yearPageStart.set(yearPageStart() + 9)">
+        <svg lucideChevronRight aria-hidden="true"></svg>
+      </button>
+    </div>
+    <div class="year-grid" aria-label="Anos">
+      @for (year of yearPage(); track $index) {
+        <button type="button" class="year-choice" [disabled]="!periods()[year]"
+          [attr.aria-pressed]="year === selectedYear()" (click)="selectYear(year, yearDialog)">
+          {{ year }}
+        </button>
+      }
+    </div>
+  </dialog>
+  <nav class="period-selector" [class.has-scroll-shadow]="monthsOverflowTop()" aria-label="Seleção de mês">
+    <div #monthList class="month-list" [class.fade-top]="monthsOverflowTop()"
+      (scroll)="updateMonthOverflow(monthList)">
+      @for (month of months; track month; let index = $index) {
+        <button type="button" class="month-button"
+          [class.selected]="selectedMonth() === index"
+          [disabled]="!monthsWithExpenses().includes(index)"
+          [attr.aria-label]="month + ' de ' + selectedYear()"
+          [attr.aria-pressed]="selectedMonth() === index"
+          (click)="selectedMonth.set(index)">
+          <span class="highlight-reveal month-highlight month-hover-highlight" aria-hidden="true"></span>
+          <span class="highlight-reveal month-highlight month-selected-highlight" aria-hidden="true"></span>
+          <span class="month-label">{{ month.slice(0, 3) }}</span>
+        </button>
+      }
+    </div>
+  </nav>
+</aside>

@@ -1,0 +1,27 @@
+:host {
+  display: block;
+  min-height: 0;
+}
+
+.year-sidebar {
+  --year-selector-height: 3.75rem;
+  align-items: center;
+  box-sizing: border-box;
+  color: var(--color-text);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding-left: 0.5rem;
+}
+
+.year-selector {
+  align-self: flex-start;
+  flex-shrink: 0;
+  width: calc(100% - 0.5rem);
+}
+
+.month-button:not(:disabled):hover .month-hover-highlight,
+.month-button.selected .month-selected-highlight {
+  clip-path: circle(150% at 50% 50%);
+}
