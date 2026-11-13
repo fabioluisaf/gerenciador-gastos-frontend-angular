@@ -1,1 +1,253 @@
-/* You can add global styles to this file, and also import other style files */
+:root {
+  color-scheme: light;
+
+  --motion-duration-fast: 150ms;
+  --motion-duration-default: 200ms;
+
+  --color-primary: #663399;
+  --color-primary-hover: #4b2470;
+  --color-primary-subtle: #f1eaf7;
+  --color-secondary: #79b82a;
+  --color-secondary-hover: #61951f;
+  --color-secondary-subtle: #f0f7e5;
+  --color-background: #f7f6fa;
+  --color-surface: #ffffff;
+  --color-surface-alt: #f0eef4;
+  --color-sidebar: #30213e;
+  --color-sidebar-text: var(--color-text-inverse);
+  --color-text: #292331;
+  --color-text-muted: #777080;
+  --color-text-inverse: #ffffff;
+  --color-border: #e5e0eb;
+  --color-scroll-shadow: rgb(0 0 0 / 0.12);
+  --color-success: #548e27;
+  --color-warning: #d69b27;
+  --color-danger: #d6535d;
+  --color-info: #547dc2;
+  --color-hover: #f0eef4;
+  --color-selected: #f1eaf7;
+  --color-payment-caixa-selected: #e6eaff;
+  --color-payment-caixa-border: #002ee6;
+  --color-payment-caixa-hover: #d9e0ff;
+  --payment-boleto-bg: #fff4e5;
+  --payment-boleto-border: #c98a35;
+  --payment-boleto-hover: #fbe8c9;
+  --payment-pix-bg: #e8f7f0;
+  --payment-pix-border: #25865f;
+  --payment-pix-hover: #d6f0e3;
+  --payment-credito-bg: #f9eaf2;
+  --payment-credito-border: #b85d8c;
+  --payment-credito-hover: #f3d9e7;
+  --payment-debito-bg: #e7f4f8;
+  --payment-debito-border: #3d91ad;
+  --payment-debito-hover: #d4eaf1;
+  --payment-doc-bg: #edeffd;
+  --payment-doc-border: #6574c9;
+  --payment-doc-hover: #dde2fa;
+  --payment-ted-bg: #fbece9;
+  --payment-ted-border: #c87568;
+  --payment-ted-hover: #f5dcd6;
+  --color-focus: #663399;
+  --color-disabled: #b8b2c0;
+}
+
+[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-primary: #a77bd0;
+  --color-primary-hover: #c09ae3;
+  --color-primary-subtle: #39264d;
+  --color-secondary: #a0d64e;
+  --color-secondary-hover: #b9e779;
+  --color-secondary-subtle: #29391c;
+  --color-background: #18151f;
+  --color-surface: #24202e;
+  --color-surface-alt: #302a3b;
+  --color-sidebar: #100d17;
+  --color-sidebar-text: var(--color-text);
+  --color-text: #f3eff7;
+  --color-text-muted: #b1a9bb;
+  --color-text-inverse: #18151f;
+  --color-border: #403749;
+  --color-scroll-shadow: rgb(0 0 0 / 0.3);
+  --color-success: #a0d64e;
+  --color-warning: #e9bc62;
+  --color-danger: #f08085;
+  --color-info: #8cafe5;
+  --color-hover: #302a3b;
+  --color-selected: #39264d;
+  --color-payment-caixa-selected: #1c2349;
+  --color-payment-caixa-border: #8094ff;
+  --color-payment-caixa-hover: #27356b;
+  --payment-boleto-bg: #44331f;
+  --payment-boleto-border: #e4b66f;
+  --payment-boleto-hover: #554027;
+  --payment-pix-bg: #1e3b30;
+  --payment-pix-border: #69c99b;
+  --payment-pix-hover: #294b3d;
+  --payment-credito-bg: #45283a;
+  --payment-credito-border: #db8ab3;
+  --payment-credito-hover: #563248;
+  --payment-debito-bg: #1f3943;
+  --payment-debito-border: #79c1d6;
+  --payment-debito-hover: #294852;
+  --payment-doc-bg: #292f52;
+  --payment-doc-border: #9aa7f2;
+  --payment-doc-hover: #343d66;
+  --payment-ted-bg: #482b2a;
+  --payment-ted-border: #e39a8d;
+  --payment-ted-hover: #583632;
+  --color-focus: #a77bd0;
+  --color-disabled: #746c7d;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  margin: 0;
+  font-family: Inter, system-ui, sans-serif;
+  font-size: 0.8125rem;
+}
+
+a {
+  color: var(--color-primary);
+}
+
+a:hover {
+  color: var(--color-primary-hover);
+}
+
+.btn-primary {
+  background-color: var(--color-primary);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.btn-secondary {
+  background-color: var(--color-secondary);
+  color: #202719;
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-secondary-hover);
+}
+
+.card {
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+}
+
+.data-header {
+  background-color: var(--color-secondary-subtle);
+  color: var(--color-text);
+}
+
+input,
+select,
+textarea {
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 1px;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.highlight-reveal {
+  clip-path: circle(0% at 50% 50%);
+  inset: 0;
+  pointer-events: none;
+  position: absolute;
+  transition: clip-path var(--motion-duration-fast) ease;
+}
+
+.payment-tag {
+  --payment-tag-background:
+    linear-gradient(90deg, var(--institution-background), var(--payment-background)) padding-box,
+    linear-gradient(90deg, var(--institution-border), var(--payment-border)) border-box;
+  --payment-tag-border: transparent;
+}
+
+.payment-tag:hover {
+  --payment-tag-background:
+    linear-gradient(90deg, var(--institution-hover), var(--payment-hover)) padding-box,
+    linear-gradient(90deg,
+      color-mix(in srgb, var(--institution-border) 60%, white),
+      color-mix(in srgb, var(--payment-border) 60%, white)) border-box;
+  box-shadow: 0 0 0.5rem color-mix(in srgb, var(--institution-border) 45%, transparent);
+}
+
+.expense-dialog-content {
+  scrollbar-color: transparent transparent;
+  scrollbar-width: thin;
+  transition: scrollbar-color var(--motion-duration-default) ease;
+}
+
+.expense-dialog-content:hover {
+  scrollbar-color: var(--color-text-muted) transparent;
+}
+
+@supports selector(::-webkit-scrollbar) {
+  .expense-dialog-content,
+  .expense-dialog-content:hover {
+    scrollbar-color: auto;
+    scrollbar-width: auto;
+  }
+
+  .expense-dialog-content::-webkit-scrollbar {
+    background-color: transparent;
+    width: 0.25rem;
+  }
+
+  .expense-dialog-content::-webkit-scrollbar-track {
+    background-color: transparent;
+    margin-block: 0.75rem;
+  }
+
+  .expense-dialog-content::-webkit-scrollbar-button {
+    display: none;
+  }
+
+  .expense-dialog-content::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 9999px;
+    transition: background-color var(--motion-duration-default) ease;
+  }
+
+  .expense-dialog-content:hover::-webkit-scrollbar-thumb {
+    background-color: var(--color-text-muted);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .highlight-reveal,
+  .expense-dialog-content,
+  .expense-dialog-content::-webkit-scrollbar-thumb {
+    transition: none;
+  }
+}
