@@ -1,0 +1,345 @@
+:host {
+  display: block;
+  min-width: 0;
+}
+
+.content-area-primary {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  padding: 0;
+  width: 100%;
+}
+
+table {
+  --expense-row-radius: 0.5rem;
+  border-collapse: collapse;
+  min-width: 34rem;
+  table-layout: fixed;
+  text-align: left;
+  width: 100%;
+}
+
+th,
+td {
+  padding: 0.5rem;
+}
+
+th {
+  white-space: nowrap;
+}
+
+.empty-state {
+  color: var(--color-text-muted);
+  padding: 1.5rem 0.5rem;
+  text-align: center;
+}
+
+.list-status {
+  padding: 0.5rem;
+}
+
+.date-column {
+  width: 6rem;
+}
+
+.amount-column {
+  width: 6.25rem;
+}
+
+.name-column {
+  width: 40%;
+}
+
+.description-column {
+  width: 60%;
+}
+
+table tr {
+  position: relative;
+}
+
+thead tr > :last-child::after,
+tbody tr:not(:last-child) > :last-child::after {
+  background-color: var(--color-border);
+  bottom: 0;
+  content: '';
+  height: 1px;
+  left: var(--expense-row-radius);
+  pointer-events: none;
+  position: absolute;
+  right: var(--expense-row-radius);
+}
+
+.expense-row-action {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  height: 100%;
+  inset: 0;
+  padding: 0;
+  position: absolute;
+  width: 100%;
+}
+
+.expense-row-action:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
+}
+
+.expense-row-highlight {
+  background-color: var(--color-hover);
+  border-radius: var(--expense-row-radius);
+}
+
+.expense-cell-value {
+  pointer-events: none;
+  position: relative;
+}
+
+.planned-expense .expense-cell-value {
+  color: var(--color-text-muted);
+}
+
+td:nth-child(n + 3) .expense-cell-value {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+td:nth-child(3) .expense-name-value {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.expense-name-text {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.expense-row-action:hover .expense-row-highlight,
+.expense-dialog-close:hover .expense-dialog-close-highlight {
+  clip-path: circle(150% at 50% 50%);
+}
+
+.expense-dialog {
+  --expense-dialog-max-height: min(80dvh, calc(100dvh - 2rem));
+  align-items: stretch;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 0.75rem;
+  box-sizing: border-box;
+  color: var(--color-text);
+  flex-direction: column;
+  font: inherit;
+  max-height: var(--expense-dialog-max-height);
+  max-width: calc(100vw - 2rem);
+  overflow: hidden;
+  padding: 0;
+  width: 30rem;
+}
+
+.expense-dialog[open] {
+  display: flex;
+}
+
+.expense-dialog-content {
+  box-sizing: border-box;
+  max-height: calc(var(--expense-dialog-max-height) - 2px);
+  min-height: 0;
+  overflow: auto;
+  padding: 1.25rem;
+  scrollbar-gutter: stable;
+}
+
+.expense-dialog::backdrop {
+  background: rgb(0 0 0 / 0.55);
+}
+
+.expense-dialog-header {
+  align-items: flex-start;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+}
+
+.expense-dialog-heading {
+  flex: 1;
+  min-width: 0;
+}
+
+.expense-dialog-meta {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.expense-dialog-header h2 {
+  font-size: 1.5rem;
+  margin: 0;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.installment-count {
+  color: var(--color-text-muted);
+  font-size: 0.875em;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.expense-dialog-header .installment-count {
+  font-size: 0.7em;
+}
+
+.expense-category-filter {
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.expense-status,
+.expense-category-filter {
+  align-items: center;
+  background: var(--payment-tag-background, var(--color-selected));
+  border: 1px solid var(--payment-tag-border, var(--color-primary));
+  border-radius: 9999px;
+  display: inline-flex;
+  font-size: 0.875em;
+  gap: 0.25rem;
+  line-height: 1rem;
+  padding: 0.25rem 0.5rem;
+}
+
+.expense-status {
+  flex-shrink: 0;
+}
+
+.expense-status.planned {
+  background: transparent;
+  border-color: var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.expense-status svg,
+.payment-icon {
+  height: 1rem;
+  width: 1rem;
+}
+
+.expense-dialog-date {
+  color: var(--color-text-muted);
+  margin: 0;
+}
+
+.expense-amount-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+}
+
+.expense-amount {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.expense-category-filter:hover {
+  background: var(--payment-tag-background, var(--color-hover));
+}
+
+.expense-payment-filter {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.expense-dialog-close {
+  align-items: center;
+  background: transparent;
+  border: 0;
+  border-radius: 9999px;
+  color: inherit;
+  cursor: pointer;
+  display: inline-flex;
+  flex-shrink: 0;
+  font: inherit;
+  height: 2.75rem;
+  justify-content: center;
+  padding: 0;
+  position: relative;
+  width: 2.75rem;
+}
+
+.expense-dialog-close:focus-visible,
+.expense-category-filter:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.expense-dialog-close-highlight {
+  background-color: var(--color-hover);
+  border-radius: inherit;
+}
+
+.expense-dialog-close svg {
+  height: 1.2rem;
+  position: relative;
+  width: 1.2rem;
+}
+
+.expense-details {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 1rem 0 0;
+}
+
+.expense-details dt {
+  color: var(--color-text-muted);
+}
+
+.expense-details dd {
+  margin: 0.25rem 0 0;
+  overflow-wrap: anywhere;
+}
+
+.expense-details > div:first-child {
+  grid-column: 1 / -1;
+}
+
+.installment-schedule {
+  margin-top: 1rem;
+}
+
+.installment-schedule h3 {
+  font-size: 1.125rem;
+  margin: 0 0 0.5rem;
+}
+
+.installment-table td:nth-child(2),
+.installment-table td:nth-child(3) {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.installment-table td:last-child {
+  text-align: center;
+}
+
+.installment-status {
+  color: var(--color-text-muted);
+  display: inline-flex;
+}
+

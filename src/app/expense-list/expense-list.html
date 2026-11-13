@@ -1,0 +1,171 @@
+<app-card class="content-area content-area-primary" role="region" aria-label="Lista de gastos">
+  <section #tableContainer class="table-container" aria-label="Tabela de gastos">
+    <table aria-label="Gastos">
+      <colgroup>
+        <col class="date-column">
+        <col class="amount-column">
+        <col class="name-column">
+        <col class="description-column">
+      </colgroup>
+      <thead class="data-header">
+        <tr>
+          <th scope="col">Data</th>
+          <th scope="col">Valor</th>
+          <th scope="col">Nome</th>
+          <th scope="col">Descrição</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (expense of expenses(); track expense.id) {
+          <tr [class.planned-expense]="!expense.realized">
+            <td>
+              <button type="button" class="expense-row-action"
+                [attr.aria-label]="'Ver detalhes de ' + expense.name
+                  + (expense.installment
+                    ? ', parcela ' + expense.installment.number + ' de ' + expense.installment.quantity
+                    : '')
+                  + (expense.realized ? '' : ', planejado')"
+                (click)="openExpense(expense)">
+                <span class="highlight-reveal expense-row-highlight" aria-hidden="true"></span>
+              </button>
+              <span class="expense-cell-value">{{ formatDate(expense) }}</span>
+            </td>
+            <td><span class="expense-cell-value">{{ formatCurrency(expense.amountInCents / 100) }}</span></td>
+            <td>
+              <span class="expense-cell-value expense-name-value">
+                <span class="expense-name-text">{{ expense.name }}</span>
+                @if (expense.installment; as installment) {
+                  <span class="installment-count">{{ ' ' + installment.number + '/' + installment.quantity }}</span>
+                }
+              </span>
+            </td>
+            <td><span class="expense-cell-value">{{ expense.description }}</span></td>
+          </tr>
+        } @empty {
+          @if (ready() && !loading() && !failed()) {
+            <tr class="empty-row"><td colspan="4" class="empty-state">Nenhum gasto neste período para os filtros selecionados.</td></tr>
+          }
+        }
+      </tbody>
+    </table>
+    @if (failed()) {
+      <p class="list-status" role="alert">Não foi possível carregar os gastos.
+        <button type="button" (click)="retry.emit()">Tentar novamente</button>
+      </p>
+    } @else if (loading()) {
+      <p class="list-status" role="status">Carregando gastos...</p>
+    }
+  </section>
+  <router-outlet />
+</app-card>
+
+<dialog #expenseDialog class="expense-dialog" aria-labelledby="expense-dialog-title"
+  aria-describedby="expense-dialog-status expense-dialog-date expense-dialog-amount"
+  (click)="closeOnBackdrop($event, expenseDialog)"
+  (close)="selectedExpense.set(null)"
+  (keydown.escape)="expenseDialog.close(); $event.preventDefault()">
+  @if (selectedExpense(); as expense) {
+    <div class="expense-dialog-content">
+      <div class="expense-dialog-header">
+        <div class="expense-dialog-heading">
+          <h2 id="expense-dialog-title">
+            {{ expense.name }}
+            @if (expense.installment; as installment) {
+              <span class="installment-count">{{ ' ' + installment.number + '/' + installment.quantity }}</span>
+            }
+          </h2>
+          <div class="expense-dialog-meta">
+            <button type="button" class="expense-category-filter"
+              [attr.aria-label]="'Filtrar por categoria: ' + expense.category"
+              (click)="filterCategory(expense)">{{ expense.category }}</button>
+            <span id="expense-dialog-status" class="expense-status"
+              [class.planned]="!expense.realized"
+              [style.--color-selected]="expense.realized ? 'var(--color-secondary-subtle)' : null"
+              [style.--color-primary]="expense.realized ? 'var(--color-secondary)' : null">
+              @if (expense.realized) {
+                <svg lucideCheck aria-hidden="true"></svg>
+              } @else {
+                <svg lucideClock aria-hidden="true"></svg>
+              }
+              <span>{{ expense.realized ? 'Realizado' : 'Planejado' }}</span>
+            </span>
+            <p id="expense-dialog-date" class="expense-dialog-date">
+              {{ !expense.realized && expense.day == null ? invoiceLabel() : formatDate(expense) }}
+            </p>
+          </div>
+        </div>
+        <button type="button" class="expense-dialog-close" aria-label="Fechar" (click)="expenseDialog.close()" autofocus>
+          <span class="highlight-reveal expense-dialog-close-highlight" aria-hidden="true"></span>
+          <svg lucideX aria-hidden="true"></svg>
+        </button>
+      </div>
+      <div class="expense-amount-row">
+        <p id="expense-dialog-amount" class="expense-amount">{{ formatCurrency(expense.amountInCents / 100) }}</p>
+        <button type="button" class="expense-category-filter expense-payment-filter payment-tag"
+          [ngStyle]="paymentTagStyles(expense)"
+          [attr.aria-label]="'Filtrar por pagamento: ' + expense.paymentName"
+          (click)="filterPaymentMethod(expense)">
+          @if (institutionIcon(expense); as icon) {
+            <img class="payment-icon" [src]="icon" alt="" aria-hidden="true">
+          }
+          @switch (paymentMethodIcon(expense.paymentMethod)) {
+            @case ('barcode') { <svg class="payment-icon" lucideBarcode aria-hidden="true"></svg> }
+            @case ('qr-code') { <svg class="payment-icon" lucideQrCode aria-hidden="true"></svg> }
+            @case ('credit-card') { <svg class="payment-icon" lucideCreditCard aria-hidden="true"></svg> }
+            @case ('wallet') { <svg class="payment-icon" lucideWallet aria-hidden="true"></svg> }
+            @case ('arrow-left-right') { <svg class="payment-icon" lucideArrowLeftRight aria-hidden="true"></svg> }
+            @case ('landmark') { <svg class="payment-icon" lucideLandmark aria-hidden="true"></svg> }
+          }
+          <span>{{ expense.paymentName }}</span>
+        </button>
+      </div>
+      <dl class="expense-details">
+        <div><dt>Descrição</dt><dd>{{ expense.description }}</dd></div>
+      </dl>
+      @if (expense.installment; as installment) {
+        <section id="installment-schedule" class="installment-schedule" aria-labelledby="installments-title">
+          <h3 id="installments-title">Parcelas da compra</h3>
+          <p class="installments-total">
+            Valor total:
+            <strong>
+              {{ formatCurrency(expense.amountInCents * installment.quantity / 100) }}
+            </strong>
+          </p>
+          <table class="installment-table" aria-label="Parcelas da compra"
+            style="min-width: 0">
+            <colgroup>
+              <col style="width: 4rem">
+              <col style="width: 7rem">
+              <col style="width: 7rem">
+              <col style="width: 2rem">
+            </colgroup>
+            <tbody>
+              @for (item of installmentSchedule(expense); track item.number) {
+                <tr>
+                  <td aria-label="Número da parcela">{{ item.number }}/{{ installment.quantity }}</td>
+                  <td aria-label="Valor da parcela">{{ formatCurrency(expense.amountInCents / 100) }}</td>
+                  <td aria-label="Mês e ano da parcela">{{ formatInvoiceMonth(item.year, item.month) }}</td>
+                  <td aria-label="Estado da parcela">
+                    <span class="installment-status" role="img"
+                      [style.color]="invoiceIsPastDue(expense, item.year, item.month)
+                        ? 'var(--color-secondary)'
+                        : 'var(--color-text-muted)'"
+                      [attr.aria-label]="invoiceIsPastDue(expense, item.year, item.month)
+                        ? 'Fatura vencida'
+                        : 'Fatura ainda não venceu'">
+                      @if (invoiceIsPastDue(expense, item.year, item.month)) {
+                        <svg class="payment-icon" lucideCircleCheck aria-hidden="true"></svg>
+                      } @else {
+                        <svg class="payment-icon" lucideCircle aria-hidden="true"></svg>
+                      }
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </section>
+      }
+    </div>
+  }
+</dialog>
