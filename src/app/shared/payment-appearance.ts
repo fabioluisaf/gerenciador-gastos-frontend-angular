@@ -13,7 +13,7 @@ interface PaymentPalette {
 const DEFAULT_PAYMENT_PALETTE: PaymentPalette = {
   background: 'var(--color-selected)',
   border: 'var(--color-primary)',
-  hover: 'var(--color-hover)',
+  hover: 'var(--color-payment-default-hover)',
 };
 
 const PAYMENT_PALETTES: Readonly<Record<PaymentPaletteKey, PaymentPalette>> = {

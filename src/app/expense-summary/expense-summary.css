@@ -48,6 +48,7 @@ h2 {
 }
 
 .summary-item {
+  align-items: center;
   display: flex;
   gap: 0.5rem;
   padding: 0.5rem 0;
@@ -55,6 +56,7 @@ h2 {
 }
 
 .summary-item dt {
+  display: flex;
   flex: 1;
   min-width: 0;
 }

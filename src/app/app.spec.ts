@@ -1,8 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { App, AUTO_OPEN_EXPENSE_PREVIEW } from './app';
+import { App } from './app';
 import { ExpenseApi } from './expense-api';
-import { Expense, ExpenseMetadata, ExpensePage, ExpenseTotals, PaginationInfo } from './expense-models';
-import { mockExpenseList, mockExpensePeriod, mockExpenseTotals } from './mock-expenses';
+import { Expense, ExpenseMetadata, ExpensePage, ExpenseTotals, PaginationInfo, PaymentMethod } from './expense-models';
+import { mockExpenseList, mockExpensePeriod, mockExpenseTotals } from './testing/expense-fixtures';
+import { ExpenseApiFixture } from './testing/expense-api-fixture';
+import { provideHttpClient } from '@angular/common/http';
 import { invoiceIsPastDue } from './expense-utils';
 import { of, Subject, throwError } from 'rxjs';
 
@@ -71,7 +73,7 @@ describe('App', () => {
 
     await TestBed.configureTestingModule({
       imports: [App],
-      providers: [{ provide: AUTO_OPEN_EXPENSE_PREVIEW, useValue: false }],
+      providers: [provideHttpClient(), { provide: ExpenseApi, useClass: ExpenseApiFixture }],
     })
       .compileComponents();
   });
@@ -120,8 +122,7 @@ describe('App', () => {
     expect(compiled.querySelector<HTMLDialogElement>('.expense-dialog')?.open).toBe(false);
   });
 
-  it.each([true, false])('should handle temporary preview once without reopening after filtering (initial expenses: %s)', async (hasExpenses) => {
-    TestBed.overrideProvider(AUTO_OPEN_EXPENSE_PREVIEW, { useValue: true });
+  it.each([true, false])('should keep expense details closed on initial load and filtering (initial expenses: %s)', async (hasExpenses) => {
     vi.spyOn(Date.prototype, 'getFullYear').mockReturnValue(2026);
     vi.spyOn(Date.prototype, 'getMonth').mockReturnValue(0);
     const showModal = vi.fn(function (this: HTMLDialogElement) {
@@ -135,22 +136,16 @@ describe('App', () => {
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     const dialog = compiled.querySelector<HTMLDialogElement>('.expense-dialog')!;
-    expect(dialog.open).toBe(hasExpenses);
-    if (hasExpenses) {
-      expect(dialog.querySelector('#expense-dialog-title')?.textContent?.trim()).toBe('Mercado');
-    } else {
-      expect(dialog.querySelector('.expense-details')).toBeNull();
-    }
-    dialog.removeAttribute('open');
-    dialog.dispatchEvent(new Event('close'));
+    expect(dialog.open).toBe(false);
+    expect(dialog.querySelector('.expense-details')).toBeNull();
     compiled.querySelector<HTMLButtonElement>('[aria-label="Filtrar por pagamento: Pix Caixa"]')!.click();
     await fixture.whenStable();
     expect(compiled.querySelector<HTMLDialogElement>('.expense-dialog')?.open).toBe(false);
     expect(compiled.querySelectorAll('.expense-row-action')).toHaveLength(3);
-    expect(showModal).toHaveBeenCalledTimes(hasExpenses ? 1 : 0);
+    expect(showModal).not.toHaveBeenCalled();
   });
 
-  it('should show the current expense list and disable creation until it is available', async () => {
+  it('should show the current expense list and enable creation', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const navigation: HTMLElement = fixture.nativeElement.querySelector('.top-navigation');
@@ -159,8 +154,8 @@ describe('App', () => {
     expect(buttons[0].querySelector('svg[lucideChartNoAxesCombined]')).not.toBeNull();
     expect(buttons[1].querySelector('svg[lucidePlus]')).not.toBeNull();
     expect(buttons[0].disabled).toBe(false);
-    expect(buttons[1].disabled).toBe(true);
-    expect(buttons[1].title).toBe('Criar (disponível em breve)');
+    expect(buttons[1].disabled).toBe(false);
+    expect(buttons[1].title).toBe('Criar');
   });
 
   it.each(['button', 'Escape', 'backdrop'])('should dismiss and reopen the totals panel using %s', async (method) => {
@@ -176,7 +171,7 @@ describe('App', () => {
     expect(dialog.open).toBe(true);
     if (method === 'button') {
       expect(dialog.querySelector('.totals-dialog-header button')).toBeNull();
-      dialog.querySelector<HTMLButtonElement>('.totals-appendix .totals-close')!.click();
+      dialog.querySelector<HTMLButtonElement>('.dialog-appendix-close')!.click();
     } else if (method === 'Escape') {
       dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
     } else {
@@ -191,6 +186,48 @@ describe('App', () => {
     expect(dialog.open).toBe(true);
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
     expect(totalsRequest).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    '.totals-dialog', '.year-dialog', '.filter-dialog', '.expense-editor',
+    '.expense-dialog', '.expense-delete-dialog',
+  ])('should close %s only when both mouse events occur outside', async (selector) => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const dialog = mockDialog(fixture.nativeElement as HTMLElement, selector);
+    dialog.setAttribute('open', '');
+    vi.spyOn(dialog, 'getBoundingClientRect').mockReturnValue(new DOMRect(100, 100, 200, 200));
+    const inside = document.createElement('span');
+    dialog.appendChild(inside);
+    const mouse = (target: Element, type: string, clientX: number) =>
+      target.dispatchEvent(new MouseEvent(type, { bubbles: true, clientX, clientY: 150 }));
+
+    mouse(inside, 'mousedown', 150);
+    mouse(dialog, 'mouseup', 50);
+    mouse(dialog, 'click', 50);
+    expect(dialog.open).toBe(true);
+
+    mouse(dialog, 'mousedown', 50);
+    mouse(inside, 'mouseup', 150);
+    mouse(dialog, 'click', 150);
+    expect(dialog.open).toBe(true);
+
+    if (selector === '.expense-dialog' || selector === '.expense-delete-dialog') {
+      mouse(dialog, 'mousedown', 150);
+      mouse(dialog, 'mouseup', 50);
+      mouse(dialog, 'click', 50);
+      expect(dialog.open).toBe(true);
+
+      mouse(dialog, 'mousedown', 50);
+      mouse(dialog, 'mouseup', 150);
+      mouse(dialog, 'click', 50);
+      expect(dialog.open).toBe(true);
+    }
+
+    mouse(dialog, 'mousedown', 50);
+    mouse(dialog, 'mouseup', 50);
+    mouse(dialog, 'click', 50);
+    expect(dialog.open).toBe(false);
   });
 
   it.each([
@@ -221,7 +258,8 @@ describe('App', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     mockYearDialog(compiled);
     const cells = () => Array.from(compiled.querySelector<HTMLTableRowElement>('tbody tr')!.cells,
-      (cell) => cell.textContent?.trim().replace(/\s+/g, ' '));
+      (cell) => (cell.querySelector('.expense-cell-value')?.textContent ?? cell.textContent)
+        ?.trim().replace(/\s+/g, ' '));
     const paymentItems = compiled.querySelectorAll('[aria-labelledby="totais-metodo"] .summary-item');
     const categoryItems = () => compiled.querySelectorAll('[aria-labelledby="totais-categoria"] .summary-item');
     const total = (items: NodeListOf<Element>, name: string) => {
@@ -256,6 +294,23 @@ describe('App', () => {
     expect(rows[0].classList.contains('planned-expense')).toBe(false);
     expect(rows[5].classList.contains('planned-expense')).toBe(true);
     expect(rows[5].querySelector('button')?.getAttribute('aria-label')).toContain('planejado');
+    const creditIcons = rows[0].querySelector<HTMLElement>('.expense-payment-icons')!;
+    expect(creditIcons.closest('td')).toBe(rows[0].cells[0]);
+    expect(creditIcons.nextElementSibling?.textContent?.trim()).toBe(`04/${month}/${now.getFullYear()}`);
+    expect(rows[0].cells[1].querySelector('.expense-payment-icons')).toBeNull();
+    expect(rows[0].cells[2].querySelector('.expense-payment-icons')).toBeNull();
+    expect(rows[0].cells[3].querySelector('.expense-payment-icons')).toBeNull();
+    expect(rows[0].matches('tr.payment-tag')).toBe(true);
+    expect(rows[0].style.getPropertyValue('--institution-background')).toBe('var(--color-selected)');
+    expect(rows[0].style.getPropertyValue('--payment-background')).toBe('var(--payment-credito-bg)');
+    expect(creditIcons.getAttribute('aria-label'))
+      .toBe('Instituição financeira: Nubank; tipo de pagamento: Cartão de crédito');
+    expect(creditIcons.querySelector('img')?.getAttribute('src')).toBe('/nubank.png');
+    expect(creditIcons.querySelector('svg[lucideCreditCard]')).not.toBeNull();
+    expect(creditIcons.querySelector('span')).toBeNull();
+    const pixIcons = rows[2].querySelector<HTMLElement>('.expense-payment-icons')!;
+    expect(pixIcons.querySelector('img')?.getAttribute('src')).toBe('/caixa.png');
+    expect(pixIcons.querySelector('svg[lucideQrCode]')).not.toBeNull();
 
     compiled.querySelectorAll<HTMLButtonElement>('.month-button')[1].click();
     await chooseYear(fixture, 2027);
@@ -288,6 +343,212 @@ describe('App', () => {
     await fixture.whenStable();
     expect(dialog.open).toBe(false);
     expect(dialog.querySelector('.expense-details')).toBeNull();
+  });
+
+  it('should open editing from rows and the fixed detail footer without deleting or reloading', async () => {
+    vi.spyOn(Date.prototype, 'getFullYear').mockReturnValue(2026);
+    vi.spyOn(Date.prototype, 'getMonth').mockReturnValue(0);
+    const api = TestBed.inject(ExpenseApi);
+    const deleteRequest = vi.spyOn(api, 'deleteExpense');
+    const listRequest = vi.spyOn(api, 'getExpenses');
+    vi.spyOn(api, 'getPaymentMethods').mockReturnValue(of([]));
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const details = mockDialog(compiled, '.expense-dialog');
+    const confirmation = mockDialog(compiled, '.expense-delete-dialog');
+    const editor = mockDialog(compiled, '.expense-editor');
+    compiled.querySelector<HTMLButtonElement>('.expense-row-tools [aria-label^="Editar"]')!.click();
+    await fixture.whenStable();
+    expect(details.open).toBe(false);
+    expect(confirmation.open).toBe(false);
+    expect(editor.open).toBe(true);
+    expect(editor.querySelector('app-dialog-appendix')).toBeNull();
+    editor.close();
+    await fixture.whenStable();
+    compiled.querySelector<HTMLButtonElement>('.expense-row-action')!.click();
+    await fixture.whenStable();
+    expect(details.querySelector('.expense-detail-actions [aria-label^="Deletar"]')).not.toBeNull();
+    compiled.querySelector<HTMLButtonElement>('.expense-detail-actions [aria-label^="Editar"]')!.click();
+    await fixture.whenStable();
+    expect(details.open).toBe(false);
+    expect(editor.open).toBe(true);
+    expect(deleteRequest).not.toHaveBeenCalled();
+    expect(listRequest).toHaveBeenCalledTimes(1);
+  });
+
+  it('should reload expense data and totals after a successful edit', async () => {
+    vi.spyOn(Date.prototype, 'getFullYear').mockReturnValue(2026);
+    vi.spyOn(Date.prototype, 'getMonth').mockReturnValue(0);
+    const api = TestBed.inject(ExpenseApi);
+    const query = { year: 2026, month: 0, filter: null, page: 1, pageSize: 10 };
+    const initial = mockExpenseList(query);
+    const expense = initial.items[0];
+    const updatedName = 'Mercado atualizado';
+    const updated: ExpensePage = {
+      ...initial,
+      items: initial.items.map((item) => item.id === expense.id ? { ...item, name: updatedName } : item),
+    };
+    const listRequest = vi.spyOn(api, 'getExpenses')
+      .mockReturnValueOnce(of(initial))
+      .mockReturnValueOnce(of(updated));
+    const totalsRequest = vi.spyOn(api, 'getTotals');
+    const metadataRequest = vi.spyOn(api, 'getMetadata');
+    vi.spyOn(api, 'getPaymentMethods').mockReturnValue(of([{
+      value: expense.paymentMethod, name: expense.paymentName, institution: expense.institution,
+      paymentMethod: expense.paymentMethod, type: 'CREDITO', closingDay: 18, dueDay: 21,
+    } satisfies PaymentMethod]));
+    vi.spyOn(api, 'saveExpense').mockReturnValue(of(undefined));
+
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const editor = mockDialog(compiled, '.expense-editor');
+    compiled.querySelector<HTMLButtonElement>('.expense-row-tools [aria-label^="Editar"]')!.click();
+    await fixture.whenStable();
+    const name = editor.querySelector<HTMLInputElement>('[formControlName="name"]')!;
+    name.value = updatedName;
+    name.dispatchEvent(new Event('input', { bubbles: true }));
+    editor.querySelector<HTMLButtonElement>('.save-button')!.click();
+    await fixture.whenStable();
+
+    expect(listRequest).toHaveBeenCalledTimes(2);
+    expect(totalsRequest).toHaveBeenCalledTimes(2);
+    expect(metadataRequest).toHaveBeenCalledTimes(2);
+    expect(compiled.querySelector('.expense-list-area')?.textContent).toContain(updatedName);
+  });
+
+  it.each(['button', 'Escape', 'backdrop'])('should cancel expense deletion using %s without opening details', async (method) => {
+    const api = TestBed.inject(ExpenseApi);
+    const deleteRequest = vi.spyOn(api, 'deleteExpense');
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const details = mockDialog(compiled, '.expense-dialog');
+    const confirmation = mockDialog(compiled, '.expense-delete-dialog');
+    const initialRows = compiled.querySelectorAll('.expense-row-action').length;
+    compiled.querySelector<HTMLButtonElement>('.expense-delete-button')!.click();
+    await fixture.whenStable();
+    expect(confirmation.open).toBe(true);
+    expect(details.open).toBe(false);
+    if (method === 'button') {
+      confirmation.querySelector<HTMLButtonElement>('[autofocus]')!.click();
+    } else if (method === 'Escape') {
+      confirmation.dispatchEvent(new Event('cancel', { cancelable: true }));
+    } else {
+      vi.spyOn(confirmation, 'getBoundingClientRect').mockReturnValue(new DOMRect(100, 100, 200, 200));
+      confirmation.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 99, clientY: 150 }));
+    }
+    await fixture.whenStable();
+    expect(confirmation.open).toBe(false);
+    expect(deleteRequest).not.toHaveBeenCalled();
+    expect(compiled.querySelectorAll('.expense-row-action')).toHaveLength(initialRows);
+  });
+
+  it('should delete a simple expense only for this session and refresh its list and totals', async () => {
+    vi.spyOn(Date.prototype, 'getFullYear').mockReturnValue(2026);
+    vi.spyOn(Date.prototype, 'getMonth').mockReturnValue(0);
+    const api = TestBed.inject(ExpenseApi);
+    const deleteRequest = vi.spyOn(api, 'deleteExpense');
+    const listRequest = vi.spyOn(api, 'getExpenses');
+    const totalsRequest = vi.spyOn(api, 'getTotals');
+    const query = { year: 2026, month: 0, filter: null, page: 1, pageSize: 10 };
+    const original = mockExpenseList(query);
+    const expense = original.items[0];
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const confirmation = mockDialog(compiled, '.expense-delete-dialog');
+    compiled.querySelector<HTMLButtonElement>('.expense-delete-button')!.click();
+    await fixture.whenStable();
+    expect(confirmation.textContent).toContain(expense.name);
+    expect(confirmation.querySelector('h2')?.textContent).toBe('Deletar gasto?');
+    confirmation.querySelector<HTMLButtonElement>('.expense-delete-confirm')!.click();
+    await fixture.whenStable();
+    expect(deleteRequest).toHaveBeenCalledExactlyOnceWith(expense);
+    expect(confirmation.open).toBe(false);
+    expect(compiled.querySelectorAll('.expense-row-action')).toHaveLength(original.items.length - 1);
+    expect(Array.from(compiled.querySelectorAll('.expense-name-text'), (item) => item.textContent?.trim()))
+      .not.toContain(expense.name);
+    expect(listRequest).toHaveBeenCalledTimes(2);
+    expect(totalsRequest).toHaveBeenCalledTimes(2);
+    expect(compiled.querySelector('[aria-labelledby="totais-metodo"]')?.textContent?.replace(/\s+/g, ' '))
+      .toContain('Planejado: R$ 128,40');
+    compiled.querySelectorAll<HTMLButtonElement>('.month-button')[1].click();
+    await fixture.whenStable();
+    compiled.querySelectorAll<HTMLButtonElement>('.month-button')[0].click();
+    await fixture.whenStable();
+    expect(compiled.querySelectorAll('.expense-row-action')).toHaveLength(original.items.length - 1);
+    expect(mockExpenseList(query)).toEqual(original);
+  });
+
+  it('should confirm the entire installment purchase and remove all its installments across periods', async () => {
+    vi.spyOn(Date.prototype, 'getFullYear').mockReturnValue(2026);
+    vi.spyOn(Date.prototype, 'getMonth').mockReturnValue(10);
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const api = TestBed.inject(ExpenseApi);
+    const deleteRequest = vi.spyOn(api, 'deleteExpense');
+    const confirmation = mockDialog(compiled, '.expense-delete-dialog');
+    const row = Array.from(compiled.querySelectorAll<HTMLTableRowElement>('tbody tr.payment-tag'))
+      .find((item) => item.querySelector('.expense-name-text')?.textContent?.trim() === installmentExpenseName)!;
+    row.querySelector<HTMLButtonElement>('.expense-delete-button')!.click();
+    await fixture.whenStable();
+    expect(confirmation.querySelector('h2')?.textContent).toBe('Deletar compra parcelada?');
+    expect(confirmation.textContent?.replace(/\s+/g, ' ')).toContain('incluindo todas as 12 parcelas');
+    expect(confirmation.textContent).toContain('Não é possível deletar somente esta parcela.');
+    confirmation.querySelector<HTMLButtonElement>('.expense-delete-confirm')!.click();
+    await fixture.whenStable();
+    expect(deleteRequest).toHaveBeenCalledTimes(1);
+    for (const [year, month] of [[2026, 4], [2026, 10], [2026, 11], [2027, 3]]) {
+      const query = { year, month, filter: null, page: 1, pageSize: 100 };
+      api.getExpenses(query).subscribe((page) => {
+        expect(page.items.some((expense) => expense.purchaseId === 'purchase-fuel')).toBe(false);
+      });
+      expect(mockExpenseList(query).items.some((expense) => expense.purchaseId === 'purchase-fuel')).toBe(true);
+    }
+    api.getExpenses({ year: 2026, month: 10, filter: null, page: 1, pageSize: 100 }).subscribe((page) => {
+      expect(page.items.find((expense) => expense.name === 'Fone')?.installment).toEqual({ number: 1, quantity: 2 });
+      expect(page.items.some((expense) => expense.name === 'Revisão do carro')).toBe(true);
+    });
+  });
+
+  it('should retain the expense until deletion succeeds and allow retry after a failed request', async () => {
+    vi.spyOn(Date.prototype, 'getFullYear').mockReturnValue(2026);
+    vi.spyOn(Date.prototype, 'getMonth').mockReturnValue(0);
+    const api = TestBed.inject(ExpenseApi);
+    const response = new Subject<void>();
+    const deleteRequest = vi.spyOn(api, 'deleteExpense').mockReturnValueOnce(response);
+    const listRequest = vi.spyOn(api, 'getExpenses');
+    const totalsRequest = vi.spyOn(api, 'getTotals');
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const confirmation = mockDialog(compiled, '.expense-delete-dialog');
+    compiled.querySelector<HTMLButtonElement>('.expense-delete-button')!.click();
+    await fixture.whenStable();
+    const confirm = confirmation.querySelector<HTMLButtonElement>('.expense-delete-confirm')!;
+    confirm.click();
+    await fixture.whenStable();
+    expect(confirm.disabled).toBe(true);
+    expect(confirmation.getAttribute('aria-busy')).toBe('true');
+    expect(listRequest).toHaveBeenCalledTimes(1);
+    expect(totalsRequest).toHaveBeenCalledTimes(1);
+    expect(compiled.querySelectorAll('.expense-row-action')).toHaveLength(7);
+    confirmation.dispatchEvent(new Event('cancel', { cancelable: true }));
+    expect(confirmation.open).toBe(true);
+    response.error(new Error('Falha ao excluir'));
+    await fixture.whenStable();
+    expect(confirmation.querySelector('[role="alert"]')?.textContent).toContain('Não foi possível deletar');
+    expect(confirm.disabled).toBe(false);
+    expect(compiled.querySelectorAll('.expense-row-action')).toHaveLength(7);
+    confirm.click();
+    await fixture.whenStable();
+    expect(deleteRequest).toHaveBeenCalledTimes(2);
+    expect(confirmation.open).toBe(false);
+    expect(compiled.querySelectorAll('.expense-row-action')).toHaveLength(6);
+    expect(totalsRequest).toHaveBeenCalledTimes(2);
   });
 
   it('should select only months with expenses in 2026 and 2027', async () => {
@@ -397,6 +658,7 @@ describe('App', () => {
     expect(paymentFilter.textContent?.trim()).toBe('Cartão principal');
     expect(paymentFilter.style.getPropertyValue('--institution-background')).toBe('var(--color-selected)');
     expect(paymentFilter.style.getPropertyValue('--institution-border')).toBe('var(--color-primary)');
+    expect(paymentFilter.style.getPropertyValue('--institution-hover')).toBe('var(--color-payment-default-hover)');
     expect(paymentFilter.style.getPropertyValue('--payment-background')).toBe('var(--payment-credito-bg)');
     expect(paymentFilter.querySelector('img')?.getAttribute('src')).toBe('/nubank.png');
     expect(paymentFilter.querySelector('svg[lucideCreditCard]')).not.toBeNull();
@@ -509,7 +771,7 @@ describe('App', () => {
     expect(listRequest).toHaveBeenLastCalledWith({
       year: 2026,
       month: 0,
-      filter: { field: 'paymentName', value: 'Cartão principal' },
+      filter: { field: 'paymentMethod', value: 'Cartão de crédito' },
       page: 1,
       pageSize: 10,
     });
@@ -738,6 +1000,7 @@ describe('App', () => {
     await fixture.whenStable();
     expect(dialog.open).toBe(true);
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(dialog.querySelector('#totals-dialog-title')?.textContent?.trim()).toBe('Totais de janeiro de 2026');
     expect(dialog.querySelectorAll('app-expense-summary')).toHaveLength(2);
 
     paymentFilter.click();
@@ -766,6 +1029,7 @@ describe('App', () => {
     compiled.querySelectorAll<HTMLButtonElement>('.month-button')[1].click();
     await fixture.whenStable();
     expect(rows()).toHaveLength(3);
+    expect(compiled.querySelector('#totals-dialog-title')?.textContent?.trim()).toBe('Totais de fevereiro de 2026');
     expect(compiled.querySelector('tbody tr')?.textContent).toContain('04/02/2026');
     expect(compiled.querySelector('.summary-filter[aria-pressed="true"]')?.textContent).toBe('Cartão principal');
     expect(listRequest).toHaveBeenLastCalledWith({
@@ -854,10 +1118,12 @@ describe('App', () => {
     expect(compiled.querySelectorAll('.expense-row-action')).toHaveLength(40);
     expect(compiled.querySelector('app-pagination')).toBeNull();
     const filterButton = compiled.querySelector<HTMLButtonElement>('[aria-label="Filtros"]')!;
-    expect(filterButton.querySelector('svg[lucideListFilter]')).not.toBeNull();
+    expect(filterButton.querySelector('svg[lucideFunnel]')).not.toBeNull();
+    const filterDialog = mockDialog(compiled, '.filter-dialog');
     filterButton.click();
     await fixture.whenStable();
     expect(listRequest).toHaveBeenCalledTimes(4);
+    filterDialog.querySelector<HTMLButtonElement>('.dialog-appendix-close')!.click();
 
     await scrollTo(800);
     expect(listRequest.mock.calls.map(([query]) => query.page)).toEqual([1, 2, 3, 4, 5, 6]);
@@ -988,7 +1254,7 @@ describe('App', () => {
   it.each([
     { month: 8, totalItems: 43, totalPages: 5 },
     { month: 9, totalItems: 20, totalPages: 2 },
-    { month: 10, totalItems: 24, totalPages: 3 },
+    { month: 10, totalItems: 33, totalPages: 4 },
     { month: 11, totalItems: 32, totalPages: 4 },
   ])('should provide $totalPages demo pages with matching totals for month $month', ({ month, totalItems, totalPages }) => {
     const query = { year: 2026, month, filter: null, page: 1, pageSize: 10 };
@@ -1015,6 +1281,16 @@ describe('App', () => {
         expect(total.realized).toBe(matching.reduce((sum, item) => sum + (item.realized ? item.amountInCents : 0), 0));
       }
     }
+  });
+
+  it('should provide all institution and payment method combinations in November 2026', () => {
+    const items = mockExpenseList({ year: 2026, month: 10, filter: null, page: 1, pageSize: 100 }).items;
+    const combinations = new Set(items.map((expense) => `${expense.institution}:${expense.paymentMethod}`));
+    const expected = ['Nubank', 'Caixa'].flatMap((institution) =>
+      ['Cartão de crédito', 'Cartão de débito', 'Pix', 'Boleto', 'DOC', 'TED']
+        .map((method) => `${institution}:${method}`),
+    );
+    expect(combinations).toEqual(new Set(expected));
   });
 
   it('should provide one sequential installment per invoice from May 2026 through April 2027', () => {
@@ -1073,7 +1349,7 @@ describe('App', () => {
       year: 2026, month: 10, day: null, realized: false,
     }]);
     const credit = november.filter((expense) => expense.paymentMethod === 'Cartão de crédito');
-    expect(credit).toHaveLength(12);
+    expect(credit).toHaveLength(13);
     expect(credit.every((expense) =>
       expense.year === 2026 && expense.day != null &&
         ((expense.month === 9 && expense.day >= 18) || (expense.month === 10 && expense.day < 18)),
@@ -1086,7 +1362,7 @@ describe('App', () => {
     expect(moved).toMatchObject({ year: 2026, month: 10, day: 21, invoiceMonthOffset: 1 });
     expect(november.some((expense) => expense.id === moved?.id)).toBe(false);
     expect(mockExpenseTotals(query).payment.find((total) => total.value === 'Cartão de crédito'))
-      .toMatchObject({ planned: 151290, realized: 151290 });
+      .toMatchObject({ planned: 154790, realized: 154790 });
   });
 
   it('should render server responses without filtering or calculating totals and discard superseded requests', async () => {
@@ -1374,6 +1650,195 @@ describe('App', () => {
     await fixture.whenStable();
     expect(dialog.open).toBe(false);
     expect(open.textContent?.trim()).toBe('2027');
+  });
+
+  it('should close the year selector from transparent space beside the appendix and from the backdrop', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const dialog = mockYearDialog(compiled);
+    const trigger = compiled.querySelector<HTMLButtonElement>('.year-selector')!;
+    vi.spyOn(dialog, 'getBoundingClientRect').mockReturnValue(new DOMRect(100, 100, 224, 300));
+    for (const clientX of [220, 99]) {
+      trigger.click();
+      await fixture.whenStable();
+      dialog.querySelector('.year-panel')!.dispatchEvent(
+        new MouseEvent('click', { bubbles: true, clientX: 150, clientY: 200 }),
+      );
+      expect(dialog.open).toBe(true);
+      dialog.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX, clientY: 120 }));
+      await fixture.whenStable();
+      expect(dialog.open).toBe(false);
+    }
+  });
+
+  it('should populate filter choices from totals and request only the list when choosing or toggling options', async () => {
+    vi.spyOn(Date.prototype, 'getFullYear').mockReturnValue(2026);
+    vi.spyOn(Date.prototype, 'getMonth').mockReturnValue(0);
+    const totals: ExpenseTotals = {
+      payment: [
+        { value: 'server-payment-id', name: 'Conta especial', institution: 'Caixa', paymentMethod: 'Pix', planned: 0, realized: 0 },
+        { value: 'server-credit-id', name: 'Cartão adicional', institution: 'Nubank', paymentMethod: 'Cartão de crédito', planned: 100, realized: 0 },
+      ],
+      category: [
+        { value: 'server-category-id', name: 'Categoria especial', planned: 0, realized: 0 },
+        { value: 'another-category-id', name: 'Outra categoria', planned: 100, realized: 0 },
+      ],
+    };
+    const api = TestBed.inject(ExpenseApi);
+    const totalsRequest = vi.spyOn(api, 'getTotals').mockReturnValue(of(totals));
+    const listRequest = vi.spyOn(api, 'getExpenses');
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const dialog = mockDialog(compiled, '.filter-dialog');
+    const trigger = compiled.querySelector<HTMLButtonElement>('.filter-toggle')!;
+    trigger.click();
+    await fixture.whenStable();
+    expect(trigger.querySelector('svg[lucideFunnel]')).not.toBeNull();
+    expect(dialog.querySelector('.dialog-appendix svg[lucideFunnel]')).not.toBeNull();
+    expect(dialog.querySelectorAll('app-payment-options button')).toHaveLength(2);
+    expect(dialog.querySelectorAll('#filter-category-heading + .filter-options button')).toHaveLength(2);
+    expect(totalsRequest).toHaveBeenCalledTimes(1);
+    expect(listRequest).toHaveBeenCalledTimes(1);
+    const payment = dialog.querySelector<HTMLButtonElement>('[aria-label="Filtrar por pagamento: Conta especial"]')!;
+    expect(payment.querySelector('img')?.getAttribute('src')).toBe('/caixa.png');
+    expect(payment.querySelector('svg[lucideQrCode]')).not.toBeNull();
+    payment.click();
+    await fixture.whenStable();
+    expect(dialog.open).toBe(false);
+    expect(listRequest).toHaveBeenLastCalledWith({
+      year: 2026, month: 0, filter: { field: 'paymentMethod', value: 'server-payment-id' }, page: 1, pageSize: 10,
+    });
+    expect(compiled.querySelector('.filter-chip')?.textContent).toContain('Pagamento: Conta especial');
+    trigger.click();
+    await fixture.whenStable();
+    expect(payment.getAttribute('aria-pressed')).toBe('true');
+    const category = dialog.querySelector<HTMLButtonElement>('[aria-label="Filtrar por categoria: Categoria especial"]')!;
+    category.click();
+    await fixture.whenStable();
+    expect(listRequest).toHaveBeenLastCalledWith({
+      year: 2026, month: 0, filter: { field: 'category', value: 'server-category-id' }, page: 1, pageSize: 10,
+    });
+    expect(compiled.querySelector('.filter-chip')?.textContent).toContain('Categoria: Categoria especial');
+    trigger.click();
+    await fixture.whenStable();
+    expect(category.getAttribute('aria-pressed')).toBe('true');
+    expect(payment.getAttribute('aria-pressed')).toBe('false');
+    category.click();
+    await fixture.whenStable();
+    expect(compiled.querySelector('.filter-chip')).toBeNull();
+    expect(listRequest).toHaveBeenLastCalledWith({ year: 2026, month: 0, filter: null, page: 1, pageSize: 10 });
+    expect(totalsRequest).toHaveBeenCalledTimes(1);
+    totalsRequest.mockReturnValueOnce(of({
+      payment: [],
+      category: [{ value: 'new-period-category', name: 'Categoria do novo mês', planned: 50, realized: 0 }],
+    }));
+    compiled.querySelector<HTMLButtonElement>('[aria-label="Novembro de 2026"]')!.click();
+    await fixture.whenStable();
+    trigger.click();
+    await fixture.whenStable();
+    expect(totalsRequest).toHaveBeenLastCalledWith({ year: 2026, month: 10 });
+    expect(dialog.querySelector('[aria-label="Filtrar por categoria: Categoria especial"]')).toBeNull();
+    expect(dialog.querySelector('[aria-label="Filtrar por categoria: Categoria do novo mês"]')).not.toBeNull();
+    expect(dialog.querySelectorAll('app-payment-options button')).toHaveLength(0);
+  });
+
+  it.each(['appendix', 'Escape', 'transparent space'])('should dismiss and reopen filters using %s without fetching data', async (method) => {
+    const api = TestBed.inject(ExpenseApi);
+    const totalsRequest = vi.spyOn(api, 'getTotals');
+    const listRequest = vi.spyOn(api, 'getExpenses');
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const dialog = mockDialog(compiled, '.filter-dialog');
+    const trigger = compiled.querySelector<HTMLButtonElement>('.filter-toggle')!;
+    trigger.click();
+    await fixture.whenStable();
+    expect(trigger.getAttribute('aria-expanded')).toBe('true');
+    dialog.querySelector('h2')!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(dialog.open).toBe(true);
+    if (method === 'appendix') {
+      dialog.querySelector<HTMLButtonElement>('.dialog-appendix-close')!.click();
+    } else if (method === 'Escape') {
+      dialog.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true, cancelable: true }));
+    } else {
+      dialog.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    }
+    await fixture.whenStable();
+    expect(dialog.open).toBe(false);
+    expect(trigger.getAttribute('aria-expanded')).toBe('false');
+    trigger.click();
+    await fixture.whenStable();
+    expect(dialog.open).toBe(true);
+    expect(totalsRequest).toHaveBeenCalledTimes(1);
+    expect(listRequest).toHaveBeenCalledTimes(1);
+  });
+
+  it('should show loading, retry failed filter totals and explain empty option groups', async () => {
+    const api = TestBed.inject(ExpenseApi);
+    const response = new Subject<ExpenseTotals>();
+    const totalsRequest = vi.spyOn(api, 'getTotals')
+      .mockReturnValueOnce(response)
+      .mockReturnValueOnce(of({ payment: [], category: [] }));
+    const fixture = TestBed.createComponent(App);
+    fixture.detectChanges();
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const dialog = mockDialog(compiled, '.filter-dialog');
+    compiled.querySelector<HTMLButtonElement>('.filter-toggle')!.click();
+    fixture.detectChanges();
+    expect(dialog.querySelector('[role="status"]')?.textContent).toContain('Carregando filtros');
+    expect(dialog.querySelector('.filter-panel')?.getAttribute('aria-busy')).toBe('true');
+    response.error(new Error('Totais indisponíveis'));
+    await fixture.whenStable();
+    expect(dialog.querySelector('[role="alert"]')?.textContent).toContain('Não foi possível carregar');
+    dialog.querySelector<HTMLButtonElement>('.filter-retry')!.click();
+    await fixture.whenStable();
+    expect(totalsRequest).toHaveBeenCalledTimes(2);
+    expect(dialog.querySelector('[role="alert"]')).toBeNull();
+    expect(Array.from(dialog.querySelectorAll('.filter-empty, app-payment-options .empty'), (item) => item.textContent?.trim()))
+      .toEqual(['Nenhum pagamento neste período.', 'Nenhuma categoria neste período.']);
+  });
+
+  it('should include older years returned by the real period endpoint in the year selector', async () => {
+    vi.spyOn(TestBed.inject(ExpenseApi), 'getMetadata').mockReturnValue(of({
+      initialPeriod: { year: 2005, month: 2 },
+      periods: { 2005: { months: [2], monthOnSelect: 2 } },
+    }));
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    mockYearDialog(compiled);
+    compiled.querySelector<HTMLButtonElement>('.year-selector')!.click();
+    await fixture.whenStable();
+    const year = Array.from(compiled.querySelectorAll<HTMLButtonElement>('.year-choice'))
+      .find((button) => button.textContent?.trim() === '2005');
+    expect(year?.disabled).toBe(false);
+    expect(year?.getAttribute('aria-pressed')).toBe('true');
+  });
+
+  it('should match the year selector appendix to its trigger and close from it', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const dialog = mockYearDialog(compiled);
+    const trigger = compiled.querySelector<HTMLButtonElement>('.year-selector')!;
+    vi.spyOn(trigger, 'getBoundingClientRect').mockReturnValue(new DOMRect(17.6, 56.8, 72.8, 60.8));
+    trigger.click();
+    await fixture.whenStable();
+
+    expect(dialog.style.left).toBe('17.6px');
+    expect(dialog.style.top).toBe('56.8px');
+    expect(dialog.style.getPropertyValue('--dialog-appendix-width')).toBe('72.8px');
+    expect(dialog.style.getPropertyValue('--dialog-appendix-height')).toBe('60.8px');
+    const appendix = dialog.querySelector<HTMLButtonElement>('.dialog-appendix-close')!;
+    expect(appendix.getAttribute('aria-label')).toBe('Fechar seleção de ano');
+    expect(appendix.querySelector('svg[lucideCalendarDays]')).not.toBeNull();
+    appendix.click();
+    await fixture.whenStable();
+    expect(dialog.open).toBe(false);
   });
 
   it('should open the page containing the current year when no earlier expenses exist', async () => {

@@ -1,4 +1,6 @@
-import { afterNextRender, afterRenderEffect, Component, computed, ElementRef, inject, Injector, input, output, signal, viewChild } from '@angular/core';
+import { afterNextRender, afterRenderEffect, Component, computed, DestroyRef, ElementRef, inject, Injector, input, output, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { finalize, Subscription } from 'rxjs';
 import { NgStyle } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import {
@@ -10,20 +12,25 @@ import {
   LucideClock,
   LucideCreditCard,
   LucideLandmark,
+  LucidePencil,
   LucideQrCode,
+  LucideTrash2,
   LucideWallet,
   LucideX,
 } from '@lucide/angular';
-import { closeOnBackdrop, formatCurrency, formatExpenseDate, invoiceIsPastDue, MONTHS } from '../expense-utils';
+import { formatCurrency, formatExpenseDate, invoiceIsPastDue, MONTHS } from '../expense-utils';
 import { Expense, ExpensePeriod, SelectedExpenseFilter } from '../expense-models';
+import { ExpenseApi } from '../expense-api';
 import { Card } from '../shared/card';
 import { institutionIcon, paymentMethodIcon, paymentTagStyles } from '../shared/payment-appearance';
+import { BackdropClick } from '../shared/backdrop-click';
 
 @Component({
   selector: 'app-expense-list',
   host: { '(window:resize)': 'requestVisiblePages()' },
   imports: [
     Card,
+    BackdropClick,
     NgStyle,
     RouterOutlet,
     LucideArrowLeftRight,
@@ -34,7 +41,9 @@ import { institutionIcon, paymentMethodIcon, paymentTagStyles } from '../shared/
     LucideClock,
     LucideCreditCard,
     LucideLandmark,
+    LucidePencil,
     LucideQrCode,
+    LucideTrash2,
     LucideWallet,
     LucideX,
   ],
@@ -51,16 +60,27 @@ export class ExpenseList {
   readonly pagesRequested = output<number>();
   readonly retry = output<void>();
   readonly filterSelected = output<SelectedExpenseFilter>();
+  readonly deleted = output<void>();
+  readonly editRequested = output<Expense>();
+  protected readonly detailLoading = signal(false);
+  protected readonly detailFailed = signal(false);
+  private detailSubscription?: Subscription;
+  protected readonly pendingDeletion = signal<Expense | null>(null);
+  protected readonly deleting = signal(false);
+  protected readonly deletionError = signal(false);
+  protected readonly deletionNotice = signal('');
   protected readonly invoiceLabel = computed(() =>
     `${MONTHS[this.period().month]} de ${this.period().year}`,
   );
   protected readonly selectedExpense = signal<Expense | null>(null);
   protected readonly formatCurrency = formatCurrency;
-  protected readonly closeOnBackdrop = closeOnBackdrop;
   protected readonly institutionIcon = institutionIcon;
   protected readonly paymentMethodIcon = paymentMethodIcon;
   protected readonly paymentTagStyles = paymentTagStyles;
   private readonly expenseDialog = viewChild.required<ElementRef<HTMLDialogElement>>('expenseDialog');
+  private readonly deleteDialog = viewChild.required<ElementRef<HTMLDialogElement>>('deleteDialog');
+  private readonly api = inject(ExpenseApi);
+  private readonly destroyRef = inject(DestroyRef);
   private readonly injector = inject(Injector);
   private readonly tableContainer = viewChild.required<ElementRef<HTMLElement>>('tableContainer');
   private scrollResetPending = false;
@@ -94,37 +114,16 @@ export class ExpenseList {
     }
   }
 
-  openFirstExpense(): void {
-    const expense = this.expenses()[0];
-    if (expense) {
-      this.openExpense(expense);
-    }
-  }
-
   protected formatDate(expense: Expense, day = expense.day, monthOffset = 0): string {
     return day == null ? 'Sem data' : formatExpenseDate(day, expense.year, expense.month, monthOffset);
-  }
-
-  protected installmentSchedule(expense: Expense): readonly { number: number; year: number; month: number }[] {
-    const installment = expense.installment;
-    if (!installment) {
-      return [];
-    }
-
-    const currentInvoiceMonth = expense.year * 12 + expense.month + (expense.invoiceMonthOffset ?? 0);
-    const firstInvoiceMonth = currentInvoiceMonth - installment.number + 1;
-    return Array.from({ length: installment.quantity }, (_, index) => {
-      const month = firstInvoiceMonth + index;
-      return { number: index + 1, year: Math.floor(month / 12), month: month % 12 };
-    });
   }
 
   protected formatInvoiceMonth(year: number, month: number): string {
     return `${MONTHS[month].slice(0, 3)}/${year}`;
   }
 
-  protected invoiceIsPastDue(expense: Expense, year: number, month: number): boolean {
-    return invoiceIsPastDue(year, month, expense.invoiceClosingDay);
+  protected invoiceIsPastDue(expense: Expense, year: number, month: number, closingDate?: string): boolean {
+    return invoiceIsPastDue(year, month, closingDate ? Number(closingDate.slice(8, 10)) : expense.invoiceClosingDay);
   }
 
   protected filterCategory(expense: Expense): void {
@@ -133,10 +132,14 @@ export class ExpenseList {
   }
 
   protected filterPaymentMethod(expense: Expense): void {
+    if (!expense.paymentId) {
+      this.detailFailed.set(true);
+      return;
+    }
     this.expenseDialog().nativeElement.close();
     this.filterSelected.emit({
-      field: 'paymentName',
-      value: expense.paymentName,
+      field: 'paymentMethod',
+      value: expense.paymentId,
       label: expense.paymentName,
       payment: { institution: expense.institution, paymentMethod: expense.paymentMethod },
     });
@@ -144,11 +147,66 @@ export class ExpenseList {
 
   protected openExpense(expense: Expense): void {
     this.selectedExpense.set(expense);
+    this.loadDetail(expense);
     afterNextRender(() => {
       const dialog = this.expenseDialog().nativeElement;
       if (!dialog.open) {
         dialog.showModal();
       }
     }, { injector: this.injector });
+  }
+
+  protected loadDetail(expense: Expense): void {
+    this.detailSubscription?.unsubscribe();
+    this.detailLoading.set(true);
+    this.detailFailed.set(false);
+    this.detailSubscription = this.api.getExpense(expense).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.detailLoading.set(false)),
+    ).subscribe({
+      next: (detail) => this.selectedExpense.set(detail),
+      error: () => this.detailFailed.set(true),
+    });
+  }
+
+  protected closeDetail(): void {
+    this.detailSubscription?.unsubscribe();
+    this.selectedExpense.set(null);
+  }
+
+  protected editExpense(expense: Expense): void {
+    if (this.expenseDialog().nativeElement.open) this.expenseDialog().nativeElement.close();
+    this.editRequested.emit(expense);
+  }
+
+  protected requestDeletion(expense: Expense): void {
+    this.pendingDeletion.set(expense);
+    this.deletionError.set(false);
+    this.deletionNotice.set('');
+    afterNextRender(() => {
+      this.deleteDialog().nativeElement.showModal();
+    }, { injector: this.injector });
+  }
+
+  protected confirmDeletion(): void {
+    const expense = this.pendingDeletion();
+    if (!expense || this.deleting()) {
+      return;
+    }
+    this.deleting.set(true);
+    this.deletionError.set(false);
+    this.api.deleteExpense(expense).pipe(
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.deleting.set(false)),
+    ).subscribe({
+      next: () => {
+        this.deleteDialog().nativeElement.close();
+        if (this.expenseDialog().nativeElement.open) this.expenseDialog().nativeElement.close();
+        this.deletionNotice.set(expense.installment ? 'Compra parcelada excluída.' : 'Gasto excluído.');
+        this.deleted.emit();
+        this.scrollContainer().focus({ preventScroll: true });
+      },
+      error: () => this.deletionError.set(true),
+    });
   }
 }

@@ -1,11 +1,13 @@
 import { afterNextRender, afterRenderEffect, Component, computed, DestroyRef, ElementRef, inject, input, model, signal, viewChild } from '@angular/core';
 import { LucideChevronLeft, LucideChevronRight } from '@lucide/angular';
-import { closeOnBackdrop, MONTHS } from '../expense-utils';
+import { MONTHS } from '../expense-utils';
 import { AvailablePeriod } from '../expense-models';
+import { DialogAppendix } from '../shared/dialog-appendix';
+import { BackdropClick } from '../shared/backdrop-click';
 
 @Component({
   selector: 'app-period-selector',
-  imports: [LucideChevronLeft, LucideChevronRight],
+  imports: [DialogAppendix, LucideChevronLeft, LucideChevronRight, BackdropClick],
   templateUrl: './period-selector.html',
   styleUrls: ['./period-selector.css', './month-selector.css', './year-wheel.css'],
 })
@@ -14,12 +16,11 @@ export class PeriodSelector {
   readonly selectedYear = model.required<number>();
   readonly selectedMonth = model.required<number>();
   protected readonly months = MONTHS;
-  protected readonly firstYear = 2020;
-  protected readonly yearPageStart = signal(this.firstYear);
+  protected readonly firstYear = computed(() => Math.min(2020, ...Object.keys(this.periods()).map(Number)));
+  protected readonly yearPageStart = signal(2020);
   protected readonly yearPage = computed(() => Array.from({ length: 9 }, (_, index) => this.yearPageStart() + index));
   protected readonly monthsWithExpenses = computed(() => this.periods()[this.selectedYear()]?.months ?? []);
   protected readonly monthsOverflowTop = signal(false);
-  protected readonly closeOnBackdrop = closeOnBackdrop;
   private readonly monthList = viewChild.required<ElementRef<HTMLElement>>('monthList');
 
   constructor() {
@@ -66,9 +67,14 @@ export class PeriodSelector {
     this.updateMonthOverflow(list);
   }
 
-  protected openYearSelector(dialog: HTMLDialogElement): void {
-    const page = Math.max(0, Math.floor((this.selectedYear() - this.firstYear) / 9));
-    this.yearPageStart.set(this.firstYear + page * 9);
+  protected openYearSelector(dialog: HTMLDialogElement, trigger: HTMLButtonElement): void {
+    const page = Math.max(0, Math.floor((this.selectedYear() - this.firstYear()) / 9));
+    this.yearPageStart.set(this.firstYear() + page * 9);
+    const bounds = trigger.getBoundingClientRect();
+    dialog.style.left = `${bounds.left}px`;
+    dialog.style.top = `${bounds.top}px`;
+    dialog.style.setProperty('--dialog-appendix-width', `${bounds.width}px`);
+    dialog.style.setProperty('--dialog-appendix-height', `${bounds.height}px`);
     dialog.showModal();
   }
 

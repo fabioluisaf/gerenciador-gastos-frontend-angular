@@ -1,14 +1,20 @@
 import { DOCUMENT } from '@angular/common';
-import { Component, DestroyRef, ElementRef, inject, signal, viewChild } from '@angular/core';
-import { LucideChartNoAxesCombined, LucideMoon, LucidePlus, LucideSun, LucideX } from '@lucide/angular';
+import { Component, DestroyRef, ElementRef, inject, input, output, signal, viewChild } from '@angular/core';
+import { LucideChartNoAxesCombined, LucideMoon, LucidePlus, LucideSun } from '@lucide/angular';
+import { DialogAppendix } from '../shared/dialog-appendix';
+import { BackdropClick } from '../shared/backdrop-click';
 
 @Component({
   selector: 'app-top-bar',
-  imports: [LucideChartNoAxesCombined, LucideMoon, LucidePlus, LucideSun, LucideX],
+  imports: [DialogAppendix, LucideChartNoAxesCombined, LucideMoon, LucidePlus, LucideSun, BackdropClick],
   templateUrl: './top-bar.html',
   styleUrl: './top-bar.css',
 })
 export class TopBar {
+  readonly totalsTitle = input.required<string>();
+  readonly creationOpen = input(false);
+  readonly offline = input(false);
+  readonly createRequested = output<HTMLButtonElement>();
   private readonly document = inject(DOCUMENT);
   private readonly systemTheme = window.matchMedia('(prefers-color-scheme: dark)');
   private manualTheme = false;

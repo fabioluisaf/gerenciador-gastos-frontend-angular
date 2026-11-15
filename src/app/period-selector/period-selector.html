@@ -1,28 +1,31 @@
 <aside class="year-sidebar" aria-label="Seleção de período">
-  <button type="button" class="year-selector" aria-haspopup="dialog"
+  <button #yearSelector type="button" class="year-selector" aria-haspopup="dialog"
     [attr.aria-label]="'Selecionar ano, ano selecionado: ' + selectedYear()"
-    (click)="openYearSelector(yearDialog)">{{ selectedYear() }}</button>
+    (click)="openYearSelector(yearDialog, yearSelector)">{{ selectedYear() }}</button>
   <dialog #yearDialog class="year-dialog" aria-label="Selecionar ano"
-    (click)="closeOnBackdrop($event, yearDialog)"
+    appBackdropClick (backdropClick)="yearDialog.close()"
     (keydown.escape)="yearDialog.close(); $event.preventDefault()">
-    <div class="year-dialog-header">
-      <button type="button" class="year-page-button" aria-label="Página anterior"
-        [disabled]="yearPageStart() === firstYear" (click)="yearPageStart.set(yearPageStart() - 9)">
-        <svg lucideChevronLeft aria-hidden="true"></svg>
-      </button>
-      <span aria-live="polite">{{ yearPageStart() }}–{{ yearPageStart() + 8 }}</span>
-      <button type="button" class="year-page-button" aria-label="Próxima página"
-        (click)="yearPageStart.set(yearPageStart() + 9)">
-        <svg lucideChevronRight aria-hidden="true"></svg>
-      </button>
-    </div>
-    <div class="year-grid" aria-label="Anos">
-      @for (year of yearPage(); track $index) {
-        <button type="button" class="year-choice" [disabled]="!periods()[year]"
-          [attr.aria-pressed]="year === selectedYear()" (click)="selectYear(year, yearDialog)">
-          {{ year }}
+    <app-dialog-appendix icon="calendar" label="seleção de ano" (close)="yearDialog.close()" />
+    <div class="year-panel">
+      <div class="year-dialog-header">
+        <button type="button" class="year-page-button" aria-label="Página anterior"
+          [disabled]="yearPageStart() === firstYear()" (click)="yearPageStart.set(yearPageStart() - 9)">
+          <svg lucideChevronLeft aria-hidden="true"></svg>
         </button>
-      }
+        <span aria-live="polite">{{ yearPageStart() }}–{{ yearPageStart() + 8 }}</span>
+        <button type="button" class="year-page-button" aria-label="Próxima página"
+          (click)="yearPageStart.set(yearPageStart() + 9)">
+          <svg lucideChevronRight aria-hidden="true"></svg>
+        </button>
+      </div>
+      <div class="year-grid" aria-label="Anos">
+        @for (year of yearPage(); track $index) {
+          <button type="button" class="year-choice" [disabled]="!periods()[year]"
+            [attr.aria-pressed]="year === selectedYear()" (click)="selectYear(year, yearDialog)">
+            {{ year }}
+          </button>
+        }
+      </div>
     </div>
   </dialog>
   <nav class="period-selector" [class.has-scroll-shadow]="monthsOverflowTop()" aria-label="Seleção de mês">

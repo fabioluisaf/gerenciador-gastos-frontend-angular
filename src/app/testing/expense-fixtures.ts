@@ -1,21 +1,23 @@
 import {
   Expense, ExpenseMetadata, ExpensePage, ExpensePeriod, ExpenseQuery, ExpenseTotal, ExpenseTotals,
   PaymentExpenseTotal,
-} from './expense-models';
+} from '../expense-models';
+
+type FixtureExpense = Omit<Expense, 'id'> & { id: number };
 
 const MOCK_INVOICES = [
   { id: 'nubank-1', cardName: 'Cartão principal', institution: 'Nubank', icon: 'nubank.png' },
   { id: 'caixa-1', cardName: 'Cartão viagens', institution: 'Caixa', icon: 'caixa.png' },
 ] as const;
 
-const MONTHLY_EXPENSES: readonly Omit<Expense, 'year' | 'month'>[] = [
+const MONTHLY_EXPENSES: readonly Omit<FixtureExpense, 'year' | 'month'>[] = [
   { id: 1, day: 4, name: 'Mercado', amountInCents: 18590, description: 'Compras da semana', category: 'Alimentação', paymentMethod: 'Cartão de crédito', paymentName: MOCK_INVOICES[0].cardName, invoiceId: MOCK_INVOICES[0].id, institution: 'Nubank', realized: true, closingDay: 18, invoiceClosingDay: 18 },
   { id: 2, day: 6, name: 'Transporte', amountInCents: 2650, description: 'Deslocamento', category: 'Transporte', paymentMethod: 'Cartão de débito', paymentName: 'Cartão Caixa', institution: 'Caixa', realized: true },
   { id: 3, day: 8, name: 'Energia', amountInCents: 14375, description: 'Conta de energia', category: 'Moradia', paymentMethod: 'Pix', paymentName: 'Pix Caixa', institution: 'Caixa', realized: true },
   { id: 4, day: 11, name: 'Farmácia', amountInCents: 4990, description: 'Itens de farmácia', category: 'Saúde', paymentMethod: 'Cartão de crédito', paymentName: MOCK_INVOICES[0].cardName, invoiceId: MOCK_INVOICES[0].id, institution: 'Nubank', realized: true, closingDay: 18, invoiceClosingDay: 18 },
   { id: 5, day: 14, name: 'Restaurante e cafeteria da praça central', amountInCents: 7850, description: 'Almoço em família no restaurante da praça central da cidade', category: 'Alimentação', paymentMethod: 'Cartão de crédito', paymentName: MOCK_INVOICES[0].cardName, invoiceId: MOCK_INVOICES[0].id, institution: 'Nubank', realized: true, closingDay: 18, invoiceClosingDay: 18 },
   { id: 6, day: 17, name: 'Plano de internet residencial de alta velocidade', amountInCents: 9990, description: 'Mensalidade do plano de internet residencial e serviços adicionais', category: 'Moradia', paymentMethod: 'Pix', paymentName: 'Pix Caixa', institution: 'Caixa', realized: false },
-  { id: 7, day: 21, name: 'Abastecimento de combustível para viagens longas e manutenção do veículo familiar', amountInCents: 21000, description: 'Abastecimento', category: 'Transporte', paymentMethod: 'Cartão de crédito', paymentName: MOCK_INVOICES[0].cardName, invoiceId: MOCK_INVOICES[0].id, institution: 'Nubank', realized: true, closingDay: 18, invoiceClosingDay: 18, invoiceMonthOffset: 1, installment: { number: 1, quantity: 12 } },
+  { id: 7, day: 21, name: 'Abastecimento de combustível para viagens longas e manutenção do veículo familiar', amountInCents: 21000, description: 'Abastecimento', category: 'Transporte', paymentMethod: 'Cartão de crédito', paymentName: MOCK_INVOICES[0].cardName, invoiceId: MOCK_INVOICES[0].id, institution: 'Nubank', realized: true, closingDay: 18, invoiceClosingDay: 18, invoiceMonthOffset: 1, purchaseId: 'purchase-fuel', installment: { number: 1, quantity: 12 } },
   { id: 8, day: 25, name: 'Academia', amountInCents: 9000, description: 'Mensalidade', category: 'Saúde', paymentMethod: 'Pix', paymentName: 'Pix Caixa', institution: 'Caixa', realized: false },
 ];
 
@@ -36,7 +38,7 @@ const PAGINATION_DEMO_NAMES = [
 
 const FIRST_INSTALLMENT_MONTH_INDEX = 4;
 
-const MOCK_EXPENSES: readonly Expense[] = [
+const MOCK_EXPENSES: readonly FixtureExpense[] = [
   ...Array.from({ length: 19 }, (_, index) =>
     MONTHLY_EXPENSES.flatMap((expense) => {
       const installmentNumber = index + (expense.invoiceMonthOffset ?? 0) - FIRST_INSTALLMENT_MONTH_INDEX + 1;
@@ -72,11 +74,12 @@ const MOCK_EXPENSES: readonly Expense[] = [
     closingDay: 18,
     invoiceClosingDay: 18,
     invoiceMonthOffset: 1,
+    purchaseId: 'purchase-headphones',
     installment: { number: index + 1, quantity: 2 },
   })),
   ...PAGINATION_DEMO_MONTHS.flatMap(({ month, repetitions }) =>
     Array.from({ length: repetitions - 1 }, (_, index) =>
-      MONTHLY_EXPENSES.map(({ installment, ...expense }, expenseIndex) => {
+      MONTHLY_EXPENSES.map(({ installment, purchaseId, ...expense }, expenseIndex) => {
         const name = PAGINATION_DEMO_NAMES[index][expenseIndex];
         return {
           ...expense,
@@ -89,6 +92,27 @@ const MOCK_EXPENSES: readonly Expense[] = [
       }),
     ).flat(),
   ),
+  ...[
+    { name: 'Hospedagem', paymentMethod: 'Cartão de crédito', paymentName: MOCK_INVOICES[1].cardName, institution: 'Caixa', invoiceId: MOCK_INVOICES[1].id, closingDay: 18, invoiceClosingDay: 18 },
+    { name: 'Estacionamento', paymentMethod: 'Cartão de débito', paymentName: 'Cartão Nubank', institution: 'Nubank' },
+    { name: 'Corte de cabelo', paymentMethod: 'Pix', paymentName: 'Pix Nubank', institution: 'Nubank' },
+    { name: 'Curso de idiomas', paymentMethod: 'Boleto', paymentName: 'Boleto Nubank', institution: 'Nubank' },
+    { name: 'Material de escritório', paymentMethod: 'Boleto', paymentName: 'Boleto Caixa', institution: 'Caixa' },
+    { name: 'Serviço de jardinagem', paymentMethod: 'DOC', paymentName: 'DOC Nubank', institution: 'Nubank' },
+    { name: 'Pequenos reparos', paymentMethod: 'DOC', paymentName: 'DOC Caixa', institution: 'Caixa' },
+    { name: 'Aula de música', paymentMethod: 'TED', paymentName: 'TED Nubank', institution: 'Nubank' },
+    { name: 'Serviço de pintura', paymentMethod: 'TED', paymentName: 'TED Caixa', institution: 'Caixa' },
+  ].map((expense, index) => ({
+    ...expense,
+    id: 4000 + index,
+    year: 2026,
+    month: 10,
+    day: 10,
+    amountInCents: 3500 + index * 500,
+    description: expense.name,
+    category: 'Serviços',
+    realized: true,
+  })),
   { id: 153, year: 2029, month: 8, day: 15, name: 'Notebook', amountInCents: 320000, description: 'Compra de notebook', category: 'Tecnologia', paymentMethod: 'Pix', paymentName: 'Pix Caixa', institution: 'Caixa', realized: false },
 ];
 
@@ -99,11 +123,25 @@ export function mockExpensePeriod(expense: Expense): ExpensePeriod {
   return { year: Math.floor(period / 12), month: period % 12 };
 }
 
-function mockExpensesForPeriod(period: ExpensePeriod): readonly Expense[] {
+function mockExpensesForPeriod(period: ExpensePeriod, excludedIds: ReadonlySet<number>): readonly Expense[] {
   return MOCK_EXPENSES.filter((expense) => {
     const invoice = mockExpensePeriod(expense);
-    return invoice.year === period.year && invoice.month === period.month;
+    return !excludedIds.has(expense.id) && invoice.year === period.year && invoice.month === period.month;
   });
+}
+
+export function mockExpenseIdsToDelete(expense: Expense): readonly number[] {
+  const target = MOCK_EXPENSES.find((item) => item.id === expense.id);
+  if (!target) {
+    throw new Error('Gasto não encontrado.');
+  }
+  if (!target.installment) {
+    return [target.id];
+  }
+  if (!target.purchaseId || target.purchaseId !== expense.purchaseId) {
+    throw new Error('Compra parcelada não identificada.');
+  }
+  return MOCK_EXPENSES.filter((item) => item.purchaseId === target.purchaseId).map((item) => item.id);
 }
 
 function mockTotalsForField(expenses: readonly Expense[], field: 'paymentMethod' | 'category'): readonly ExpenseTotal[] {
@@ -155,8 +193,8 @@ export function mockExpenseMetadata(today: Date): ExpenseMetadata {
   };
 }
 
-export function mockExpenseList(query: ExpenseQuery): ExpensePage {
-  const filtered = mockExpensesForPeriod(query).filter((expense) =>
+export function mockExpenseList(query: ExpenseQuery, excludedIds: ReadonlySet<number> = new Set()): ExpensePage {
+  const filtered = mockExpensesForPeriod(query, excludedIds).filter((expense) =>
     query.filter === null || expense[query.filter.field] === query.filter.value,
   );
   const totalItems = filtered.length;
@@ -174,8 +212,8 @@ export function mockExpenseList(query: ExpenseQuery): ExpensePage {
   };
 }
 
-export function mockExpenseTotals(period: ExpensePeriod): ExpenseTotals {
-  const expenses = mockExpensesForPeriod(period);
+export function mockExpenseTotals(period: ExpensePeriod, excludedIds: ReadonlySet<number> = new Set()): ExpenseTotals {
+  const expenses = mockExpensesForPeriod(period, excludedIds);
   return {
     payment: mockPaymentTotals(expenses),
     category: mockTotalsForField(expenses, 'category'),

@@ -1,0 +1,124 @@
+<dialog #editorDialog id="expense-editor-dialog" class="expense-editor" aria-labelledby="editor-title"
+  [attr.aria-busy]="saving() || detailLoading()"
+  appBackdropClick (close)="onClose()" (backdropClick)="close()"
+  (cancel)="$event.preventDefault(); close()">
+  @if (!editing()) {
+    <app-dialog-appendix icon="create" label="criação" [disabled]="saving()" (close)="close()" />
+  }
+  <div class="editor-panel" [class.editing-panel]="editing()">
+    @if (!editing()) {
+      <nav class="editor-sidebar" aria-label="Tipo de cadastro">
+        <button type="button" [attr.aria-pressed]="tab() === 'expense'" [disabled]="saving()"
+          (click)="switchTab('expense')">Gasto</button>
+        <button type="button" [attr.aria-pressed]="tab() === 'payment'" [disabled]="saving()"
+          (click)="switchTab('payment')">Método de pagamento</button>
+      </nav>
+    }
+    <section class="editor-main">
+      <header class="editor-header">
+        <h2 id="editor-title">{{ editing() ? currentExpense()?.installment ? 'Editar compra parcelada' : 'Editar gasto' : tab() === 'expense' ? 'Criar gasto' : 'Criar método de pagamento' }}</h2>
+        @if (editing()) {
+          <button type="button" class="editor-close" aria-label="Fechar edição" autofocus
+            [disabled]="saving()" (click)="close()"><svg lucideX aria-hidden="true"></svg></button>
+        }
+      </header>
+      @if (detailLoading() || paymentRequest.isLoading()) {
+        <p class="editor-message" role="status">Carregando formulário...</p>
+      } @else if (detailFailed() || paymentRequest.error()) {
+        <div class="editor-message" role="alert">
+          <p>Não foi possível carregar o formulário.</p>
+          <button type="button" (click)="detailFailed() ? loadDetail(currentExpense()!) : paymentRequest.reload()">Tentar novamente</button>
+        </div>
+      } @else if (tab() === 'expense' && paymentRequest.hasValue() && !paymentRequest.value().length) {
+        <div class="editor-message" role="status">
+          <p>Cadastre um método de pagamento antes de criar gastos.</p>
+          @if (!editing()) { <button type="button" (click)="switchTab('payment')">Cadastrar método de pagamento</button> }
+        </div>
+      } @else if (tab() === 'expense') {
+        <form [formGroup]="expenseForm" (ngSubmit)="submit()" novalidate>
+          <div class="editor-scroll">
+            @if (currentExpense()?.installment) {
+              <p class="editor-hint">As alterações serão aplicadas à compra inteira, incluindo todas as parcelas.</p>
+            }
+            <fieldset [disabled]="saving()">
+              <label class="full-field">Nome<input formControlName="name" autocomplete="off" required></label>
+              <label>{{ expenseForm.controls.parcelled.value ? 'Valor total' : 'Valor' }} (R$)
+                <input formControlName="amount" inputmode="decimal" placeholder="0,00" required>
+              </label>
+              <label>Data<input type="date" formControlName="date"
+                [attr.aria-required]="expenseForm.controls.realized.value || expenseForm.controls.parcelled.value"></label>
+              <div class="full-field">
+                <h3>Método de pagamento</h3>
+                <app-payment-options [options]="visiblePaymentMethods()"
+                  [selectedId]="expenseForm.controls.paymentId.value" label="Selecionar método de pagamento"
+                  actionLabel="Selecionar pagamento: " [disabled]="saving()"
+                  (selected)="expenseForm.patchValue({ paymentId: $event.value })" />
+              </div>
+              <div class="full-field">
+                <label>Categoria<input formControlName="category" autocomplete="off" required></label>
+                @if (categoriesLoading()) {
+                  <p role="status">Carregando categorias...</p>
+                } @else if (categoriesFailed()) {
+                  <p role="alert">Não foi possível carregar as categorias.
+                    <button type="button" (click)="retryCategories.emit()">Tentar novamente</button>
+                  </p>
+                } @else if (categories().length) {
+                  <div class="horizontal-options category-options" role="group" aria-label="Categorias existentes" tabindex="0">
+                    @for (category of categories(); track category.value) {
+                      <button type="button" [attr.aria-pressed]="expenseForm.controls.category.value === category.value"
+                        (click)="expenseForm.patchValue({ category: category.value })">{{ category.name }}</button>
+                    }
+                  </div>
+                }
+              </div>
+              @if (selectedPayment?.type === 'CREDITO') {
+                <label>Fatura (opcional com data)<input type="month" formControlName="invoicePeriod"></label>
+              }
+              @if (!editing()) {
+                <label class="check-field"><input type="checkbox" formControlName="parcelled">Compra parcelada?</label>
+              }
+              @if (expenseForm.controls.parcelled.value) {
+                <label>Quantidade de parcelas<input type="number" formControlName="quantity" min="1" step="1" required></label>
+                @if (selectedPayment?.type !== 'CREDITO') {
+                  <p class="full-field editor-hint">Parcelamento exige cartão de crédito.</p>
+                }
+              } @else {
+                <label class="check-field"><input type="checkbox" formControlName="realized">Realizado</label>
+              }
+              <label class="full-field">Descrição<textarea formControlName="description" rows="3"></textarea></label>
+            </fieldset>
+            @if (submitted() && expenseForm.invalid) {
+              <p role="alert">Preencha nome, valor, categoria e pagamento. Informe a data para gastos realizados ou parcelados; crédito sem data exige a fatura. Parcelamento exige cartão de crédito e quantidade inteira positiva.</p>
+            }
+            @if (saveFailed()) { <p role="alert">Não foi possível salvar o gasto. Seus dados foram mantidos. Verifique os campos e tente novamente.</p> }
+            <p class="editor-notice" role="status">{{ notice() }}</p>
+          </div>
+          <footer class="editor-footer">
+            <button type="submit" class="save-button" [disabled]="saving()">Salvar</button>
+          </footer>
+        </form>
+      } @else {
+        <form [formGroup]="paymentForm" (ngSubmit)="submit()" novalidate>
+          <div class="editor-scroll">
+            <fieldset [disabled]="saving()">
+              <label class="full-field">Nome<input formControlName="name" autocomplete="off" required></label>
+              <label>Instituição<select formControlName="institution"><option value="NUBANK">Nubank</option><option value="CAIXA">Caixa</option></select></label>
+              <label>Tipo<select formControlName="type">
+                @for (type of paymentTypes; track type) { <option [value]="type">{{ paymentLabels[type] }}</option> }
+              </select></label>
+              @if (paymentForm.controls.type.value === 'CREDITO') {
+                <label>Dia do fechamento (1–31)<input type="number" formControlName="closingDay" step="1" aria-required="true"></label>
+                <label>Dia do vencimento (1–31)<input type="number" formControlName="dueDay" step="1" aria-required="true"></label>
+              }
+            </fieldset>
+            @if (submitted() && paymentForm.invalid) { <p role="alert">Informe o nome e, para crédito, os dias de fechamento e vencimento entre 1 e 31.</p> }
+            @if (saveFailed()) { <p role="alert">Não foi possível salvar o método de pagamento. Seus dados foram mantidos. Tente novamente.</p> }
+          </div>
+          <footer class="editor-footer">
+            <button type="submit" class="save-button" [disabled]="saving()">Salvar</button>
+          </footer>
+        </form>
+      }
+    </section>
+  </div>
+</dialog>

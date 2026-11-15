@@ -126,7 +126,7 @@
 }
 
 .month-selected-highlight {
-  --month-highlight-color: var(--color-selected);
+  --month-highlight-color: var(--color-surface-alt);
 }
 
 .month-button.selected {

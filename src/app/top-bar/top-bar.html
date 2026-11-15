@@ -7,8 +7,13 @@
       <span class="highlight-reveal top-nav-hover-highlight" aria-hidden="true"></span>
       <svg lucideChartNoAxesCombined aria-hidden="true"></svg>
     </button>
-    <button type="button" class="top-nav-button" disabled aria-label="Criar" title="Criar (disponível em breve)">
-      <svg lucidePlus aria-hidden="true"></svg>
+    <button #createTrigger type="button" class="top-nav-button create-toggle"
+      [disabled]="offline()" aria-label="Criar" title="Criar" aria-haspopup="dialog"
+      aria-controls="expense-editor-dialog" [attr.aria-expanded]="creationOpen()"
+      (click)="createRequested.emit(createTrigger)">
+      <span class="highlight-reveal top-nav-selected-highlight" aria-hidden="true"></span>
+      <span class="highlight-reveal top-nav-hover-highlight" aria-hidden="true"></span>
+      <svg lucidePlus [class.rotated]="creationOpen()" aria-hidden="true"></svg>
     </button>
   </nav>
   <button type="button" class="theme-toggle"
@@ -24,21 +29,12 @@
   </button>
 </header>
 <dialog #totalsDialog id="totals-dialog" class="totals-dialog" aria-labelledby="totals-dialog-title"
-  (close)="totalsOpen.set(false)" (click)="$event.target === totalsDialog && totalsDialog.close()"
+  appBackdropClick (close)="totalsOpen.set(false)" (backdropClick)="totalsDialog.close()"
   (keydown.escape)="totalsDialog.close(); $event.preventDefault()">
-  <div class="totals-appendix">
-    <button type="button" class="top-nav-button totals-close" aria-label="Fechar totais"
-      title="Fechar totais" autofocus
-      (click)="totalsDialog.close()">
-      <span class="highlight-reveal top-nav-selected-highlight" aria-hidden="true"></span>
-      <span class="highlight-reveal top-nav-hover-highlight" aria-hidden="true"></span>
-      <svg lucideChartNoAxesCombined class="totals-open-icon" aria-hidden="true"></svg>
-      <svg lucideX class="totals-close-icon" aria-hidden="true"></svg>
-    </button>
-  </div>
+  <app-dialog-appendix icon="totals" label="totais" (close)="totalsDialog.close()" />
   <div class="totals-panel">
     <div class="totals-dialog-header">
-      <h2 id="totals-dialog-title">Totais</h2>
+      <h2 id="totals-dialog-title">{{ totalsTitle() }}</h2>
     </div>
     <ng-content select="[totals-content]" />
   </div>

@@ -1,5 +1,6 @@
 <div class="app-layout">
-  <app-top-bar>
+  <app-top-bar [totalsTitle]="'Totais de ' + periodLabel()" [creationOpen]="creationOpen()"
+    [offline]="offline()" (createRequested)="editor.openCreate($event)">
     <div totals-content class="summary-areas" [attr.aria-busy]="totalsRequest.isLoading()">
       @if (totalsRequest.error()) {
         <p role="alert">Não foi possível carregar os totalizadores.
@@ -25,7 +26,7 @@
       <h1 class="visually-hidden">Gastos</h1>
       <div>
         <p id="expense-period" class="visually-hidden">Gastos de {{ periodLabel() }}</p>
-        @if (metadataRequest.error()) {
+        @if (metadataRequest.error() && !offline()) {
           <p role="alert">Não foi possível carregar os períodos.
             <button type="button" (click)="metadataRequest.reload()">Tentar novamente</button>
           </p>
@@ -33,11 +34,25 @@
           <p role="status">Carregando períodos...</p>
         }
       </div>
-      <div class="content-layout">
+      @if (offline()) {
+        <section class="application-state" role="alert">
+          <h2>Servidor back-end offline</h2>
+          <p>Não foi possível conectar ao servidor. Verifique se ele está em execução e tente novamente.</p>
+          <button type="button" (click)="retryConnection()">Tentar novamente</button>
+        </section>
+      } @else if (noExpenses()) {
+        <section class="application-state" role="status">
+          <h2>Nenhum gasto cadastrado</h2>
+          <p>Use o botão + para cadastrar um método de pagamento ou seu primeiro gasto.</p>
+          <button #firstExpense type="button" (click)="editor.openCreate(firstExpense)">Criar primeiro gasto</button>
+        </section>
+      }
+      <div class="content-layout" [hidden]="offline() || noExpenses()">
         <div class="expense-toolbar" role="group" aria-label="Filtros de gastos">
-          <button type="button" class="filter-toggle" aria-label="Filtros" title="Filtros (disponível em breve)">
-            <svg lucideListFilter aria-hidden="true"></svg>
-          </button>
+          <app-expense-filter-dialog [totals]="totalsRequest.hasValue() ? totalsRequest.value() : undefined"
+            [loading]="metadataRequest.isLoading() || totalsRequest.isLoading()"
+            [failed]="!!totalsRequest.error()" [disabled]="!metadata()" [selectedFilter]="selectedFilter()"
+            (filterSelected)="selectFilter($event)" (retry)="totalsRequest.reload()" />
           @if (selectedFilter(); as filter) {
             <app-expense-filter [filter]="filter" (removed)="selectedFilter.set(null)" />
           }
@@ -49,9 +64,13 @@
             [failed]="expensesError()"
             [ready]="!!metadata()"
             (pagesRequested)="requestPages($event)" (retry)="retryExpenses()"
-            (filterSelected)="filterExpense($event)" />
+            (filterSelected)="filterExpense($event)" (deleted)="reloadExpenses()" (editRequested)="editor.openEdit($event)" />
         </div>
       </div>
     </main>
   </app-card>
+  <app-expense-editor #editor [period]="{ year: selectedYear(), month: selectedMonth() }"
+    [categories]="totalsRequest.hasValue() ? totalsRequest.value().category : []"
+    [categoriesLoading]="totalsRequest.isLoading()" [categoriesFailed]="!!totalsRequest.error()"
+    (retryCategories)="totalsRequest.reload()" (saved)="reloadExpenses()" (creationOpen)="creationOpen.set($event)" />
 </div>

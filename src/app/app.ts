@@ -1,31 +1,28 @@
-import { afterNextRender, afterRenderEffect, Component, computed, effect, ElementRef, inject, InjectionToken, Injector, isDevMode, linkedSignal, signal, untracked, viewChild } from '@angular/core';
+import { afterNextRender, Component, computed, effect, ElementRef, inject, Injector, linkedSignal, signal, untracked, viewChild } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
-import { LucideListFilter } from '@lucide/angular';
 import { Subscription } from 'rxjs';
 import { ExpenseApi } from './expense-api';
 import { ExpenseFilter } from './expense-filter/expense-filter';
-import { Expense, ExpenseQuery, SelectedExpenseFilter } from './expense-models';
+import { ExpenseFilterDialog } from './expense-filter-dialog/expense-filter-dialog';
+import { Expense, ExpenseMetadata, ExpenseQuery, SelectedExpenseFilter } from './expense-models';
 import { ExpenseList } from './expense-list/expense-list';
+import { ExpenseEditor } from './expense-editor/expense-editor';
 import { ExpenseSummary } from './expense-summary/expense-summary';
 import { MONTHS } from './expense-utils';
 import { PeriodSelector } from './period-selector/period-selector';
 import { Card } from './shared/card';
 import { TopBar } from './top-bar/top-bar';
 
-export const AUTO_OPEN_EXPENSE_PREVIEW = new InjectionToken<boolean>('AUTO_OPEN_EXPENSE_PREVIEW', {
-  providedIn: 'root',
-  factory: () => isDevMode(),
-});
-
 @Component({
-  imports: [Card, TopBar, PeriodSelector, ExpenseFilter, ExpenseList, ExpenseSummary, LucideListFilter],
+  imports: [Card, TopBar, PeriodSelector, ExpenseFilter, ExpenseFilterDialog, ExpenseList, ExpenseSummary, ExpenseEditor],
   selector: 'app-root',
   styleUrl: './app.css',
   templateUrl: './app.html',
 })
 export class App {
   private readonly api = inject(ExpenseApi);
-  private previewPending = inject(AUTO_OPEN_EXPENSE_PREVIEW);
+  protected readonly offline = this.api.offline;
+  protected readonly creationOpen = signal(false);
   private readonly expenseList = viewChild(ExpenseList);
   private readonly topBar = viewChild.required(TopBar);
   private readonly filterChip = viewChild<ExpenseFilter, ElementRef<HTMLElement>>(ExpenseFilter, { read: ElementRef });
@@ -36,8 +33,24 @@ export class App {
   protected readonly metadata = computed(() =>
     this.metadataRequest.hasValue() ? this.metadataRequest.value() : undefined,
   );
-  protected readonly selectedYear = linkedSignal(() => this.metadata()?.initialPeriod.year ?? new Date().getFullYear());
-  protected readonly selectedMonth = linkedSignal(() => this.metadata()?.initialPeriod.month ?? new Date().getMonth());
+  protected readonly noExpenses = computed(() => {
+    const metadata = this.metadata();
+    return !!metadata && Object.keys(metadata.periods).length === 0;
+  });
+  protected readonly selectedYear = linkedSignal<ExpenseMetadata | undefined, number>({
+    source: this.metadata,
+    computation: (metadata, previous) => previous && metadata?.periods[previous.value]
+      ? previous.value : metadata?.initialPeriod.year ?? new Date().getFullYear(),
+  });
+  protected readonly selectedMonth = linkedSignal({
+    source: () => ({ metadata: this.metadata(), year: this.selectedYear() }),
+    computation: ({ metadata, year }, previous): number => {
+      const available = metadata?.periods[year];
+      if (previous && previous.source.year === year && available?.months.includes(previous.value)) return previous.value;
+      return year === metadata?.initialPeriod.year ? metadata.initialPeriod.month
+        : available?.monthOnSelect ?? new Date().getMonth();
+    },
+  });
   protected readonly selectedFilter = signal<SelectedExpenseFilter | null>(null);
   protected readonly periodLabel = computed(() => `${MONTHS[this.selectedMonth()].toLowerCase()} de ${this.selectedYear()}`);
   private readonly period = computed(() => this.metadata()
@@ -93,13 +106,6 @@ export class App {
       }
     });
 
-    afterRenderEffect(() => {
-      const list = this.expenseList();
-      if (this.previewPending && list && !this.expensesLoading() && this.totalPages() !== null) {
-        this.previewPending = false;
-        list.openFirstExpense();
-      }
-    });
   }
 
   protected requestPages(count: number): void {
@@ -141,6 +147,17 @@ export class App {
   }
 
   onExpenseAdded(): void {
+    this.reloadExpenses();
+  }
+
+  protected reloadExpenses(): void {
+    this.expenseReload.update((value) => value + 1);
+    this.totalsRequest.reload();
+    this.metadataRequest.reload();
+  }
+
+  protected retryConnection(): void {
+    this.metadataRequest.reload();
     this.expenseReload.update((value) => value + 1);
     this.totalsRequest.reload();
   }

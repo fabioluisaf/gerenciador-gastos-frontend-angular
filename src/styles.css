@@ -26,6 +26,7 @@
   --color-info: #547dc2;
   --color-hover: #f0eef4;
   --color-selected: #f1eaf7;
+  --color-payment-default-hover: #faf7fd;
   --color-payment-caixa-selected: #e6eaff;
   --color-payment-caixa-border: #002ee6;
   --color-payment-caixa-hover: #d9e0ff;
@@ -76,6 +77,7 @@
   --color-info: #8cafe5;
   --color-hover: #302a3b;
   --color-selected: #39264d;
+  --color-payment-default-hover: #49365d;
   --color-payment-caixa-selected: #1c2349;
   --color-payment-caixa-border: #8094ff;
   --color-payment-caixa-hover: #27356b;
@@ -186,6 +188,64 @@ textarea:focus {
   transition: clip-path var(--motion-duration-fast) ease;
 }
 
+.expense-dialog-content,
+.editor-scroll {
+  scrollbar-color: transparent transparent;
+  scrollbar-width: thin;
+  transition: scrollbar-color var(--motion-duration-default) ease;
+}
+
+.expense-dialog-content:hover,
+.editor-scroll:hover {
+  scrollbar-color: var(--color-text-muted) transparent;
+}
+
+@supports selector(::-webkit-scrollbar) {
+  .expense-dialog-content,
+  .expense-dialog-content:hover,
+  .editor-scroll,
+  .editor-scroll:hover {
+    scrollbar-color: auto;
+    scrollbar-width: auto;
+  }
+
+  .expense-dialog-content::-webkit-scrollbar,
+  .editor-scroll::-webkit-scrollbar {
+    background-color: transparent;
+    width: 0.25rem;
+  }
+
+  .expense-dialog-content::-webkit-scrollbar-track,
+  .editor-scroll::-webkit-scrollbar-track {
+    background-color: transparent;
+    margin-block: 0.75rem;
+  }
+
+  .expense-dialog-content::-webkit-scrollbar-button,
+  .editor-scroll::-webkit-scrollbar-button {
+    display: none;
+  }
+
+  .expense-dialog-content::-webkit-scrollbar-thumb,
+  .editor-scroll::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 9999px;
+    transition: background-color var(--motion-duration-default) ease;
+  }
+
+  .expense-dialog-content:hover::-webkit-scrollbar-thumb,
+  .editor-scroll:hover::-webkit-scrollbar-thumb {
+    background-color: var(--color-text-muted);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .expense-dialog-content::-webkit-scrollbar-thumb,
+    .editor-scroll::-webkit-scrollbar-thumb {
+      transition: none;
+    }
+  }
+}
+
 .payment-tag {
   --payment-tag-background:
     linear-gradient(90deg, var(--institution-background), var(--payment-background)) padding-box,
@@ -202,52 +262,48 @@ textarea:focus {
   box-shadow: 0 0 0.5rem color-mix(in srgb, var(--institution-border) 45%, transparent);
 }
 
-.expense-dialog-content {
+.horizontal-options {
+  display: flex;
+  gap: 0.5rem;
+  min-width: 0;
+  overflow-x: auto;
+  padding: 0.25rem 0.125rem 0.5rem;
   scrollbar-color: transparent transparent;
   scrollbar-width: thin;
-  transition: scrollbar-color var(--motion-duration-default) ease;
 }
 
-.expense-dialog-content:hover {
+.horizontal-options:hover,
+.horizontal-options:focus-within {
   scrollbar-color: var(--color-text-muted) transparent;
 }
 
+.horizontal-options:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
 @supports selector(::-webkit-scrollbar) {
-  .expense-dialog-content,
-  .expense-dialog-content:hover {
+  .horizontal-options,
+  .horizontal-options:hover,
+  .horizontal-options:focus-within {
     scrollbar-color: auto;
     scrollbar-width: auto;
   }
-
-  .expense-dialog-content::-webkit-scrollbar {
-    background-color: transparent;
-    width: 0.25rem;
+  .horizontal-options::-webkit-scrollbar {
+    background: transparent;
+    height: 0.25rem;
   }
-
-  .expense-dialog-content::-webkit-scrollbar-track {
-    background-color: transparent;
-    margin-block: 0.75rem;
-  }
-
-  .expense-dialog-content::-webkit-scrollbar-button {
-    display: none;
-  }
-
-  .expense-dialog-content::-webkit-scrollbar-thumb {
-    background-color: transparent;
-    border-radius: 9999px;
-    transition: background-color var(--motion-duration-default) ease;
-  }
-
-  .expense-dialog-content:hover::-webkit-scrollbar-thumb {
-    background-color: var(--color-text-muted);
-  }
+  .horizontal-options::-webkit-scrollbar-track { background: transparent; }
+  .horizontal-options::-webkit-scrollbar-button { display: none; }
+  .horizontal-options::-webkit-scrollbar-thumb { background: transparent; border-radius: 9999px; }
+  .horizontal-options:hover::-webkit-scrollbar-thumb,
+  .horizontal-options:focus-within::-webkit-scrollbar-thumb { background: var(--color-text-muted); }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .highlight-reveal,
   .expense-dialog-content,
-  .expense-dialog-content::-webkit-scrollbar-thumb {
+  .editor-scroll {
     transition: none;
   }
 }
