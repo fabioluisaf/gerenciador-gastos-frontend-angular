@@ -1,5 +1,5 @@
 export interface Expense {
-  id: number;
+  id: string | number;
   year: number;
   month: number;
   day?: number | null;
@@ -15,7 +15,63 @@ export interface Expense {
   closingDay?: number;
   invoiceClosingDay?: number;
   invoiceMonthOffset?: number;
+  purchaseId?: string;
+  paymentId?: string;
+  invoicePeriod?: string;
+  purchase?: ExpensePurchase;
   installment?: { number: number; quantity: number };
+}
+
+export type PaymentType = 'CREDITO' | 'DEBITO' | 'PIX' | 'BOLETO' | 'DOC' | 'TED';
+
+export interface PaymentOption {
+  value: string;
+  name: string;
+  institution: string;
+  paymentMethod: string;
+}
+
+export interface PaymentMethod extends PaymentOption {
+  type: PaymentType;
+  closingDay: number | null;
+  dueDay: number | null;
+}
+
+export interface PaymentDraft {
+  nome: string;
+  tipo: PaymentType;
+  instituicaoFinanceira: 'NUBANK' | 'CAIXA';
+  diaFechamento: number | null;
+  diaVencimento: number | null;
+}
+
+export interface ExpenseDraft {
+  nome: string;
+  valor: number;
+  categoria: string;
+  metodoPagamentoId: string;
+  data: string | null;
+  descricao: string;
+  realizado: boolean;
+  faturaPeriodo: string | null;
+  parcelado: boolean;
+  quantidadeParcelas: number;
+}
+
+export interface PurchaseInstallment extends ExpensePeriod {
+  id: string;
+  number: number;
+  amountInCents: number;
+  date: string;
+  realized: boolean;
+  closingDate?: string;
+}
+
+export interface ExpensePurchase {
+  id: string;
+  amountInCents: number;
+  quantity: number;
+  installments: readonly PurchaseInstallment[];
 }
 
 export interface ExpensePeriod {
