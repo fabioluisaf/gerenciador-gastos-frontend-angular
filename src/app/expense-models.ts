@@ -56,6 +56,7 @@ export interface ExpenseDraft {
   faturaPeriodo: string | null;
   parcelado: boolean;
   quantidadeParcelas: number;
+  valoresParcelas?: readonly number[];
 }
 
 export interface PurchaseInstallment extends ExpensePeriod {

@@ -148,7 +148,7 @@ describe('ExpenseApi HTTP contracts', () => {
     api.getExpense(row).subscribe((expense) => {
       expect(expense.purchase?.installments.map((item) => item.amountInCents)).toEqual([1670, 1666]);
       expect(expense.purchaseId).toBe('purchase-id');
-      api.saveExpense(draft, expense).subscribe();
+      api.saveExpense({ ...draft, valoresParcelas: [16.70, 16.66] }, expense).subscribe();
     });
     http.expectOne('/api/gastos/expense-id').flush(envelope({
       id: 'expense-id', data: '09/11/2026', nome: 'Compra', valor: 16.70, categoria: 'Casa', realizado: true,
@@ -164,7 +164,7 @@ describe('ExpenseApi HTTP contracts', () => {
     const request = http.expectOne('/api/compras-parceladas/purchase-id');
     expect(request.request.method).toBe('PUT');
     expect(request.request.body).toMatchObject({ data: '09/11/2026', valorTotal: 33.36, quantidadeParcelas: 2, valoresParcelas: [16.70, 16.66] });
-    expect(request.request.body).not.toHaveProperty('realizado');
+    expect(request.request.body.realizado).toBe(true);
     expect(request.request.body).not.toHaveProperty('valor');
     request.flush({});
   });
@@ -192,5 +192,29 @@ describe('ExpenseApi HTTP contracts', () => {
     expect(purchaseDeletion.request.method).toBe('DELETE');
     purchaseDeletion.flush(null, { status: 204, statusText: 'No Content' });
     expect(complete).toHaveBeenCalledOnce();
+  });
+
+  it('should send explicit installment amounts for creation and editing, or omit them for automatic calculation', () => {
+    const existingPurchase: Expense = {
+      ...row, purchaseId: 'purchase-id',
+      purchase: { id: 'purchase-id', amountInCents: 3336, quantity: 2, installments: [
+        { id: 'a', number: 1, year: 2026, month: 10, date: '2026-11-09', amountInCents: 1670, realized: true },
+        { id: 'b', number: 2, year: 2026, month: 11, date: '2026-11-09', amountInCents: 1666, realized: true },
+      ] },
+    };
+    for (const existing of [undefined, existingPurchase]) {
+      for (const values of [[10.01, 23.35], undefined]) {
+        api.saveExpense({ ...draft, valoresParcelas: values, realizado: !!values }, existing).subscribe();
+        const request = http.expectOne(existing ? '/api/compras-parceladas/purchase-id' : '/api/compras-parceladas');
+        expect(request.request.method).toBe(existing ? 'PUT' : 'POST');
+        if (values) expect(request.request.body.valoresParcelas).toEqual(values);
+        else expect(request.request.body).not.toHaveProperty('valoresParcelas');
+        expect(request.request.body).not.toHaveProperty('recalcularParcelas');
+        expect(request.request.body).not.toHaveProperty('parcelado');
+        if (existing) expect(request.request.body.realizado).toBe(!!values);
+        else expect(request.request.body).not.toHaveProperty('realizado');
+        request.flush({});
+      }
+    }
   });
 });

@@ -70,6 +70,16 @@
   z-index: 2;
 }
 
+/* Cover the panel's overlapping top border beneath the creation curve. */
+.dialog-appendix-create::before {
+  bottom: -1px;
+}
+
+.dialog-appendix-create::after {
+  /* Match the panel border even when fractional zoom rounds border widths. */
+  bottom: calc(100% - var(--dialog-appendix-height, 2.75rem) + 1px);
+}
+
 .dialog-appendix-close {
   align-items: center;
   background: transparent;

@@ -1,27 +1,35 @@
-<dialog #editorDialog id="expense-editor-dialog" class="expense-editor" aria-labelledby="editor-title"
-  [attr.aria-busy]="saving() || detailLoading()"
-  appBackdropClick (close)="onClose()" (backdropClick)="close()"
+<dialog #editorDialog id="expense-editor-dialog" class="expense-editor" [class.creating]="!editing()"
+  aria-labelledby="editor-title" [attr.aria-busy]="saving() || detailLoading()"
+  appBackdropClick [backdropBounds]="editing()" (close)="onClose()" (backdropClick)="close()"
   (cancel)="$event.preventDefault(); close()">
   @if (!editing()) {
     <app-dialog-appendix icon="create" label="criação" [disabled]="saving()" (close)="close()" />
   }
-  <div class="editor-panel" [class.editing-panel]="editing()">
+  <div class="editor-panel">
     @if (!editing()) {
-      <nav class="editor-sidebar" aria-label="Tipo de cadastro">
-        <button type="button" [attr.aria-pressed]="tab() === 'expense'" [disabled]="saving()"
-          (click)="switchTab('expense')">Gasto</button>
-        <button type="button" [attr.aria-pressed]="tab() === 'payment'" [disabled]="saving()"
-          (click)="switchTab('payment')">Método de pagamento</button>
-      </nav>
+      <aside class="year-sidebar editor-sidebar">
+        <nav class="period-selector editor-tabs" aria-label="Tipo de cadastro">
+          <div class="month-list">
+            @for (item of creationTabs; track item.value) {
+              <button type="button" class="month-button" [class.selected]="tab() === item.value"
+                [attr.aria-pressed]="tab() === item.value" [disabled]="saving()" (click)="switchTab(item.value)">
+                <span class="highlight-reveal month-highlight month-hover-highlight" aria-hidden="true"></span>
+                <span class="highlight-reveal month-highlight month-selected-highlight" aria-hidden="true"></span>
+                <span class="month-label">{{ item.label }}</span>
+              </button>
+            }
+          </div>
+        </nav>
+      </aside>
     }
     <section class="editor-main">
-      <header class="editor-header">
-        <h2 id="editor-title">{{ editing() ? currentExpense()?.installment ? 'Editar compra parcelada' : 'Editar gasto' : tab() === 'expense' ? 'Criar gasto' : 'Criar método de pagamento' }}</h2>
-        @if (editing()) {
-          <button type="button" class="editor-close" aria-label="Fechar edição" autofocus
-            [disabled]="saving()" (click)="close()"><svg lucideX aria-hidden="true"></svg></button>
-        }
-      </header>
+      @if (tab() === 'payment' || detailLoading() || paymentRequest.isLoading() || detailFailed() ||
+        paymentRequest.error() || !paymentRequest.hasValue() || !paymentRequest.value().length) {
+        <header class="expense-dialog-header editor-state-header">
+          <h2 id="editor-title">{{ tab() === 'payment' ? 'Criar método de pagamento' : editing() ? 'Editar gasto' : 'Criar gasto' }}</h2>
+          <ng-container [ngTemplateOutlet]="closeButton" />
+        </header>
+      }
       @if (detailLoading() || paymentRequest.isLoading()) {
         <p class="editor-message" role="status">Carregando formulário...</p>
       } @else if (detailFailed() || paymentRequest.error()) {
@@ -36,89 +44,216 @@
         </div>
       } @else if (tab() === 'expense') {
         <form [formGroup]="expenseForm" (ngSubmit)="submit()" novalidate>
-          <div class="editor-scroll">
+          <div class="expense-dialog-content editor-scroll">
+            <h2 id="editor-title" class="visually-hidden">{{ editing() ? currentExpense()?.installment ? 'Editar compra parcelada' : 'Editar gasto' : 'Criar gasto' }}</h2>
+            <fieldset [disabled]="saving()">
+              <header class="expense-dialog-header">
+                <div class="expense-dialog-heading">
+                  <label class="expense-name-field">
+                    <span class="visually-hidden">Nome</span>
+                    <textarea formControlName="name" class="expense-name-input" placeholder="Nome do gasto"
+                      rows="1" autocomplete="off" required [attr.aria-invalid]="expenseInvalid('name')"></textarea>
+                  </label>
+                  <div class="expense-dialog-meta">
+                    <button type="button" class="expense-category-filter category-trigger"
+                      aria-label="Selecionar categoria" aria-haspopup="dialog" popovertarget="editor-category-menu"
+                      [attr.aria-invalid]="expenseInvalid('category')">
+                      {{ expenseForm.controls.category.value || 'Categoria' }}
+                    </button>
+                    <div #categoryMenu id="editor-category-menu" class="tag-menu category-menu" popover
+                      role="dialog" aria-label="Categorias disponíveis">
+                      @if (categoriesLoading()) {
+                        <p role="status">Carregando categorias...</p>
+                      } @else if (categoriesFailed()) {
+                        <p role="alert">Não foi possível carregar as categorias.
+                          <button type="button" (click)="retryCategories.emit()">Tentar novamente</button>
+                        </p>
+                      } @else {
+                        <div class="tag-options" role="group" aria-label="Categorias existentes">
+                          @for (category of categories(); track category.value) {
+                            <button type="button" class="expense-category-filter"
+                              [attr.aria-pressed]="expenseForm.controls.category.value === category.value"
+                              (click)="expenseForm.controls.category.setValue(category.value); categoryMenu.hidePopover()">{{ category.name }}</button>
+                          } @empty { <p>Nenhuma categoria disponível.</p> }
+                        </div>
+                      }
+                      <label class="new-category">Nova categoria
+                        <input formControlName="category" autocomplete="off" placeholder="Digite uma nova categoria"
+                          required [attr.aria-invalid]="expenseInvalid('category')"
+                          (keydown.enter)="$event.preventDefault(); categoryMenu.hidePopover()">
+                      </label>
+                      <button type="button" class="expense-category-filter"
+                        [disabled]="!expenseForm.controls.category.value.trim()" (click)="categoryMenu.hidePopover()">Usar categoria</button>
+                    </div>
+                    @if (editing() || !expenseForm.controls.parcelled.value) {
+                      <label class="expense-status status-switch" [class.planned]="!expenseForm.controls.realized.value">
+                        <input type="checkbox" role="switch" formControlName="realized" aria-label="Realizado">
+                        {{ expenseForm.controls.realized.value ? 'Realizado' : 'Planejado' }}
+                      </label>
+                    }
+                    <div class="date-input expense-dialog-date">
+                      <input id="expense-date" formControlName="date" aria-label="Data" placeholder="dd/mm/aaaa"
+                        inputmode="numeric" maxlength="10" autocomplete="off" [attr.aria-invalid]="expenseInvalid('date')"
+                        [attr.aria-required]="expenseForm.controls.realized.value || expenseForm.controls.parcelled.value">
+                      <app-date-selector pickerId="editor-date-menu" [value]="isoDate(expenseForm.controls.date.value)"
+                        [disabled]="saving()" (valueChange)="selectDate($event)" />
+                    </div>
+                  </div>
+                </div>
+                <ng-container [ngTemplateOutlet]="closeButton" />
+              </header>
+              @if (submitted() && expenseForm.controls.date.value && !isoDate(expenseForm.controls.date.value)) {
+                <small role="alert">Informe uma data válida no formato dd/mm/aaaa.</small>
+              }
+              <div class="expense-amount-row">
+                <div class="amount-summary">
+                  <label class="expense-amount amount-field">
+                    <span aria-hidden="true">R$</span>
+                    <span class="visually-hidden">{{ expenseForm.controls.parcelled.value ? 'Valor total' : 'Valor' }} (R$)</span>
+                    <input formControlName="amount" inputmode="decimal" placeholder="0,00" required
+                      [attr.aria-invalid]="expenseInvalid('amount')">
+                  </label>
+                  @if (expenseForm.controls.parcelled.value && !installmentSummary.manual) {
+                    <p class="editor-hint automatic-installments"><em>As parcelas serão calculadas pela aplicação.</em></p>
+                  }
+                </div>
+                <button type="button" class="expense-category-filter expense-payment-filter payment-trigger"
+                  [class.payment-tag]="!!selectedPayment" [ngStyle]="selectedPayment ? paymentTagStyles(selectedPayment) : null"
+                  aria-label="Selecionar método de pagamento" aria-haspopup="dialog" popovertarget="editor-payment-menu"
+                  [attr.aria-invalid]="expenseInvalid('paymentId')">
+                  @if (selectedPayment; as payment) {
+                    <app-payment-label [payment]="payment" [label]="payment.name" />
+                  } @else { Método de pagamento }
+                </button>
+                <div #paymentMenu id="editor-payment-menu" class="tag-menu payment-menu" popover
+                  role="dialog" aria-label="Métodos de pagamento disponíveis">
+                  <div class="tag-options" role="group" aria-label="Selecionar método de pagamento">
+                    @for (method of visiblePaymentMethods(); track method.value) {
+                      <button type="button" class="expense-category-filter expense-payment-filter payment-tag"
+                        [ngStyle]="paymentTagStyles(method)" [attr.aria-pressed]="expenseForm.controls.paymentId.value === method.value"
+                        [attr.aria-label]="'Selecionar pagamento: ' + method.name"
+                        (click)="expenseForm.controls.paymentId.setValue(method.value); paymentMenu.hidePopover()">
+                        <app-payment-label [payment]="method" [label]="method.name" />
+                      </button>
+                    } @empty { <p role="status">Cadastre um cartão de crédito para parcelar a compra.</p> }
+                  </div>
+                </div>
+              </div>
+              <dl class="expense-details">
+                <div>
+                  <dt><label for="expense-description">Descrição</label></dt>
+                  <dd><textarea id="expense-description" formControlName="description" rows="2" placeholder="Descrição do gasto"></textarea></dd>
+                </div>
+              </dl>
+              <div class="additional-fields">
+                @if (selectedPayment?.type === 'CREDITO') {
+                  <div class="invoice-field">
+                    <span>{{ expenseForm.controls.parcelled.value ? 'Fatura da primeira parcela (opcional com data)' : 'Fatura (opcional com data)' }}</span>
+                    <app-date-selector pickerId="editor-invoice-menu" mode="month" [value]="expenseForm.controls.invoicePeriod.value"
+                      [invalid]="expenseInvalid('invoicePeriod')" [disabled]="saving()"
+                      (valueChange)="expenseForm.controls.invoicePeriod.setValue($event)" />
+                  </div>
+                }
+                @if (!editing()) {
+                  <label class="check-field"><input type="checkbox" formControlName="parcelled">Compra parcelada?</label>
+                }
+                @if (expenseForm.controls.parcelled.value) {
+                  <label>Quantidade de parcelas<input type="number" formControlName="quantity" min="1" max="1000" step="1" required
+                    [attr.aria-invalid]="expenseInvalid('quantity')"></label>
+                  @if (selectedPayment?.type !== 'CREDITO') { <p class="editor-hint">Parcelamento exige cartão de crédito.</p> }
+                  <section class="installment-values installment-schedule" aria-labelledby="editor-installments-title">
+                    <div class="installment-heading">
+                      <h3 id="editor-installments-title">Parcelas da compra</h3>
+                      @if (editing()) {
+                        <button type="button" class="expense-category-filter automatic-calculation"
+                          (click)="clearInstallmentAmounts()">Calcular automaticamente</button>
+                      }
+                    </div>
+                    @let invoices = installmentInvoices;
+                    <table class="installment-table" aria-label="Parcelas da compra">
+                      <colgroup><col class="installment-number-column"><col class="installment-amount-column"><col></colgroup>
+                      <tbody>
+                        @for (installment of installmentAmounts.controls; track installment; let index = $index) {
+                          <tr class="installment-value">
+                            <td aria-label="Número da parcela">{{ index + 1 }}/{{ installmentAmounts.length }}</td>
+                            <td>
+                              <input [formControl]="installment" [attr.aria-label]="'Valor da parcela ' + (index + 1)"
+                                inputmode="decimal" placeholder="Automático"
+                                [attr.aria-invalid]="installment.invalid && (submitted() || installment.dirty)">
+                            </td>
+                            <td class="installment-invoice" aria-label="Mês e ano da parcela">{{ invoices[index] }}</td>
+                          </tr>
+                        }
+                      </tbody>
+                    </table>
+                  </section>
+                  @if (installmentSummary; as summary) {
+                    @if (summary.manual && (summary.partial || !summary.matches)) {
+                      <div class="installment-warning" role="alert" aria-live="polite">
+                        @if (summary.sum !== null) {
+                          <p>Soma atual das parcelas: {{ formatCurrency(summary.sum / 100) }}.</p>
+                          @if (summary.difference !== null && !summary.matches) {
+                            <p>A soma difere do valor total em {{ formatCurrency(summary.difference / 100) }}.</p>
+                          }
+                        } @else { <p>Informe valores válidos com até duas casas decimais.</p> }
+                        @if (summary.partial) { <p>Preencha todas as parcelas ou deixe todas em branco para o cálculo automático.</p> }
+                      </div>
+                    }
+                  }
+                }
+              </div>
+            </fieldset>
             @if (currentExpense()?.installment) {
               <p class="editor-hint">As alterações serão aplicadas à compra inteira, incluindo todas as parcelas.</p>
             }
-            <fieldset [disabled]="saving()">
-              <label class="full-field">Nome<input formControlName="name" autocomplete="off" required></label>
-              <label>{{ expenseForm.controls.parcelled.value ? 'Valor total' : 'Valor' }} (R$)
-                <input formControlName="amount" inputmode="decimal" placeholder="0,00" required>
-              </label>
-              <label>Data<input type="date" formControlName="date"
-                [attr.aria-required]="expenseForm.controls.realized.value || expenseForm.controls.parcelled.value"></label>
-              <div class="full-field">
-                <h3>Método de pagamento</h3>
-                <app-payment-options [options]="visiblePaymentMethods()"
-                  [selectedId]="expenseForm.controls.paymentId.value" label="Selecionar método de pagamento"
-                  actionLabel="Selecionar pagamento: " [disabled]="saving()"
-                  (selected)="expenseForm.patchValue({ paymentId: $event.value })" />
-              </div>
-              <div class="full-field">
-                <label>Categoria<input formControlName="category" autocomplete="off" required></label>
-                @if (categoriesLoading()) {
-                  <p role="status">Carregando categorias...</p>
-                } @else if (categoriesFailed()) {
-                  <p role="alert">Não foi possível carregar as categorias.
-                    <button type="button" (click)="retryCategories.emit()">Tentar novamente</button>
-                  </p>
-                } @else if (categories().length) {
-                  <div class="horizontal-options category-options" role="group" aria-label="Categorias existentes" tabindex="0">
-                    @for (category of categories(); track category.value) {
-                      <button type="button" [attr.aria-pressed]="expenseForm.controls.category.value === category.value"
-                        (click)="expenseForm.patchValue({ category: category.value })">{{ category.name }}</button>
-                    }
-                  </div>
-                }
-              </div>
-              @if (selectedPayment?.type === 'CREDITO') {
-                <label>Fatura (opcional com data)<input type="month" formControlName="invoicePeriod"></label>
-              }
-              @if (!editing()) {
-                <label class="check-field"><input type="checkbox" formControlName="parcelled">Compra parcelada?</label>
-              }
-              @if (expenseForm.controls.parcelled.value) {
-                <label>Quantidade de parcelas<input type="number" formControlName="quantity" min="1" step="1" required></label>
-                @if (selectedPayment?.type !== 'CREDITO') {
-                  <p class="full-field editor-hint">Parcelamento exige cartão de crédito.</p>
-                }
-              } @else {
-                <label class="check-field"><input type="checkbox" formControlName="realized">Realizado</label>
-              }
-              <label class="full-field">Descrição<textarea formControlName="description" rows="3"></textarea></label>
-            </fieldset>
             @if (submitted() && expenseForm.invalid) {
-              <p role="alert">Preencha nome, valor, categoria e pagamento. Informe a data para gastos realizados ou parcelados; crédito sem data exige a fatura. Parcelamento exige cartão de crédito e quantidade inteira positiva.</p>
+              <p role="alert">Preencha nome, valor, categoria e pagamento. Informe a data para gastos realizados ou parcelados; crédito sem data exige a fatura. Parcelamento exige cartão de crédito, quantidade inteira de 1 a 1000 e valores individuais válidos.</p>
             }
             @if (saveFailed()) { <p role="alert">Não foi possível salvar o gasto. Seus dados foram mantidos. Verifique os campos e tente novamente.</p> }
             <p class="editor-notice" role="status">{{ notice() }}</p>
           </div>
-          <footer class="editor-footer">
-            <button type="submit" class="save-button" [disabled]="saving()">Salvar</button>
+          <footer class="expense-detail-actions editor-footer">
+            <button type="submit" class="save-button" aria-label="Salvar" title="Salvar" [disabled]="saving()">
+              <svg lucideCheck aria-hidden="true"></svg>
+            </button>
           </footer>
         </form>
       } @else {
         <form [formGroup]="paymentForm" (ngSubmit)="submit()" novalidate>
-          <div class="editor-scroll">
-            <fieldset [disabled]="saving()">
-              <label class="full-field">Nome<input formControlName="name" autocomplete="off" required></label>
+          <div class="expense-dialog-content editor-scroll">
+            <fieldset class="payment-fields" [disabled]="saving()">
+              <label class="full-field">Nome<textarea formControlName="name" rows="1" autocomplete="off" required
+                [attr.aria-invalid]="paymentInvalid('name')"></textarea></label>
               <label>Instituição<select formControlName="institution"><option value="NUBANK">Nubank</option><option value="CAIXA">Caixa</option></select></label>
               <label>Tipo<select formControlName="type">
                 @for (type of paymentTypes; track type) { <option [value]="type">{{ paymentLabels[type] }}</option> }
               </select></label>
               @if (paymentForm.controls.type.value === 'CREDITO') {
-                <label>Dia do fechamento (1–31)<input type="number" formControlName="closingDay" step="1" aria-required="true"></label>
-                <label>Dia do vencimento (1–31)<input type="number" formControlName="dueDay" step="1" aria-required="true"></label>
+                <label>Dia do fechamento (1–31)<input type="number" formControlName="closingDay" step="1" aria-required="true"
+                  [attr.aria-invalid]="paymentInvalid('closingDay')"></label>
+                <label>Dia do vencimento (1–31)<input type="number" formControlName="dueDay" step="1" aria-required="true"
+                  [attr.aria-invalid]="paymentInvalid('dueDay')"></label>
               }
             </fieldset>
             @if (submitted() && paymentForm.invalid) { <p role="alert">Informe o nome e, para crédito, os dias de fechamento e vencimento entre 1 e 31.</p> }
             @if (saveFailed()) { <p role="alert">Não foi possível salvar o método de pagamento. Seus dados foram mantidos. Tente novamente.</p> }
           </div>
-          <footer class="editor-footer">
-            <button type="submit" class="save-button" [disabled]="saving()">Salvar</button>
+          <footer class="expense-detail-actions editor-footer">
+            <button type="submit" class="save-button" aria-label="Salvar" title="Salvar" [disabled]="saving()">
+              <svg lucideCheck aria-hidden="true"></svg>
+            </button>
           </footer>
         </form>
       }
     </section>
   </div>
+  <ng-template #closeButton>
+    @if (editing()) {
+      <button type="button" class="expense-dialog-close" aria-label="Fechar edição"
+        [disabled]="saving()" (click)="close()" autofocus>
+        <span class="highlight-reveal expense-dialog-close-highlight" aria-hidden="true"></span>
+        <svg lucideX aria-hidden="true"></svg>
+      </button>
+    }
+  </ng-template>
 </dialog>

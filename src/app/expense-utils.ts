@@ -5,6 +5,10 @@ export const MONTHS = [
 
 export const formatCurrency = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format;
 
+export function formatInvoiceMonth(year: number, month: number): string {
+  return `${MONTHS[month].slice(0, 3)}/${year}`;
+}
+
 export function formatExpenseDate(day: number, year: number, month: number, monthOffset = 0): string {
   const monthIndex = month + monthOffset;
   return `${String(day).padStart(2, '0')}/${String(monthIndex % 12 + 1).padStart(2, '0')}/${year + Math.floor(monthIndex / 12)}`;

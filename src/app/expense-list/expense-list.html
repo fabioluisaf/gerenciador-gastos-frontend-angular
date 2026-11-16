@@ -58,7 +58,7 @@
             <td>
               <span class="expense-cell-value">{{ expense.description || '—' }}</span>
               <div class="expense-row-tools" role="group" [attr.aria-label]="'Ações de ' + expense.name">
-                <button type="button" class="expense-icon-button" [attr.aria-label]="'Editar gasto: ' + expense.name"
+                <button type="button" class="expense-icon-button expense-edit-button" [attr.aria-label]="'Editar gasto: ' + expense.name"
                   title="Editar" (click)="editExpense(expense)">
                   <svg lucidePencil aria-hidden="true"></svg>
                 </button>
@@ -144,18 +144,7 @@
           [ngStyle]="paymentTagStyles(expense)"
           [attr.aria-label]="'Filtrar por pagamento: ' + expense.paymentName"
           (click)="filterPaymentMethod(expense)">
-          @if (institutionIcon(expense); as icon) {
-            <img class="payment-icon" [src]="icon" alt="" aria-hidden="true">
-          }
-          @switch (paymentMethodIcon(expense.paymentMethod)) {
-            @case ('barcode') { <svg class="payment-icon" lucideBarcode aria-hidden="true"></svg> }
-            @case ('qr-code') { <svg class="payment-icon" lucideQrCode aria-hidden="true"></svg> }
-            @case ('credit-card') { <svg class="payment-icon" lucideCreditCard aria-hidden="true"></svg> }
-            @case ('wallet') { <svg class="payment-icon" lucideWallet aria-hidden="true"></svg> }
-            @case ('arrow-left-right') { <svg class="payment-icon" lucideArrowLeftRight aria-hidden="true"></svg> }
-            @case ('landmark') { <svg class="payment-icon" lucideLandmark aria-hidden="true"></svg> }
-          }
-          <span>{{ expense.paymentName }}</span>
+          <app-payment-label [payment]="expense" [label]="expense.paymentName" />
         </button>
       </div>
       <dl class="expense-details">
@@ -208,7 +197,7 @@
       }
     </div>
     <footer class="expense-detail-actions">
-      <button type="button" class="expense-icon-button" [attr.aria-label]="'Editar gasto: ' + expense.name"
+      <button type="button" class="expense-icon-button expense-edit-button" [attr.aria-label]="'Editar gasto: ' + expense.name"
         title="Editar" [disabled]="detailLoading() || detailFailed()" (click)="editExpense(expense)">
         <svg lucidePencil aria-hidden="true"></svg>
       </button>

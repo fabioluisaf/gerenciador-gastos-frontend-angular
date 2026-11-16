@@ -51,7 +51,7 @@ describe('App', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     compiled.querySelector<HTMLButtonElement>('.year-selector')!.click();
     await fixture.whenStable();
-    const button = Array.from(compiled.querySelectorAll<HTMLButtonElement>('.year-choice'))
+    const button = Array.from(compiled.querySelectorAll<HTMLButtonElement>('app-period-selector .year-choice'))
       .find((choice) => choice.textContent?.trim() === String(year))!;
     button.click();
     await fixture.whenStable();
@@ -244,7 +244,7 @@ describe('App', () => {
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.querySelector('.year-selector')?.textContent?.trim()).toBe(String(expectedYear));
-    const selected = compiled.querySelector<HTMLButtonElement>('.month-button[aria-pressed="true"]')!;
+    const selected = compiled.querySelector<HTMLButtonElement>('app-period-selector .month-button[aria-pressed="true"]')!;
     expect(selected.getAttribute('aria-label')).toBe(`${expectedMonth} de ${expectedYear}`);
     expect(selected.disabled).toBe(expenseCount === 0);
     expect(compiled.querySelectorAll('.expense-row-action')).toHaveLength(expenseCount);
@@ -312,7 +312,7 @@ describe('App', () => {
     expect(pixIcons.querySelector('img')?.getAttribute('src')).toBe('/caixa.png');
     expect(pixIcons.querySelector('svg[lucideQrCode]')).not.toBeNull();
 
-    compiled.querySelectorAll<HTMLButtonElement>('.month-button')[1].click();
+    compiled.querySelectorAll<HTMLButtonElement>('app-period-selector .month-button')[1].click();
     await chooseYear(fixture, 2027);
     expect(cells()[0]).toBe(`21/12/${now.getFullYear()}`);
     expect(expensePeriod.textContent?.trim()).toBe(`Gastos de janeiro de ${now.getFullYear() + 1}`);
@@ -474,9 +474,9 @@ describe('App', () => {
     expect(totalsRequest).toHaveBeenCalledTimes(2);
     expect(compiled.querySelector('[aria-labelledby="totais-metodo"]')?.textContent?.replace(/\s+/g, ' '))
       .toContain('Planejado: R$ 128,40');
-    compiled.querySelectorAll<HTMLButtonElement>('.month-button')[1].click();
+    compiled.querySelectorAll<HTMLButtonElement>('app-period-selector .month-button')[1].click();
     await fixture.whenStable();
-    compiled.querySelectorAll<HTMLButtonElement>('.month-button')[0].click();
+    compiled.querySelectorAll<HTMLButtonElement>('app-period-selector .month-button')[0].click();
     await fixture.whenStable();
     expect(compiled.querySelectorAll('.expense-row-action')).toHaveLength(original.items.length - 1);
     expect(mockExpenseList(query)).toEqual(original);
@@ -557,7 +557,7 @@ describe('App', () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
-    const months = compiled.querySelectorAll<HTMLButtonElement>('.month-button');
+    const months = compiled.querySelectorAll<HTMLButtonElement>('app-period-selector .month-button');
     mockYearDialog(compiled);
     const expectExpenses = (count: number) => {
       expect(compiled.querySelectorAll('tbody tr')).toHaveLength(count);
@@ -597,17 +597,17 @@ describe('App', () => {
       compiled.querySelector<HTMLButtonElement>('[aria-label="Página anterior"]')!.click();
       await fixture.whenStable();
     }
-    Array.from(compiled.querySelectorAll<HTMLButtonElement>('.year-choice'))
+    Array.from(compiled.querySelectorAll<HTMLButtonElement>('app-period-selector .year-choice'))
       .find((button) => button.textContent?.trim() === '2026')!.click();
     await fixture.whenStable();
     compiled.querySelector<HTMLButtonElement>('.year-selector')!.click();
     await fixture.whenStable();
     compiled.querySelector<HTMLButtonElement>('[aria-label="Próxima página"]')!.click();
     await fixture.whenStable();
-    compiled.querySelector<HTMLButtonElement>('.year-choice')!.click();
+    compiled.querySelector<HTMLButtonElement>('app-period-selector .year-choice')!.click();
     await fixture.whenStable();
 
-    const months = compiled.querySelectorAll<HTMLButtonElement>('.month-button');
+    const months = compiled.querySelectorAll<HTMLButtonElement>('app-period-selector .month-button');
     expect(months[0].disabled).toBe(true);
     expect(months[8].disabled).toBe(false);
     expect(months[8].getAttribute('aria-pressed')).toBe('true');
@@ -711,7 +711,7 @@ describe('App', () => {
     dialog.close();
     await fixture.whenStable();
 
-    compiled.querySelectorAll<HTMLButtonElement>('.month-button')[10].click();
+    compiled.querySelectorAll<HTMLButtonElement>('app-period-selector .month-button')[10].click();
     await fixture.whenStable();
     expect(compiled.querySelector('tbody tr td:nth-child(3)')?.textContent?.trim().replace(/\s+/g, ' '))
       .toBe(`${installmentExpenseName} 7/12`);
@@ -945,7 +945,7 @@ describe('App', () => {
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     mockYearDialog(compiled);
-    const months = compiled.querySelectorAll<HTMLButtonElement>('.month-button');
+    const months = compiled.querySelectorAll<HTMLButtonElement>('app-period-selector .month-button');
     expect(months).toHaveLength(12);
     expect(compiled.querySelector('aside .period-selector')?.contains(months[0])).toBe(true);
     expect(months[0].getAttribute('aria-pressed')).toBe('true');
@@ -954,7 +954,7 @@ describe('App', () => {
     months[1].click();
     await fixture.whenStable();
     expect(months[1].getAttribute('aria-pressed')).toBe('true');
-    expect(compiled.querySelectorAll('.month-button[aria-pressed="true"]')).toHaveLength(1);
+    expect(compiled.querySelectorAll('app-period-selector .month-button[aria-pressed="true"]')).toHaveLength(1);
     await chooseYear(fixture, 2027);
     expect(compiled.querySelector('.year-selector')?.textContent?.trim()).toBe('2027');
     expect(months[1].getAttribute('aria-label')).toBe('Fevereiro de 2027');
@@ -1026,7 +1026,7 @@ describe('App', () => {
     expect(summary('totais-categoria').querySelectorAll('dt')).toHaveLength(4);
     expect([summary('totais-metodo').textContent, summary('totais-categoria').textContent]).toEqual(initialTotals);
 
-    compiled.querySelectorAll<HTMLButtonElement>('.month-button')[1].click();
+    compiled.querySelectorAll<HTMLButtonElement>('app-period-selector .month-button')[1].click();
     await fixture.whenStable();
     expect(rows()).toHaveLength(3);
     expect(compiled.querySelector('#totals-dialog-title')?.textContent?.trim()).toBe('Totais de fevereiro de 2026');
@@ -1051,7 +1051,7 @@ describe('App', () => {
     });
     expect(totalsRequest).toHaveBeenCalledTimes(2);
     expect([summary('totais-metodo').textContent, summary('totais-categoria').textContent]).toEqual(februaryTotals);
-    expect(Array.from(compiled.querySelectorAll<HTMLButtonElement>('.month-button')).every((button) => !button.disabled)).toBe(true);
+    expect(Array.from(compiled.querySelectorAll<HTMLButtonElement>('app-period-selector .month-button')).every((button) => !button.disabled)).toBe(true);
 
     const remove = compiled.querySelector<HTMLButtonElement>('[aria-label="Remover filtro de categoria: Saúde"]')!;
     expect(remove.querySelector('svg[lucideX]')).not.toBeNull();
@@ -1149,7 +1149,7 @@ describe('App', () => {
     expect(compiled.querySelectorAll('.expense-row-action')).toHaveLength(40);
     expect(totalsRequest).toHaveBeenCalledTimes(1);
 
-    compiled.querySelectorAll<HTMLButtonElement>('.month-button')[1].click();
+    compiled.querySelectorAll<HTMLButtonElement>('app-period-selector .month-button')[1].click();
     await fixture.whenStable();
     expect(listRequest).toHaveBeenLastCalledWith({ year: 2026, month: 1, filter: null, page: 1, pageSize: 10 });
     expect(compiled.querySelector('.empty-state')).not.toBeNull();
@@ -1450,14 +1450,14 @@ describe('App', () => {
     metadata.complete();
     await fixture.whenStable();
     expect(compiled.querySelector('.year-selector')?.textContent?.trim()).toBe('2035');
-    expect(compiled.querySelector('.month-button[aria-pressed="true"]')?.getAttribute('aria-label')).toBe('Maio de 2035');
+    expect(compiled.querySelector('app-period-selector .month-button[aria-pressed="true"]')?.getAttribute('aria-label')).toBe('Maio de 2035');
     expect(compiled.querySelector<HTMLElement>('.month-list')!.scrollTop).toBe(12);
-    expect(Array.from(compiled.querySelectorAll<HTMLButtonElement>('.month-button'), (button) => button.disabled))
+    expect(Array.from(compiled.querySelectorAll<HTMLButtonElement>('app-period-selector .month-button'), (button) => button.disabled))
       .toEqual([true, true, true, true, false, true, true, true, true, false, true, true]);
     mockYearDialog(compiled);
     await chooseYear(fixture, 2035);
     expect(listRequest).toHaveBeenLastCalledWith({ year: 2035, month: 9, filter: null, page: 1, pageSize: 10 });
-    expect(compiled.querySelector('.month-button[aria-pressed="true"]')?.getAttribute('aria-label')).toBe('Outubro de 2035');
+    expect(compiled.querySelector('app-period-selector .month-button[aria-pressed="true"]')?.getAttribute('aria-label')).toBe('Outubro de 2035');
   });
 
   it('should display and retry metadata, list and totals errors without treating them as empty results', async () => {
@@ -1537,7 +1537,7 @@ describe('App', () => {
     const compiled = fixture.nativeElement as HTMLElement;
     mockYearDialog(compiled);
     const list = compiled.querySelector<HTMLElement>('.month-list')!;
-    const january = compiled.querySelector<HTMLElement>('.month-button')!;
+    const january = compiled.querySelector<HTMLElement>('app-period-selector .month-button')!;
     list.style.scrollPaddingTop = '24px';
     list.style.scrollPaddingBottom = '24px';
     list.scrollTop = 100;
@@ -1556,7 +1556,7 @@ describe('App', () => {
     await fixture.whenStable();
     const compiled = fixture.nativeElement as HTMLElement;
     mockYearDialog(compiled);
-    const months = compiled.querySelectorAll<HTMLButtonElement>('.month-button');
+    const months = compiled.querySelectorAll<HTMLButtonElement>('app-period-selector .month-button');
     const list = compiled.querySelector<HTMLElement>('.month-list')!;
     list.style.scrollPaddingTop = '24px';
     list.style.scrollPaddingBottom = '24px';
@@ -1621,7 +1621,7 @@ describe('App', () => {
     const open = compiled.querySelector<HTMLButtonElement>('.year-selector')!;
     const previous = compiled.querySelector<HTMLButtonElement>('[aria-label="Página anterior"]')!;
     const next = compiled.querySelector<HTMLButtonElement>('[aria-label="Próxima página"]')!;
-    const years = () => Array.from(compiled.querySelectorAll<HTMLButtonElement>('.year-choice'));
+    const years = () => Array.from(compiled.querySelectorAll<HTMLButtonElement>('app-period-selector .year-choice'));
     open.click();
     await fixture.whenStable();
     expect(dialog.open).toBe(true);
@@ -1813,7 +1813,7 @@ describe('App', () => {
     mockYearDialog(compiled);
     compiled.querySelector<HTMLButtonElement>('.year-selector')!.click();
     await fixture.whenStable();
-    const year = Array.from(compiled.querySelectorAll<HTMLButtonElement>('.year-choice'))
+    const year = Array.from(compiled.querySelectorAll<HTMLButtonElement>('app-period-selector .year-choice'))
       .find((button) => button.textContent?.trim() === '2005');
     expect(year?.disabled).toBe(false);
     expect(year?.getAttribute('aria-pressed')).toBe('true');
@@ -1849,12 +1849,12 @@ describe('App', () => {
     mockYearDialog(compiled);
     compiled.querySelector<HTMLButtonElement>('.year-selector')!.click();
     await fixture.whenStable();
-    const years = compiled.querySelectorAll<HTMLButtonElement>('.year-choice');
+    const years = compiled.querySelectorAll<HTMLButtonElement>('app-period-selector .year-choice');
     expect(years[0].textContent?.trim()).toBe('2020');
     expect(years[5].textContent?.trim()).toBe('2025');
     expect(years[5].disabled).toBe(true);
     expect(years[5].getAttribute('aria-pressed')).toBe('true');
-    expect(Array.from(compiled.querySelectorAll<HTMLButtonElement>('.month-button')).every((month) => month.disabled))
+    expect(Array.from(compiled.querySelectorAll<HTMLButtonElement>('app-period-selector .month-button')).every((month) => month.disabled))
       .toBe(true);
   });
 });

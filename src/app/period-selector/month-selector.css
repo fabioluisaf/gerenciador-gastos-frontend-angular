@@ -122,7 +122,10 @@
 }
 
 .month-hover-highlight {
-  --month-highlight-color: var(--color-hover);
+  background-color: transparent;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px var(--color-primary);
+  z-index: 1;
 }
 
 .month-selected-highlight {
@@ -151,8 +154,8 @@
   position: relative;
 }
 
-.month-highlight::before,
-.month-highlight::after {
+.month-selected-highlight::before,
+.month-selected-highlight::after {
   content: '';
   height: 0.75rem;
   pointer-events: none;
@@ -160,13 +163,13 @@
   width: 0.75rem;
 }
 
-.month-highlight::before {
+.month-selected-highlight::before {
   background: radial-gradient(circle at top left, transparent 0.75rem, var(--month-highlight-color) 0.75rem);
   bottom: 100%;
   right: 0;
 }
 
-.month-highlight::after {
+.month-selected-highlight::after {
   background: radial-gradient(circle at bottom left, transparent 0.75rem, var(--month-highlight-color) 0.75rem);
   right: 0;
   top: 100%;

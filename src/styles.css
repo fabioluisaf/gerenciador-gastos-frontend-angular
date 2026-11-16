@@ -113,7 +113,7 @@ body {
   color: var(--color-text);
   margin: 0;
   font-family: Inter, system-ui, sans-serif;
-  font-size: 0.8125rem;
+  font-size: 1rem;
 }
 
 a {

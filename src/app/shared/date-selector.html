@@ -1,0 +1,56 @@
+<div class="date-selector" (keydown.escape)="escape(popup, $event)">
+  <button type="button" class="date-trigger" [disabled]="disabled()" [attr.aria-invalid]="invalid()"
+    [attr.aria-label]="mode() === 'date' ? 'Abrir calendário da data' : 'Selecionar mês da fatura'"
+    [attr.popovertarget]="pickerId()" aria-haspopup="dialog" (click)="prepare()">
+    @if (mode() === 'month') { <span>{{ monthLabel() }}</span> }
+    <svg lucideCalendarDays aria-hidden="true"></svg>
+  </button>
+  <div #popup [id]="pickerId()" class="date-menu" popover role="dialog"
+    [attr.aria-label]="mode() === 'date' ? 'Calendário da data' : 'Mês da fatura'">
+    <div class="year-dialog-header">
+      <button type="button" class="year-page-button" aria-label="Período anterior"
+        [disabled]="!canNavigate(-1)" (click)="navigate(-1)">
+        <svg lucideChevronLeft aria-hidden="true"></svg>
+      </button>
+      <button type="button" class="period-heading" aria-label="Escolher mês e ano"
+        (click)="changeView()">
+        @if (view() === 'years') { {{ yearStart() }}–{{ years()[8] > 9999 ? 9999 : years()[8] }} }
+        @else if (view() === 'months') { {{ year() }} }
+        @else { {{ months[month()] }} de {{ year() }} }
+      </button>
+      <button type="button" class="year-page-button" aria-label="Próximo período"
+        [disabled]="!canNavigate(1)" (click)="navigate(1)">
+        <svg lucideChevronRight aria-hidden="true"></svg>
+      </button>
+    </div>
+    @if (view() === 'years') {
+      <div class="year-grid" aria-label="Anos">
+        @for (item of years(); track item) {
+          <button type="button" class="year-choice" [disabled]="item > 9999"
+            [attr.aria-pressed]="year() === item" (click)="chooseYear(item)">{{ item }}</button>
+        }
+      </div>
+    } @else if (view() === 'months') {
+      <div class="year-grid" aria-label="Meses">
+        @for (item of months; track item; let index = $index) {
+          <button type="button" class="year-choice" [attr.aria-label]="item + ' de ' + year()"
+            [attr.aria-pressed]="value().slice(0, 7) === period(index)"
+            (click)="chooseMonth(index, popup)">{{ item.slice(0, 3) }}</button>
+        }
+      </div>
+    } @else {
+      <div class="day-grid" aria-label="Dias do mês">
+        @for (weekday of weekdays; track weekday) { <span class="weekday">{{ weekday }}</span> }
+        @for (day of days(); track $index) {
+          @if (day !== null) {
+            <button type="button" class="year-choice" [attr.aria-label]="'Selecionar data: ' + dateLabel(day)"
+              [attr.aria-pressed]="value() === date(day)" (click)="choose(date(day), popup)">{{ day }}</button>
+          } @else { <span aria-hidden="true"></span> }
+        }
+      </div>
+    }
+    @if (mode() === 'month') {
+      <button type="button" class="clear-period" (click)="choose('', popup)">Limpar fatura</button>
+    }
+  </div>
+</div>

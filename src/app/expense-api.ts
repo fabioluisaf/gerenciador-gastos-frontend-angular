@@ -182,15 +182,16 @@ export class ExpenseApi {
   }
 
   saveExpense(draft: ExpenseDraft, existing?: Expense): Observable<void> {
-    const { parcelado, quantidadeParcelas, valor, ...body } = draft;
+    const { parcelado, quantidadeParcelas, valor, valoresParcelas, ...body } = draft;
     const data = body.data ? body.data.split('-').reverse().join('/') : null;
     const purchase = parcelado || !!existing?.installment;
     const { realizado, ...purchaseBody } = body;
-    const preservedAmounts = existing?.purchase && existing.purchase.quantity === quantidadeParcelas &&
-      existing.purchase.amountInCents === Math.round(valor * 100)
-      ? existing.purchase.installments.map((item) => item.amountInCents / 100) : undefined;
     const payload = purchase
-      ? { ...purchaseBody, data, valorTotal: valor, quantidadeParcelas, ...(preservedAmounts ? { valoresParcelas: preservedAmounts } : {}) }
+      ? {
+        ...purchaseBody, data, valorTotal: valor, quantidadeParcelas,
+        ...(valoresParcelas ? { valoresParcelas } : {}),
+        ...(existing ? { realizado } : {}),
+      }
       : { ...body, data, valor };
     const url = purchase ? '/api/compras-parceladas' : '/api/gastos';
     const id = purchase ? existing?.purchaseId : existing?.id;

@@ -18,12 +18,13 @@ import {
   LucideWallet,
   LucideX,
 } from '@lucide/angular';
-import { formatCurrency, formatExpenseDate, invoiceIsPastDue, MONTHS } from '../expense-utils';
+import { formatCurrency, formatExpenseDate, formatInvoiceMonth, invoiceIsPastDue, MONTHS } from '../expense-utils';
 import { Expense, ExpensePeriod, SelectedExpenseFilter } from '../expense-models';
 import { ExpenseApi } from '../expense-api';
 import { Card } from '../shared/card';
 import { institutionIcon, paymentMethodIcon, paymentTagStyles } from '../shared/payment-appearance';
 import { BackdropClick } from '../shared/backdrop-click';
+import { PaymentLabel } from '../shared/payment-label';
 
 @Component({
   selector: 'app-expense-list',
@@ -31,6 +32,7 @@ import { BackdropClick } from '../shared/backdrop-click';
   imports: [
     Card,
     BackdropClick,
+    PaymentLabel,
     NgStyle,
     RouterOutlet,
     LucideArrowLeftRight,
@@ -48,7 +50,7 @@ import { BackdropClick } from '../shared/backdrop-click';
     LucideX,
   ],
   templateUrl: './expense-list.html',
-  styleUrl: './expense-list.css',
+  styleUrls: ['../shared/expense-dialog.css', './expense-list.css'],
 })
 export class ExpenseList {
   readonly expenses = input.required<readonly Expense[]>();
@@ -118,9 +120,7 @@ export class ExpenseList {
     return day == null ? 'Sem data' : formatExpenseDate(day, expense.year, expense.month, monthOffset);
   }
 
-  protected formatInvoiceMonth(year: number, month: number): string {
-    return `${MONTHS[month].slice(0, 3)}/${year}`;
-  }
+  protected readonly formatInvoiceMonth = formatInvoiceMonth;
 
   protected invoiceIsPastDue(expense: Expense, year: number, month: number, closingDate?: string): boolean {
     return invoiceIsPastDue(year, month, closingDate ? Number(closingDate.slice(8, 10)) : expense.invoiceClosingDay);
