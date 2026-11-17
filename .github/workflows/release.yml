@@ -1,19 +1,14 @@
-# Release: publica em produção a imagem gerada pela Pipeline na mesma branch.
-# Execução manual: Actions > Release > Run workflow > escolher a branch e informar a versão.
+# Release: publica em produção a imagem gerada pela Pipeline na tag escolhida.
+# Execução manual: Actions > Release > Run workflow > Use workflow from > Tags > escolher a tag.
 #
-# Cria a tag X.Y.Z na imagem, atualiza o repositório gerenciador-gastos-deploy
-# e cria a tag git vX.Y.Z com a GitHub Release.
-# O deploy em si é feito pelo Argo CD, que observa o repositório de deploy.
+# Atualiza o repositório gerenciador-gastos-deploy (o Argo CD faz o deploy)
+# e cria a GitHub Release da tag, se ainda não existir.
+# Rodar em uma tag antiga faz rollback de produção para aquela versão.
 # Requer o secret DEPLOY_TOKEN (token com permissão de escrita no repositório de deploy).
 name: Release
 
 on:
   workflow_dispatch:
-    inputs:
-      versao:
-        description: Versão no formato X.Y.Z (ex. 1.1.0)
-        type: string
-        required: true
 
 concurrency:
   group: release
@@ -21,31 +16,29 @@ concurrency:
 
 permissions:
   contents: write
-  packages: write
+  packages: read
 
 env:
   IMAGEM: ghcr.io/${{ github.repository_owner }}/gerenciador-gastos-web
   REPO_DEPLOY: ${{ github.repository_owner }}/gerenciador-gastos-deploy
-  VERSAO: ${{ inputs.versao }}
+  VERSAO: ${{ github.ref_name }}
 
 jobs:
   release:
-    name: Release ${{ inputs.versao }}
+    name: Release ${{ github.ref_name }}
     runs-on: ubuntu-latest
     environment: prod
     steps:
-      - name: Validar versão
-        id: versao
+      - name: Validar tag
         run: |
+          if [ "$GITHUB_REF_TYPE" != "tag" ]; then
+            echo "::error::Rode a Release a partir de uma tag (Use workflow from > Tags), não da branch $GITHUB_REF_NAME."
+            exit 1
+          fi
           if ! printf '%s' "$VERSAO" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-            echo "::error::Informe a versão no formato X.Y.Z (ex.: 1.1.0)."
+            echo "::error::A tag $VERSAO não está no formato X.Y.Z (ex.: 1.1.1)."
             exit 1
           fi
-          if git ls-remote --exit-code --tags "https://github.com/$GITHUB_REPOSITORY.git" "refs/tags/v$VERSAO" > /dev/null; then
-            echo "::error::A tag v$VERSAO já existe. Informe uma nova versão."
-            exit 1
-          fi
-          echo "origem=sha-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
 
       - uses: docker/setup-buildx-action@v3
 
@@ -55,15 +48,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Criar tag da versão na imagem
-        env:
-          ORIGEM: ${{ steps.versao.outputs.origem }}
+      - name: Conferir imagem da Pipeline
         run: |
-          if ! docker buildx imagetools inspect "$IMAGEM:$ORIGEM" > /dev/null; then
-            echo "::error::Imagem $IMAGEM:$ORIGEM não encontrada. Rode a Pipeline na branch $GITHUB_REF_NAME antes."
+          if ! docker buildx imagetools inspect "$IMAGEM:$VERSAO" > /dev/null; then
+            echo "::error::Imagem $IMAGEM:$VERSAO não encontrada. Rode a Pipeline na tag $VERSAO antes."
             exit 1
           fi
-          docker buildx imagetools create -t "$IMAGEM:$VERSAO" "$IMAGEM:$ORIGEM"
 
       - uses: actions/checkout@v5
         with:
@@ -83,7 +73,7 @@ jobs:
             echo "Produção já está com $IMAGEM:$VERSAO."
             exit 0
           fi
-          git commit -m "release(web): $VERSAO" -m "Origem: $GITHUB_REPOSITORY@$GITHUB_SHA ($GITHUB_REF_NAME)"
+          git commit -m "release(web): $VERSAO" -m "Origem: $GITHUB_REPOSITORY@$GITHUB_SHA"
 
           for tentativa in 1 2 3 4 5; do
             git push && exit 0
@@ -96,17 +86,20 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "v$VERSAO" \
-            --repo "$GITHUB_REPOSITORY" \
-            --target "$GITHUB_SHA" \
-            --title "v$VERSAO" \
-            --generate-notes
+          if gh release view "$VERSAO" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            echo "A GitHub Release $VERSAO já existe (redeploy/rollback)."
+          else
+            gh release create "$VERSAO" \
+              --repo "$GITHUB_REPOSITORY" \
+              --verify-tag \
+              --title "$VERSAO" \
+              --generate-notes
+          fi
 
       - name: Resumo
         run: |
           {
             echo "### Release $VERSAO"
             echo "- Imagem: \`$IMAGEM:$VERSAO\`"
-            echo "- Branch: \`$GITHUB_REF_NAME\` (\`${GITHUB_SHA::7}\`)"
             echo "- O Argo CD aplica a mudança em até 3 minutos (ou clique em *Refresh* na aplicação gerenciador-gastos-prod)."
           } >> "$GITHUB_STEP_SUMMARY"
