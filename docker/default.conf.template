@@ -1,0 +1,39 @@
+server {
+    listen 80;
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # Encaminha /api para o backend removendo o prefixo (mesmo comportamento do proxy.conf.cjs)
+    location /api/ {
+        proxy_pass ${BACKEND_URL}/;
+        proxy_set_header Host $http_host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $http_host;
+        # Permite ao backend gerar links com o prefixo (ex.: Swagger em /api/swagger)
+        proxy_set_header X-Forwarded-Prefix /api;
+    }
+
+    # Backend fora do ar: responde 503 em JSON para ativar a tela de servidor offline
+    error_page 502 504 = @backend_indisponivel;
+    location @backend_indisponivel {
+        default_type application/json;
+        return 503 '{"message":"Backend indisponivel."}';
+    }
+
+    # Arquivos com hash no nome podem ficar em cache por muito tempo
+    location ~* \.(?:js|css|woff2?|ttf|svg|png|jpg|jpeg|gif|ico|webp)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        try_files $uri =404;
+    }
+
+    # SPA: rotas desconhecidas caem no index.html, que nunca vai para o cache
+    location / {
+        add_header Cache-Control "no-cache";
+        try_files $uri $uri/ /index.html;
+    }
+}

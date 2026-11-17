@@ -1,0 +1,137 @@
+# Release: publica no ambiente escolhido a imagem gerada pela Pipeline na mesma branch.
+# Execução manual: Actions > Release > Run workflow > escolher a branch e o ambiente.
+#
+# - des:  usa a imagem sha-<commit>.
+# - prod: exige a versão (X.Y.Z), cria a tag da imagem, a tag git vX.Y.Z e a GitHub Release.
+#
+# O deploy em si é feito pelo Argo CD, que observa o repositório gerenciador-gastos-deploy.
+# Requer o secret DEPLOY_TOKEN (token com permissão de escrita no repositório de deploy).
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      ambiente:
+        description: Ambiente de destino
+        type: choice
+        options: [des, prod]
+        required: true
+      versao:
+        description: Versão no formato X.Y.Z (obrigatória para prod)
+        type: string
+        required: false
+
+concurrency:
+  group: release-${{ inputs.ambiente }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  packages: write
+
+env:
+  IMAGEM: ghcr.io/${{ github.repository_owner }}/gerenciador-gastos-web
+  REPO_DEPLOY: ${{ github.repository_owner }}/gerenciador-gastos-deploy
+  AMBIENTE: ${{ inputs.ambiente }}
+  VERSAO: ${{ inputs.versao }}
+
+jobs:
+  release:
+    name: Release em ${{ inputs.ambiente }}
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.ambiente }}
+    steps:
+      - name: Definir versão
+        id: versao
+        run: |
+          sha_curto="${GITHUB_SHA::7}"
+          echo "origem=sha-$sha_curto" >> "$GITHUB_OUTPUT"
+
+          if [ "$AMBIENTE" = "prod" ]; then
+            if ! printf '%s' "$VERSAO" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+              echo "::error::Para prod, informe a versão no formato X.Y.Z (ex.: 1.4.9)."
+              exit 1
+            fi
+            if git ls-remote --exit-code --tags "https://github.com/$GITHUB_REPOSITORY.git" "refs/tags/v$VERSAO" > /dev/null; then
+              echo "::error::A tag v$VERSAO já existe. Informe uma nova versão."
+              exit 1
+            fi
+            echo "tag=$VERSAO" >> "$GITHUB_OUTPUT"
+          else
+            echo "tag=sha-$sha_curto" >> "$GITHUB_OUTPUT"
+          fi
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Conferir imagem da Pipeline
+        env:
+          ORIGEM: ${{ steps.versao.outputs.origem }}
+        run: |
+          if ! docker buildx imagetools inspect "$IMAGEM:$ORIGEM" > /dev/null; then
+            echo "::error::Imagem $IMAGEM:$ORIGEM não encontrada. Rode a Pipeline na branch $GITHUB_REF_NAME antes."
+            exit 1
+          fi
+
+      - name: Criar tag da versão na imagem
+        if: inputs.ambiente == 'prod'
+        env:
+          ORIGEM: ${{ steps.versao.outputs.origem }}
+          TAG: ${{ steps.versao.outputs.tag }}
+        run: docker buildx imagetools create -t "$IMAGEM:$TAG" "$IMAGEM:$ORIGEM"
+
+      - uses: actions/checkout@v5
+        with:
+          repository: ${{ env.REPO_DEPLOY }}
+          token: ${{ secrets.DEPLOY_TOKEN }}
+          path: deploy
+
+      - name: Atualizar repositório de deploy
+        working-directory: deploy/overlays/${{ inputs.ambiente }}
+        env:
+          TAG: ${{ steps.versao.outputs.tag }}
+        run: |
+          yq -i '(.images[] | select(.name == strenv(IMAGEM))).newTag = strenv(TAG)' kustomization.yaml
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Ambiente $AMBIENTE já está com $IMAGEM:$TAG."
+            exit 0
+          fi
+          git commit -m "release(web): $AMBIENTE -> $TAG" -m "Origem: $GITHUB_REPOSITORY@$GITHUB_SHA ($GITHUB_REF_NAME)"
+
+          for tentativa in 1 2 3 4 5; do
+            git push && exit 0
+            echo "Push rejeitado (tentativa $tentativa), sincronizando..."
+            git pull --rebase
+          done
+          exit 1
+
+      - name: Criar GitHub Release
+        if: inputs.ambiente == 'prod'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "v$VERSAO" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "v$VERSAO" \
+            --generate-notes
+
+      - name: Resumo
+        env:
+          TAG: ${{ steps.versao.outputs.tag }}
+        run: |
+          {
+            echo "### Release em $AMBIENTE"
+            echo "- Imagem: \`$IMAGEM:$TAG\`"
+            echo "- Branch: \`$GITHUB_REF_NAME\` (\`${GITHUB_SHA::7}\`)"
+            echo "- O Argo CD aplica a mudança em até 3 minutos (ou clique em *Refresh* na aplicação gerenciador-gastos-$AMBIENTE)."
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,24 @@
+# Dependências e build
+node_modules
+dist
+tmp
+out-tsc
+.angular
+coverage
+
+# Git / IDEs
+.git
+.gitignore
+.vscode
+.idea
+.history
+
+# Docker
+Dockerfile
+.dockerignore
+
+# Diversos
+*.md
+*.log
+.env
+.env.*
