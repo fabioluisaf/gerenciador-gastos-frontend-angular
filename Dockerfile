@@ -11,7 +11,8 @@ COPY . .
 RUN npm run build -- --configuration production
 
 # ---------- Runtime ----------
-FROM nginx:1.29-alpine
+# Variante oficial do nginx que roda com usuário comum (não root) e escuta na porta 8080
+FROM nginxinc/nginx-unprivileged:1.29-alpine
 
 # O nginx gera a configuração a partir do template, substituindo ${BACKEND_URL}
 COPY docker/default.conf.template /etc/nginx/templates/default.conf.template
@@ -19,4 +20,4 @@ COPY --from=build /app/dist/gerenciador-gastos/browser /usr/share/nginx/html
 
 ENV BACKEND_URL=http://gastos-api:8080
 
-EXPOSE 80
+EXPOSE 8080
