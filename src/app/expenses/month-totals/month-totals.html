@@ -1,0 +1,64 @@
+@let data = totals();
+<h2 class="title">Totais de {{ periodLabel() }}</h2>
+
+<div class="overall">
+  <p class="overall-realized">{{ data.realized | currency }}</p>
+  <p class="overall-planned">de {{ data.planned | currency }} planejados</p>
+</div>
+
+<section class="group" [attr.aria-labelledby]="idPrefix + '-metodo'">
+  <h3 class="group-title" [id]="idPrefix + '-metodo'">Por método de pagamento</h3>
+  <ul class="rows" role="list">
+    @for (row of paymentRows(); track row.line.id) {
+      <li>
+        <button
+          type="button"
+          class="row-button"
+          [attr.aria-pressed]="row.active"
+          [attr.aria-disabled]="row.selectable ? null : true"
+          [class.rejected]="rejectedKey() === row.key"
+          (click)="select(row)"
+          (animationend)="clearRejection()"
+        >
+          <app-total-row
+            [label]="row.line.label"
+            [realized]="row.line.realized"
+            [planned]="row.line.planned"
+            [largestPlanned]="largestPaymentPlanned()"
+            [institution]="row.line.institution"
+          />
+        </button>
+      </li>
+    } @empty {
+      <li class="empty">Nenhum gasto neste mês.</li>
+    }
+  </ul>
+</section>
+
+<section class="group" [attr.aria-labelledby]="idPrefix + '-categoria'">
+  <h3 class="group-title" [id]="idPrefix + '-categoria'">Por categoria</h3>
+  <ul class="rows" role="list">
+    @for (row of categoryRows(); track row.line.id) {
+      <li>
+        <button
+          type="button"
+          class="row-button"
+          [attr.aria-pressed]="row.active"
+          [attr.aria-disabled]="row.selectable ? null : true"
+          [class.rejected]="rejectedKey() === row.key"
+          (click)="select(row)"
+          (animationend)="clearRejection()"
+        >
+          <app-total-row
+            [label]="row.line.label"
+            [realized]="row.line.realized"
+            [planned]="row.line.planned"
+            [largestPlanned]="largestCategoryPlanned()"
+          />
+        </button>
+      </li>
+    } @empty {
+      <li class="empty">Nenhum gasto neste mês.</li>
+    }
+  </ul>
+</section>

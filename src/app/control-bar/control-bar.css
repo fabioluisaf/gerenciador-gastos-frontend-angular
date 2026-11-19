@@ -6,20 +6,35 @@
   display: flex;
   justify-content: center;
   pointer-events: none;
+  transition:
+    translate var(--motion-duration-default) ease,
+    opacity var(--motion-duration-default) ease;
+}
+
+:host(.hidden) {
+  translate: 0 calc(100% + var(--control-bar-offset));
+  opacity: 0;
+}
+
+:host(.hidden) .control-bar {
+  pointer-events: none;
 }
 
 .control-bar {
   display: flex;
   gap: 0.5rem;
   padding: 0.5rem;
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-floating-border);
   border-radius: 9999px;
-  background-color: var(--color-surface);
-  box-shadow: 0 0.5rem 1.5rem var(--color-scroll-shadow);
+  background-color: var(--color-floating);
+  box-shadow: var(--shadow-floating);
   pointer-events: auto;
+  view-transition-name: control-bar;
 }
 
 .control {
+  position: relative;
+  isolation: isolate;
   display: grid;
   place-items: center;
   inline-size: 3rem;
@@ -34,12 +49,45 @@
 }
 
 .control:hover {
-  background-color: var(--color-hover);
+  background-color: color-mix(in srgb, var(--color-text) 10%, transparent);
+}
+
+.control.create {
+  inline-size: 3.25rem;
+  block-size: 3.25rem;
+  margin-block: -0.125rem;
+  background-color: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+
+.control.create:hover {
+  background-color: var(--color-primary-hover);
+}
+
+.control.create svg {
+  inline-size: 1.625rem;
+  block-size: 1.625rem;
+}
+
+.highlight {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
 }
 
 .control.active {
-  background-color: var(--color-selected);
   color: var(--color-primary);
+}
+
+.control.active:hover {
+  background-color: transparent;
+}
+
+.control.active .highlight {
+  background-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
+  view-transition-name: control-bar-highlight;
+  view-transition-group: nearest;
 }
 
 .control:focus-visible {
@@ -47,7 +95,38 @@
   outline-offset: 2px;
 }
 
+@media (width < 64rem) {
+  .control-bar {
+    box-sizing: border-box;
+    inline-size: min(100vw - 1.5rem, 30rem);
+    gap: var(--control-gap);
+  }
+
+  .control {
+    flex: 1 1 0;
+    min-inline-size: 0;
+    inline-size: auto;
+    block-size: var(--control-size);
+    border-radius: 9999px;
+  }
+
+  .control svg {
+    inline-size: calc(var(--control-size) * 0.44);
+    block-size: calc(var(--control-size) * 0.44);
+  }
+
+  .control.create {
+    block-size: calc(var(--control-size) + 0.25rem);
+  }
+
+  .control.create svg {
+    inline-size: calc(var(--control-size) * 0.5);
+    block-size: calc(var(--control-size) * 0.5);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
+  :host,
   .control {
     transition: none;
   }

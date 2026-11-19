@@ -1,31 +1,55 @@
-<h1 class="visually-hidden">Gastos</h1>
+@if (hasNewer()) {
+  <div appInViewport [rootMargin]="loadMargin" (inViewportChange)="topVisible.set($event)"></div>
+}
 
 @for (day of days(); track day.date) {
-  <section class="day" [attr.aria-labelledby]="'dia-' + day.date">
-    <h2 class="day-label" [id]="'dia-' + day.date">{{ day.date | dayLabel }}</h2>
+  <section
+    #day
+    class="day"
+    [class.month-start]="day.startsMonth"
+    [id]="dayElementId(day.date)"
+    [attr.aria-labelledby]="dayElementId(day.date) + '-titulo'"
+  >
+    @if (day.startsMonth && day.date) {
+      <h2 class="month-label">{{ monthTitle(day.date) }}</h2>
+    }
+    <h3 class="day-label" [id]="dayElementId(day.date) + '-titulo'">{{ day.date | dayLabel }}</h3>
     <ul class="cards" role="list">
       @for (expense of day.expenses; track expense.id) {
-        <li><app-expense-card [expense]="expense" /></li>
+        <li>
+          <app-expense-card [expense]="expense" (deleteRequested)="confirmDelete(expense)" />
+        </li>
       }
     </ul>
   </section>
 }
 
-<div class="feedback" role="status">
+<output class="feedback">
   @switch (status()) {
     @case ('loading') {
-      <p>Carregando gastos…</p>
+      <span>Carregando gastos…</span>
     }
     @case ('error') {
-      <p>Não foi possível carregar os gastos.</p>
+      <span>Não foi possível carregar os gastos.</span>
       <button type="button" class="retry" (click)="retry()">Tentar novamente</button>
     }
   }
   @if (isEmpty()) {
-    <p>Nenhum gasto realizado ainda.</p>
+    <span>{{ emptyMessage() }}</span>
   }
-</div>
+</output>
 
-@if (hasMore()) {
-  <div appInViewport (inViewportChange)="endOfListVisible.set($event)"></div>
+@if (hasOlder()) {
+  <div appInViewport [rootMargin]="loadMargin" (inViewportChange)="bottomVisible.set($event)"></div>
 }
+
+@if (marks().length > 0) {
+  <app-timeline-scrubber
+    label="Linha do tempo dos gastos"
+    [marks]="marks()"
+    [activeId]="activePeriod()"
+    (selected)="jumpTo($event)"
+  />
+}
+
+<app-confirm-dialog />

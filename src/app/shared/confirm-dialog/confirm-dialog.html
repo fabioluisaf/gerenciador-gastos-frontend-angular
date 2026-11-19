@@ -1,0 +1,25 @@
+<dialog
+  #dialog
+  class="confirm"
+  role="alertdialog"
+  [attr.aria-labelledby]="titleId"
+  [attr.aria-describedby]="messageId"
+  (cancel)="preventCloseWhileRunning($event)"
+  (click)="closeOnBackdropClick($event)"
+>
+  @if (request(); as current) {
+    <h2 class="title" [id]="titleId">{{ current.title }}</h2>
+    <p class="message" [id]="messageId">{{ current.message }}</p>
+    @if (failed()) {
+      <p class="error" role="alert">{{ current.errorMessage }}</p>
+    }
+    <div class="actions">
+      <button type="button" class="cancel" autofocus [disabled]="running()" (click)="close()">
+        Cancelar
+      </button>
+      <button type="button" class="danger" [disabled]="running()" (click)="confirm()">
+        {{ running() ? current.runningLabel : current.confirmLabel }}
+      </button>
+    </div>
+  }
+</dialog>

@@ -18,4 +18,8 @@ describe('DayLabelPipe', () => {
     expect(pipe.transform('2026-03-07')).toBe('07 de mar de 2026 — Sábado');
     expect(pipe.transform('2026-02-01')).toBe('01 de fev de 2026 — Domingo');
   });
+
+  it('should label the expenses without a date', () => {
+    expect(pipe.transform(null)).toBe('Sem data definida');
+  });
 });

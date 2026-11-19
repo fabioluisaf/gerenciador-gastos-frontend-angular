@@ -1,0 +1,100 @@
+:host {
+  --thumb-height: 2.25rem;
+
+  position: fixed;
+  inset-block: var(--timeline-scrubber-top, 1rem)
+    var(--timeline-scrubber-clearance, var(--control-bar-clearance));
+  inset-inline-end: 0;
+  z-index: 5;
+  inline-size: 2.75rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--motion-duration-default) ease;
+}
+
+:host(.active),
+:host(:focus-within) {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.track {
+  position: absolute;
+  inset: 0;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.track.dragging {
+  cursor: grabbing;
+}
+
+.track::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0.875rem;
+  inline-size: 2px;
+  border-radius: 9999px;
+  background-color: var(--color-border);
+}
+
+.track:focus-visible {
+  outline: none;
+}
+
+.thumb {
+  position: absolute;
+  inset-inline-end: 0.625rem;
+  top: calc(var(--position) * (100% - var(--thumb-height)));
+  inline-size: 0.625rem;
+  block-size: var(--thumb-height);
+  border-radius: 9999px;
+  background-color: var(--color-primary);
+}
+
+.track:focus-visible .thumb {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.bubble {
+  position: absolute;
+  inset-inline-end: 1.5rem;
+  top: 50%;
+  translate: 0 -50%;
+  padding: 0.375rem 0.875rem;
+  border: 1px solid var(--color-border);
+  border-radius: 9999px;
+  background-color: var(--color-surface);
+  box-shadow: 0 0.5rem 1.5rem var(--color-scroll-shadow);
+  color: var(--color-text);
+  font-size: 0.875rem;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity var(--motion-duration-fast) ease;
+}
+
+:host(.active) .bubble,
+.track:focus-visible .bubble {
+  opacity: 1;
+}
+
+@media (hover: hover) {
+  :host {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .track:hover .bubble {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host,
+  .bubble {
+    transition: none;
+  }
+}

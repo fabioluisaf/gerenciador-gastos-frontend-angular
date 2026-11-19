@@ -5,7 +5,10 @@ import { inject, LOCALE_ID, Pipe, PipeTransform } from '@angular/core';
 export class DayLabelPipe implements PipeTransform {
   private readonly locale = inject(LOCALE_ID);
 
-  transform(isoDate: string): string {
+  transform(isoDate: string | null): string {
+    if (!isoDate) {
+      return 'Sem data definida';
+    }
     const [year, month, day] = isoDate.split('-').map(Number);
     const date = new Date(year, month - 1, day);
     const dayMonthYear = formatDate(date, "dd 'de' MMM 'de' y", this.locale).replaceAll('.', '');

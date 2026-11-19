@@ -1,24 +1,86 @@
 @let item = expense();
-<article class="expense-card">
-  <div class="summary">
-    <h3 class="name">{{ item.name }}</h3>
-    <p class="amount" [class.refund]="isRefund()">{{ item.amount | currency }}</p>
-  </div>
+<app-swipe-actions endLabel="Excluir" (endTriggered)="deleteRequested.emit()">
+  <svg lucideTrash2 swipeEndIcon class="action-icon" aria-hidden="true"></svg>
+  <article
+    class="expense-card"
+    [class.expanded]="expanded()"
+    [style.--institution-color]="item.institution.color"
+    [style.--payment-color]="paymentColor()"
+  >
+    <div class="body">
+      <div class="summary">
+        <div class="heading">
+          <h4 class="name">{{ item.name }}</h4>
+          @if (item.installment; as installment) {
+            <span class="installment">
+              <span aria-hidden="true">·</span>
+              Parcelado em {{ installment.count }}x
+            </span>
+          }
+        </div>
+        <p class="amount" [class.refund]="isRefund()">{{ amount() | currency }}</p>
+      </div>
 
-  @if (item.description; as description) {
-    <p class="description">{{ description }}</p>
-  }
+      <ul class="details" role="list">
+        <li class="tag">{{ item.category }}</li>
+        <li class="tag">
+          @if (item.institution.iconUrl; as iconUrl) {
+            <img class="institution-icon" [ngSrc]="iconUrl" width="16" height="16" alt="" />
+          }
+          {{ item.institution.name }} · {{ paymentLabel() }}
+        </li>
+      </ul>
 
-  <ul class="details" role="list">
-    <li class="tag">{{ item.category }}</li>
-    <li class="tag">
-      @if (item.institution.iconUrl; as iconUrl) {
-        <img class="institution-icon" [ngSrc]="iconUrl" width="16" height="16" alt="" />
+      @if (item.description; as description) {
+        <p class="description">{{ description }}</p>
       }
-      {{ item.institution.name }} · {{ paymentLabel() }}
-    </li>
-    @if (item.installment; as installment) {
-      <li class="tag">Parcela {{ installment.number }}/{{ installment.total }}</li>
-    }
-  </ul>
-</article>
+
+      @if (expanded() && item.installment) {
+        <section class="installments" [id]="detailsId" aria-label="Parcelas">
+          @if (installmentsLoading()) {
+            <p class="installments-status">Carregando parcelas…</p>
+          } @else if (installmentsFailed()) {
+            <p class="installments-status">Não foi possível carregar as parcelas.</p>
+          } @else {
+            <ol class="installment-list" role="list">
+              @for (part of installments(); track part.number) {
+                <li class="installment-row" [class]="part.status">
+                  <span class="installment-number"
+                    >{{ part.number }}/{{ item.installment.count }}</span
+                  >
+                  <span class="installment-invoice">{{ part.invoiceLabel }}</span>
+                  <span class="installment-amount">{{ part.amount | currency }}</span>
+                  @switch (part.status) {
+                    @case ('paid') {
+                      <svg lucideCircleCheck class="status-icon" aria-hidden="true"></svg>
+                    }
+                    @case ('current') {
+                      <svg lucideCircleDot class="status-icon" aria-hidden="true"></svg>
+                    }
+                    @default {
+                      <svg lucideCircle class="status-icon" aria-hidden="true"></svg>
+                    }
+                  }
+                  <span class="visually-hidden">{{ statusLabels[part.status] }}</span>
+                </li>
+              }
+            </ol>
+          }
+        </section>
+      }
+
+      @if (expandable()) {
+        <button
+          type="button"
+          class="expand"
+          [attr.aria-expanded]="expanded()"
+          [attr.aria-controls]="expanded() && item.installment ? detailsId : null"
+          [attr.aria-label]="expanded() ? 'Recolher gasto' : 'Expandir gasto'"
+        >
+          <svg lucideChevronDown aria-hidden="true"></svg>
+        </button>
+      }
+    </div>
+    <app-expense-actions-menu class="actions-menu" (deleteRequested)="deleteRequested.emit()" />
+  </article>
+</app-swipe-actions>

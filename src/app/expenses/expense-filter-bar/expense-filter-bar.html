@@ -1,0 +1,21 @@
+<section class="filter-bar" aria-label="Filtros ativos">
+  <svg class="funnel" lucideFunnel aria-hidden="true"></svg>
+  <ul class="chips" role="list" appHorizontalWheelScroll>
+    @for (filter of filters(); track filterKey(filter)) {
+      <li class="chip">
+        @if (filter.kind === 'payment' && filter.institution.iconUrl; as iconUrl) {
+          <img class="chip-icon" [ngSrc]="iconUrl" width="16" height="16" alt="" />
+        }
+        <span class="chip-label">{{ filter.label }}</span>
+        <button
+          type="button"
+          class="chip-remove"
+          [attr.aria-label]="'Remover filtro ' + filter.label"
+          (click)="removed.emit(filter)"
+        >
+          <svg lucideX aria-hidden="true"></svg>
+        </button>
+      </li>
+    }
+  </ul>
+</section>

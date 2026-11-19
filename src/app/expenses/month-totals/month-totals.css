@@ -1,0 +1,140 @@
+:host {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.title {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  font-style: italic;
+  font-weight: 400;
+}
+
+.overall {
+  display: grid;
+  gap: 0.125rem;
+}
+
+.overall-realized,
+.overall-planned {
+  margin: 0;
+}
+
+.overall-realized {
+  font-size: 1.75rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.overall-planned {
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+}
+
+.group {
+  display: grid;
+  gap: 0.75rem;
+  padding-block-start: 1.25rem;
+  border-block-start: 1px solid var(--color-border);
+}
+
+.group-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.rows {
+  display: grid;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
+}
+
+.row-button {
+  display: block;
+  inline-size: calc(100% + 1rem);
+  margin-inline: -0.5rem;
+  padding: 0.5rem;
+  border: 1px solid transparent;
+  border-radius: 0.75rem;
+  background-color: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: background-color var(--motion-duration-fast) ease;
+}
+
+.row-button:hover {
+  background-color: color-mix(in srgb, var(--color-text) 6%, transparent);
+}
+
+.row-button[aria-disabled='true'] {
+  cursor: not-allowed;
+}
+
+.row-button[aria-disabled='true']:hover {
+  background-color: color-mix(in srgb, var(--color-danger) 14%, transparent);
+}
+
+.row-button.rejected {
+  animation: rejected 450ms ease;
+}
+
+@keyframes rejected {
+  0% {
+    border-color: var(--color-danger);
+    background-color: color-mix(in srgb, var(--color-danger) 32%, transparent);
+  }
+
+  20% {
+    translate: -0.25rem 0;
+  }
+
+  40% {
+    translate: 0.25rem 0;
+  }
+
+  60% {
+    translate: -0.125rem 0;
+  }
+
+  80% {
+    translate: 0 0;
+  }
+}
+
+@keyframes rejected-without-motion {
+  from {
+    border-color: var(--color-danger);
+    background-color: color-mix(in srgb, var(--color-danger) 32%, transparent);
+  }
+}
+
+.row-button[aria-pressed='true'] {
+  border-color: color-mix(in srgb, var(--color-primary) 60%, transparent);
+  background-color: color-mix(in srgb, var(--color-primary) 16%, transparent);
+}
+
+.row-button:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.empty {
+  color: var(--color-text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row-button {
+    transition: none;
+  }
+
+  .row-button.rejected {
+    animation-name: rejected-without-motion;
+  }
+}

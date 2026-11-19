@@ -1,0 +1,32 @@
+<app-bottom-sheet label="Configurações" (closed)="onClosed()">
+  <h2 class="title">Configurações</h2>
+  <fieldset class="setting">
+    <legend class="setting-label">Tema</legend>
+    <div class="options">
+      @for (option of themeOptions; track option.value) {
+        <label class="option" [class.active]="themes.preference() === option.value">
+          <input
+            type="radio"
+            name="tema"
+            class="visually-hidden"
+            [value]="option.value"
+            [checked]="themes.preference() === option.value"
+            (change)="themes.setPreference(option.value)"
+          />
+          @switch (option.value) {
+            @case ('system') {
+              <svg lucideSunMoon aria-hidden="true"></svg>
+            }
+            @case ('light') {
+              <svg lucideSun aria-hidden="true"></svg>
+            }
+            @case ('dark') {
+              <svg lucideMoon aria-hidden="true"></svg>
+            }
+          }
+          {{ option.label }}
+        </label>
+      }
+    </div>
+  </fieldset>
+</app-bottom-sheet>

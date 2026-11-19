@@ -16,7 +16,29 @@ describe('groupByDay', () => {
     expect(days[1].expenses.map((expense) => expense.id)).toEqual(['c']);
   });
 
+  it('should gather the expenses without a date in a single group', () => {
+    const days = groupByDay([
+      buildExpense({ id: 'a', date: '2026-12-01' }),
+      buildExpense({ id: 'b', date: null }),
+      buildExpense({ id: 'c', date: null }),
+    ]);
+
+    expect(days.map((day) => day.date)).toEqual(['2026-12-01', null]);
+    expect(days[1].expenses.map((expense) => expense.id)).toEqual(['b', 'c']);
+  });
+
   it('should return no days for no expenses', () => {
     expect(groupByDay([])).toEqual([]);
+  });
+
+  it('should mark the first day of each month, leaving the undated group unmarked', () => {
+    const days = groupByDay([
+      buildExpense({ id: 'a', date: '2026-12-03' }),
+      buildExpense({ id: 'b', date: '2026-12-01' }),
+      buildExpense({ id: 'c', date: '2026-11-30' }),
+      buildExpense({ id: 'd', date: null }),
+    ]);
+
+    expect(days.map((day) => day.startsMonth)).toEqual([true, false, true, false]);
   });
 });

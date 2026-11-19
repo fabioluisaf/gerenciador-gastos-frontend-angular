@@ -8,11 +8,13 @@ export function buildExpense(overrides: Partial<Expense> = {}): Expense {
     amount: 123.45,
     category: 'Casa',
     description: null,
+    realized: true,
     paymentType: 'CREDITO',
     institution: {
       id: 'nubank',
       name: 'Nubank',
       iconUrl: '/api/instituicoes-financeiras/nubank/icone',
+      color: '#820AD1',
     },
     installment: null,
     ...overrides,

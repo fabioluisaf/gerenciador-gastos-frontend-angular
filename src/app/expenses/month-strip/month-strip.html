@@ -1,0 +1,34 @@
+<div
+  #scroller
+  class="scroller"
+  role="group"
+  aria-label="Mês dos totais"
+  appHorizontalWheelScroll
+  appDragScroll
+  [class.fade-start]="canScrollBack()"
+  [class.fade-end]="canScrollForward()"
+  (scroll)="updateScrollEdges()"
+>
+  <span #indicator class="indicator" aria-hidden="true"></span>
+  @for (group of years(); track group.year) {
+    <div class="year" role="group" [attr.aria-label]="group.year">
+      <div class="year-row" aria-hidden="true">
+        <span class="year-label">{{ group.year }}</span>
+      </div>
+      <div class="months">
+        @for (month of group.months; track month.key) {
+          <button
+            type="button"
+            class="month"
+            [attr.data-period]="month.key"
+            [attr.aria-label]="month.fullLabel"
+            [attr.aria-pressed]="month.key === selected()"
+            (click)="monthSelected.emit(month.key)"
+          >
+            {{ month.label }}
+          </button>
+        }
+      </div>
+    </div>
+  }
+</div>

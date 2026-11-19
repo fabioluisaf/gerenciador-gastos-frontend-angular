@@ -1,7 +1,10 @@
 export const API_URL = '/api';
 
-export interface ApiPage<T> {
-  dados: T[];
+export interface ApiResponse<T> {
+  dados: T;
+}
+
+export interface ApiPage<T> extends ApiResponse<T[]> {
   paginacao: {
     pagina: number;
     tamanho: number;
