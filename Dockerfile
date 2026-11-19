@@ -17,6 +17,6 @@ FROM nginx:1.29-alpine
 COPY docker/default.conf.template /etc/nginx/templates/default.conf.template
 COPY --from=build /app/dist/gerenciador-gastos/browser /usr/share/nginx/html
 
-ENV BACKEND_URL=http://api:8080
+ENV BACKEND_URL=http://gastos-api:8080
 
 EXPOSE 80
