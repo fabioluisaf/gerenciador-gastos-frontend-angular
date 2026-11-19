@@ -1,0 +1,31 @@
+<h1 class="visually-hidden">Gastos</h1>
+
+@for (day of days(); track day.date) {
+  <section class="day" [attr.aria-labelledby]="'dia-' + day.date">
+    <h2 class="day-label" [id]="'dia-' + day.date">{{ day.date | dayLabel }}</h2>
+    <ul class="cards" role="list">
+      @for (expense of day.expenses; track expense.id) {
+        <li><app-expense-card [expense]="expense" /></li>
+      }
+    </ul>
+  </section>
+}
+
+<div class="feedback" role="status">
+  @switch (status()) {
+    @case ('loading') {
+      <p>Carregando gastos…</p>
+    }
+    @case ('error') {
+      <p>Não foi possível carregar os gastos.</p>
+      <button type="button" class="retry" (click)="retry()">Tentar novamente</button>
+    }
+  }
+  @if (isEmpty()) {
+    <p>Nenhum gasto realizado ainda.</p>
+  }
+</div>
+
+@if (hasMore()) {
+  <div appInViewport (inViewportChange)="endOfListVisible.set($event)"></div>
+}

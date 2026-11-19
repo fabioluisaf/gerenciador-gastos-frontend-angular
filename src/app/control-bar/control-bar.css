@@ -1,0 +1,54 @@
+:host {
+  position: fixed;
+  inset-inline: 0;
+  bottom: calc(var(--control-bar-offset) + env(safe-area-inset-bottom));
+  z-index: 10;
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.control-bar {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 9999px;
+  background-color: var(--color-surface);
+  box-shadow: 0 0.5rem 1.5rem var(--color-scroll-shadow);
+  pointer-events: auto;
+}
+
+.control {
+  display: grid;
+  place-items: center;
+  inline-size: 3rem;
+  block-size: 3rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background-color: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background-color var(--motion-duration-fast) ease;
+}
+
+.control:hover {
+  background-color: var(--color-hover);
+}
+
+.control.active {
+  background-color: var(--color-selected);
+  color: var(--color-primary);
+}
+
+.control:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .control {
+    transition: none;
+  }
+}

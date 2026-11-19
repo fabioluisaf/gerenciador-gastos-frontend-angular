@@ -1,0 +1,24 @@
+@let item = expense();
+<article class="expense-card">
+  <div class="summary">
+    <h3 class="name">{{ item.name }}</h3>
+    <p class="amount" [class.refund]="isRefund()">{{ item.amount | currency }}</p>
+  </div>
+
+  @if (item.description; as description) {
+    <p class="description">{{ description }}</p>
+  }
+
+  <ul class="details" role="list">
+    <li class="tag">{{ item.category }}</li>
+    <li class="tag">
+      @if (item.institution.iconUrl; as iconUrl) {
+        <img class="institution-icon" [ngSrc]="iconUrl" width="16" height="16" alt="" />
+      }
+      {{ item.institution.name }} · {{ paymentLabel() }}
+    </li>
+    @if (item.installment; as installment) {
+      <li class="tag">Parcela {{ installment.number }}/{{ installment.total }}</li>
+    }
+  </ul>
+</article>
