@@ -159,7 +159,7 @@ export class ExpenseForm {
       : this.methodsByUsage(),
   );
   protected readonly dateOptional = computed(
-    () => this.kind() === 'planned' && this.effectiveInstallments() === 1,
+    () => this.kind() === 'planned' && this.effectiveInstallments() === 1 && this.isCredit(),
   );
   protected readonly installmentAmount = computed(
     () => this.amountCents() / 100 / this.effectiveInstallments(),
@@ -172,7 +172,7 @@ export class ExpenseForm {
       amount: this.amountCents() === 0 ? 'Informe o valor.' : null,
       name: name ? null : 'Informe o nome do gasto.',
       method: this.methodId() ? null : 'Escolha o método de pagamento.',
-      date: !this.dateOptional() && !this.date() ? 'Informe a data do gasto.' : null,
+      date: this.dateError(),
       category: category ? null : 'Informe a categoria.',
     };
   });
@@ -186,6 +186,16 @@ export class ExpenseForm {
         untracked(() => this.apply(draft));
       }
     });
+  }
+
+  private dateError(): string | null {
+    if (this.date()) {
+      return null;
+    }
+    if (!this.dateOptional()) {
+      return 'Informe a data do gasto.';
+    }
+    return this.invoiceMonth() ? null : 'Informe a data ou o mês da fatura.';
   }
 
   protected errorFor(field: Field): string | null {

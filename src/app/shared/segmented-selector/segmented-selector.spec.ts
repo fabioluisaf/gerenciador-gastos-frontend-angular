@@ -91,4 +91,23 @@ describe('SegmentedSelector', () => {
     expect(links.map((link) => link.getAttribute('aria-current'))).toEqual([null, 'page']);
     expect(element.querySelector('[role="radiogroup"]')).toBeNull();
   });
+
+  it('should scroll sideways instead of squeezing the choices when asked to', async () => {
+    const fixture = TestBed.createComponent(SegmentedSelector);
+    fixture.componentRef.setInput('label', 'Cartão');
+    fixture.componentRef.setInput('options', [
+      { value: 'a', label: 'Cartão A' },
+      { value: 'b', label: 'Cartão B' },
+      { value: 'c', label: 'Cartão C' },
+    ]);
+    fixture.componentRef.setInput('value', 'b');
+    fixture.componentRef.setInput('scrollable', true);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    const group: HTMLElement = fixture.nativeElement.querySelector('[role="radiogroup"]');
+
+    expect(group.classList).toContain('scrollable');
+    expect(group.classList).toContain('drag-scroll');
+    expect(group.querySelector('label.active')?.textContent?.trim()).toBe('Cartão B');
+  });
 });

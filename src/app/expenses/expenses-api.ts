@@ -36,6 +36,7 @@ interface ExpenseDto {
     compraParceladaId: string;
     valorTotalCompra: number;
   };
+  dataVencimentoFatura?: string;
 }
 
 interface InstallmentPurchaseDto {
@@ -166,6 +167,7 @@ function toExpense(dto: ExpenseDto): Expense {
           purchaseAmount: dto.parcela.valorTotalCompra,
         }
       : null,
+    invoiceDueDate: toIsoDate(dto.dataVencimentoFatura ?? null),
   };
 }
 
@@ -290,6 +292,15 @@ export class ExpensesApi {
         })
       : this.http.put(`${API_URL}/gastos/${expense.id}`, { ...common, valor: changes.amount });
     return request.pipe(map(() => undefined));
+  }
+
+  listByInvoice(invoiceId: string): Observable<{ realized: Expense[]; planned: Expense[] }> {
+    const params = new HttpParams().set('faturaId', invoiceId).set('size', TOTALS_PAGE_SIZE);
+    const load = (kind: ExpenseKind) =>
+      this.http
+        .get<ApiPage<ExpenseDto>>(LIST_URLS[kind], { params })
+        .pipe(map(({ dados }) => dados.map(toExpense)));
+    return forkJoin({ realized: load('realized'), planned: load('planned') });
   }
 
   listCategories(): Observable<string[]> {

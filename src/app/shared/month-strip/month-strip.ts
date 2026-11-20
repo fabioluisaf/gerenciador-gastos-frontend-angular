@@ -14,9 +14,8 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
-import { DragScroll } from '../../shared/drag-scroll';
-import { HorizontalWheelScroll } from '../../shared/horizontal-wheel-scroll';
-import { parsePeriodKey } from '../timeline';
+import { DragScroll } from '../drag-scroll';
+import { HorizontalWheelScroll } from '../horizontal-wheel-scroll';
 
 interface MonthOption {
   key: string;
@@ -54,6 +53,7 @@ export class MonthStrip {
   protected readonly canScrollBack = signal(false);
   protected readonly canScrollForward = signal(false);
 
+  readonly label = input('Meses');
   readonly months = input.required<readonly string[]>();
   readonly selected = input.required<string>();
   readonly monthSelected = output<string>();
@@ -61,7 +61,7 @@ export class MonthStrip {
   protected readonly years = computed(() => {
     const groups: YearGroup[] = [];
     for (const key of this.months()) {
-      const { year, month } = parsePeriodKey(key);
+      const [year, month] = key.split('-').map(Number);
       const date = new Date(year, month - 1, 1);
       const option = {
         key,

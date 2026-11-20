@@ -66,6 +66,7 @@ export interface Expense {
   paymentType: PaymentType;
   institution: Institution;
   installment: Installment | null;
+  invoiceDueDate: string | null;
 }
 
 export interface TotalLine {

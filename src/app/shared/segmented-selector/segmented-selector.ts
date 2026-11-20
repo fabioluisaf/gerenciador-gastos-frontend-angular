@@ -10,6 +10,8 @@ import {
   TemplateRef,
 } from '@angular/core';
 import { RouterLink, RouterLinkActive } from '@angular/router';
+import { DragScroll } from '../drag-scroll';
+import { HorizontalWheelScroll } from '../horizontal-wheel-scroll';
 import { SlidingIndicator } from '../sliding-indicator';
 
 export interface SelectorOption<T extends string = string> {
@@ -27,7 +29,14 @@ let nextId = 0;
 
 @Component({
   selector: 'app-segmented-selector',
-  imports: [NgTemplateOutlet, RouterLink, RouterLinkActive, SlidingIndicator],
+  imports: [
+    DragScroll,
+    HorizontalWheelScroll,
+    NgTemplateOutlet,
+    RouterLink,
+    RouterLinkActive,
+    SlidingIndicator,
+  ],
   templateUrl: './segmented-selector.html',
   styleUrl: './segmented-selector.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -39,6 +48,7 @@ export class SegmentedSelector<T extends string = string> {
   readonly value = input<T>();
   readonly memoryKey = input('');
   readonly columns = input<number | null>(null);
+  readonly scrollable = input(false, { transform: booleanAttribute });
   readonly valueChange = output<T>();
 
   protected readonly icon = contentChild<TemplateRef<SelectorOptionContext<T>>>(TemplateRef);

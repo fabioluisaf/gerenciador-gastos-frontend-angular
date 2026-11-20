@@ -30,13 +30,7 @@ import { Expense, ExpenseFilter, ExpenseKind } from '../expense';
 import { ExpenseCard } from '../expense-card/expense-card';
 import { ExpensesApi } from '../expenses-api';
 import { groupByDay } from '../group-by-day';
-import {
-  buildTimeline,
-  formatMonthTitle,
-  periodKeyOf,
-  toScrubberMarks,
-  UNDATED_PERIOD_KEY,
-} from '../timeline';
+import { buildTimeline, formatMonthTitle, toScrubberMarks, UNDATED_PERIOD_KEY } from '../timeline';
 
 const PAGE_SIZE = 50;
 const SCROLL_CLASS = 'timeline-scroll';
@@ -50,8 +44,8 @@ const EMPTY_MESSAGES: Readonly<Record<ExpenseKind, string>> = {
   planned: 'Nenhum gasto planejado.',
 };
 
-export function dayElementId(isoDate: string | null): string {
-  return `dia-${isoDate ?? UNDATED_PERIOD_KEY}`;
+export function dayElementId(key: string): string {
+  return `dia-${key}`;
 }
 
 @Component({
@@ -269,7 +263,7 @@ export class ExpenseList {
     } else if (atBottom || index === -1) {
       index = days.length - 1;
     }
-    this.activePeriod.set(periodKeyOf(days[index].date));
+    this.activePeriod.set(days[index].month ?? UNDATED_PERIOD_KEY);
   }
 
   private keepScrollPositionAfterPrepend(): void {
@@ -282,8 +276,8 @@ export class ExpenseList {
   }
 
   private scrollToPeriod(periodKey: string): boolean {
-    const day = this.days().find(({ date }) => periodKeyOf(date) === periodKey);
-    const element = day && this.document.getElementById(dayElementId(day.date));
+    const day = this.days().find(({ month }) => (month ?? UNDATED_PERIOD_KEY) === periodKey);
+    const element = day && this.document.getElementById(dayElementId(day.key));
     element?.scrollIntoView({ block: 'start' });
     return !!element;
   }

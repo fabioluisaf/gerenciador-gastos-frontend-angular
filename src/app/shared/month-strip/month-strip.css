@@ -1,4 +1,7 @@
 :host {
+  --month-strip-accent: var(--color-secondary);
+  --month-strip-divider: var(--color-totals-border);
+
   display: block;
 }
 
@@ -49,7 +52,7 @@
 }
 
 .year + .year .year-row {
-  border-inline-start: 1px solid var(--color-totals-border);
+  border-inline-start: 1px solid var(--month-strip-divider);
 }
 
 .year-label {
@@ -73,7 +76,7 @@
   inset-block-start: 0;
   inset-inline-start: 0;
   border-radius: 9999px;
-  background-color: color-mix(in srgb, var(--color-secondary) 22%, transparent);
+  background-color: color-mix(in srgb, var(--month-strip-accent) 22%, transparent);
   pointer-events: none;
 }
 
@@ -109,7 +112,7 @@
 }
 
 .month[aria-pressed='true'] {
-  color: var(--color-secondary);
+  color: var(--month-strip-accent);
   font-weight: 600;
 }
 

@@ -27,7 +27,7 @@ import { ExpenseFilters } from '../expense-filters';
 import { ExpenseKindToggle } from '../expense-kind-toggle/expense-kind-toggle';
 import { ExpenseList } from '../expense-list/expense-list';
 import { ExpensesApi } from '../expenses-api';
-import { MonthStrip } from '../month-strip/month-strip';
+import { MonthStrip } from '../../shared/month-strip/month-strip';
 import { MonthTotals } from '../month-totals/month-totals';
 import {
   currentPeriodKey,

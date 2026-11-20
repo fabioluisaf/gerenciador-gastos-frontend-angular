@@ -18,6 +18,12 @@ export const routes: Routes = [
     loadComponent: loadExpensesPage,
   },
   {
+    path: 'faturas',
+    title: 'Faturas',
+    loadComponent: () =>
+      import('./invoices/invoices-page/invoices-page').then((m) => m.InvoicesPage),
+  },
+  {
     path: 'metodos-pagamento',
     title: 'Métodos de pagamento',
     loadComponent: () =>

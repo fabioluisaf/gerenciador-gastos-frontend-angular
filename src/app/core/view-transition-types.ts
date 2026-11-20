@@ -3,7 +3,7 @@ import { ActivatedRouteSnapshot, ViewTransitionInfo } from '@angular/router';
 export const SECTION_FORWARD = 'section-forward';
 export const SECTION_BACK = 'section-back';
 
-const SECTION_ORDER = ['gastos', 'metodos-pagamento'];
+const SECTION_ORDER = ['gastos', 'metodos-pagamento', 'faturas'];
 
 function leafPath(root: ActivatedRouteSnapshot): string {
   let route = root;

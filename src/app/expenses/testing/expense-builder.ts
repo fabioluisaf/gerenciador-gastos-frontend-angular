@@ -17,6 +17,7 @@ export function buildExpense(overrides: Partial<Expense> = {}): Expense {
       color: '#820AD1',
     },
     installment: null,
+    invoiceDueDate: null,
     ...overrides,
   };
 }

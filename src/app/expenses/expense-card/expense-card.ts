@@ -1,6 +1,7 @@
 import { CurrencyPipe, DOCUMENT, formatDate, NgOptimizedImage } from '@angular/common';
 import {
   afterNextRender,
+  booleanAttribute,
   ChangeDetectionStrategy,
   Component,
   computed,
@@ -78,6 +79,7 @@ export class ExpenseCard {
   private readonly view = inject(DOCUMENT).defaultView;
 
   readonly expense = input.required<Expense>();
+  readonly invoiceView = input(false, { transform: booleanAttribute });
   readonly editRequested = output<void>();
   readonly deleteRequested = output<void>();
 
@@ -93,7 +95,7 @@ export class ExpenseCard {
   );
   protected readonly amount = computed(() => {
     const { amount, installment } = this.expense();
-    return installment?.purchaseAmount ?? amount;
+    return this.invoiceView() ? amount : (installment?.purchaseAmount ?? amount);
   });
   protected readonly isRefund = computed(() => this.amount() < 0);
   protected readonly expandable = computed(

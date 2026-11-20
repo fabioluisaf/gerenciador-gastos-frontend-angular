@@ -3,6 +3,7 @@ import { SECTION_BACK, SECTION_FORWARD, sectionSlide } from './view-transition-t
 describe('sectionSlide', () => {
   it('should slide forward when moving to a section further right in the control bar', () => {
     expect(sectionSlide('gastos/planejados', 'metodos-pagamento')).toEqual([SECTION_FORWARD]);
+    expect(sectionSlide('metodos-pagamento', 'faturas')).toEqual([SECTION_FORWARD]);
   });
 
   it('should slide back when returning to a section further left in the control bar', () => {

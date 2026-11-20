@@ -41,4 +41,20 @@ describe('groupByDay', () => {
 
     expect(days.map((day) => day.startsMonth)).toEqual([true, false, true, false]);
   });
+
+  it('should put an undated planned expense in the month of its invoice', () => {
+    const days = groupByDay([
+      buildExpense({ id: 'a', date: '2026-12-03' }),
+      buildExpense({ id: 'b', date: null, invoiceDueDate: '2026-12-21' }),
+      buildExpense({ id: 'c', date: null, invoiceDueDate: '2027-01-21' }),
+      buildExpense({ id: 'd', date: null }),
+    ]);
+
+    expect(days.map((day) => [day.key, day.month, day.startsMonth])).toEqual([
+      ['2026-12-03', '2026-12', true],
+      ['2026-12-sem-data', '2026-12', false],
+      ['2027-01-sem-data', '2027-01', true],
+      ['sem-data', null, false],
+    ]);
+  });
 });

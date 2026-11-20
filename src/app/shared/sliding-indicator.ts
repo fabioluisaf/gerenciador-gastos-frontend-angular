@@ -59,6 +59,7 @@ export class SlidingIndicator {
   readonly appSlidingIndicator = input('');
   readonly activeSelector = input('.active');
   readonly swell = input(true, { transform: booleanAttribute });
+  readonly followActive = input(false, { transform: booleanAttribute });
 
   private indicator: HTMLElement | null = null;
   private resizes: ResizeObserver | null = null;
@@ -110,7 +111,9 @@ export class SlidingIndicator {
     this.resizes?.observe(next);
 
     const target = measure(next);
-    if (previous && this.box) {
+    const animated = previous !== null && this.box !== null;
+    this.follow(target, animated);
+    if (animated) {
       this.slideTo(target);
       return;
     }
@@ -179,6 +182,16 @@ export class SlidingIndicator {
     style.translate = `${box.x}px ${box.y}px`;
     style.width = `${box.width}px`;
     style.height = `${box.height}px`;
+  }
+
+  private follow(box: IndicatorBox, animated: boolean): void {
+    if (!this.followActive() || this.host.scrollWidth <= this.host.clientWidth) {
+      return;
+    }
+    this.host.scrollTo?.({
+      left: box.x + box.width / 2 - this.host.clientWidth / 2,
+      behavior: animated && !this.prefersReducedMotion() ? 'smooth' : 'auto',
+    });
   }
 
   private prefersReducedMotion(): boolean {

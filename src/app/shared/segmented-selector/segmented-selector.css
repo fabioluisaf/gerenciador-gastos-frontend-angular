@@ -28,6 +28,21 @@
   box-shadow: var(--selector-shadow);
 }
 
+.options.scrollable {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.options.scrollable::-webkit-scrollbar {
+  display: none;
+}
+
+.options.scrollable .option {
+  flex: 0 0 auto;
+  padding-inline: 0.875rem;
+}
+
 .options.wrapped {
   grid-auto-flow: row;
   border-radius: 1.25rem;

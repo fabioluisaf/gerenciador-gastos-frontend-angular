@@ -65,10 +65,10 @@ describe('ExpenseCard', () => {
       }),
     );
 
-    expect(normalized(element.querySelector('.amount')?.textContent)).toBe('R$ 300,00');
-    expect(normalized(element.querySelector('.heading .installment')?.textContent)).toBe('· em 3x');
+    expect(normalized(element.querySelector('.amount-value')?.textContent)).toBe('R$ 300,00');
+    expect(normalized(element.querySelector('.amount .installment')?.textContent)).toBe('em 3x');
+    expect(element.querySelector('.heading .installment')).toBeNull();
     expect(normalized(element.querySelector('.name')?.textContent)).toBe('Mercado');
-    expect(element.querySelector('.installment [aria-hidden="true"]')?.textContent).toBe('·');
     expect(tags(element)).toEqual(['Casa', 'Nubank · Crédito']);
   });
 

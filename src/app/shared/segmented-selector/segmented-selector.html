@@ -20,6 +20,19 @@
       </a>
     }
   </nav>
+} @else if (scrollable()) {
+  <div
+    class="options scrollable"
+    role="radiogroup"
+    appHorizontalWheelScroll
+    appDragScroll
+    followActive
+    [appSlidingIndicator]="memoryKey()"
+    [attr.aria-labelledby]="labelVisible() ? id + '-label' : null"
+    [attr.aria-label]="labelVisible() ? null : label()"
+  >
+    <ng-container [ngTemplateOutlet]="choices" />
+  </div>
 } @else {
   <div
     class="options"
@@ -30,22 +43,26 @@
     [attr.aria-labelledby]="labelVisible() ? id + '-label' : null"
     [attr.aria-label]="labelVisible() ? null : label()"
   >
-    @for (option of options(); track option.value) {
-      <label class="option" [class.active]="option.value === value()">
-        <input
-          type="radio"
-          class="visually-hidden"
-          [name]="id"
-          [value]="option.value"
-          [checked]="option.value === value()"
-          (change)="valueChange.emit(option.value)"
-        />
-        <ng-container
-          [ngTemplateOutlet]="icon() ?? null"
-          [ngTemplateOutletContext]="{ $implicit: option }"
-        />
-        <span class="option-label">{{ option.label }}</span>
-      </label>
-    }
+    <ng-container [ngTemplateOutlet]="choices" />
   </div>
 }
+
+<ng-template #choices>
+  @for (option of options(); track option.value) {
+    <label class="option" [class.active]="option.value === value()">
+      <input
+        type="radio"
+        class="visually-hidden"
+        [name]="id"
+        [value]="option.value"
+        [checked]="option.value === value()"
+        (change)="valueChange.emit(option.value)"
+      />
+      <ng-container
+        [ngTemplateOutlet]="icon() ?? null"
+        [ngTemplateOutletContext]="{ $implicit: option }"
+      />
+      <span class="option-label">{{ option.label }}</span>
+    </label>
+  }
+</ng-template>

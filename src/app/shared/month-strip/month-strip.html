@@ -2,7 +2,7 @@
   #scroller
   class="scroller"
   role="group"
-  aria-label="Mês dos totais"
+  [attr.aria-label]="label()"
   appHorizontalWheelScroll
   appDragScroll
   [class.fade-start]="canScrollBack()"

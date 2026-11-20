@@ -59,6 +59,7 @@ describe('ExpensesApi', () => {
             compraParceladaId: 'compra',
             valorTotalCompra: 37.5,
           },
+          dataVencimentoFatura: '21/12/2026',
         },
         {
           id: 'b',
@@ -96,6 +97,7 @@ describe('ExpensesApi', () => {
             color: '#005CA9',
           },
           installment: { number: 2, count: 3, purchaseId: 'compra', purchaseAmount: 37.5 },
+          invoiceDueDate: '2026-12-21',
         },
         {
           id: 'b',
@@ -108,6 +110,7 @@ describe('ExpensesApi', () => {
           paymentType: 'DEBITO',
           institution: { id: 'banco', name: 'Banco', iconUrl: null, color: null },
           installment: null,
+          invoiceDueDate: null,
         },
       ],
     });

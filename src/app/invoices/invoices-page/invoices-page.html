@@ -1,0 +1,125 @@
+<h1 class="title">Faturas</h1>
+
+@if (!methodsLoaded()) {
+  <p class="status" aria-live="polite">Carregando…</p>
+} @else if (cards().length === 0) {
+  <p class="status">Nenhum cartão de crédito cadastrado.</p>
+} @else {
+  @if (cards().length > 1) {
+    <app-segmented-selector
+      class="cards"
+      label="Cartão"
+      [scrollable]="cards().length > 2"
+      [options]="cardOptions()"
+      [value]="cardId() ?? undefined"
+      (valueChange)="cardId.set($event)"
+    >
+      <ng-template let-option>
+        @for (item of cards(); track item.id) {
+          @if (item.id === option.value && item.institution.iconUrl) {
+            <img
+              class="card-icon"
+              [ngSrc]="item.institution.iconUrl"
+              width="20"
+              height="20"
+              alt=""
+            />
+          }
+        }
+      </ng-template>
+    </app-segmented-selector>
+  }
+
+  @if (invoicesLoaded() && invoiceList().length === 0) {
+    <p class="status">Este cartão ainda não tem faturas.</p>
+  } @else if (invoiceList().length > 0) {
+    <app-month-strip
+      class="months"
+      label="Faturas por mês de vencimento"
+      [months]="invoiceMonths()"
+      [selected]="selectedMonth()"
+      (monthSelected)="selectMonth($event)"
+    />
+
+    @if (invoice(); as selectedInvoice) {
+      @for (current of [selectedInvoice]; track current.id) {
+        <section
+          class="summary"
+          [class.back]="direction() === 'back'"
+          [class.neutral]="!card()?.institution?.color"
+          [style.--card-color]="card()?.institution?.color"
+          [attr.aria-label]="title(current)"
+        >
+          <div class="summary-header">
+            <h2 class="summary-title">{{ title(current) }}</h2>
+            @if (status(); as currentStatus) {
+              <span class="status-chip" [class]="currentStatus">{{
+                statusLabels[currentStatus]
+              }}</span>
+            }
+          </div>
+          <p class="summary-total">{{ current.total | currency }}</p>
+          @if (plannedTotal() > 0) {
+            <p class="summary-planned">+ {{ plannedTotal() | currency }} planejados</p>
+          }
+          <dl class="summary-dates">
+            <div>
+              <dt>Fecha</dt>
+              <dd>{{ dayOf(current.closingDate) }}</dd>
+            </div>
+            <div>
+              <dt>Vence</dt>
+              <dd>{{ dayOf(current.dueDate) }}</dd>
+            </div>
+          </dl>
+        </section>
+      }
+
+      <div class="entries-area" [class.stale]="entriesStale()" [attr.aria-busy]="entriesStale()">
+        @if (!entriesLoaded()) {
+          <p class="status" aria-live="polite">Carregando gastos…</p>
+        } @else if (realized().length === 0 && planned().length === 0) {
+          <p class="status">Nenhum gasto nesta fatura.</p>
+        } @else {
+          @if (realized().length > 0) {
+            <section class="entries" aria-labelledby="lancados">
+              <h2 class="entries-title" id="lancados">Lançados</h2>
+              <ul class="entry-list" role="list">
+                @for (expense of realized(); track expense.id) {
+                  <li>
+                    <app-expense-card
+                      invoiceView
+                      [expense]="expense"
+                      (editRequested)="editRequests.editExpense(expense)"
+                      (deleteRequested)="confirmDelete(expense)"
+                    />
+                  </li>
+                }
+              </ul>
+            </section>
+          }
+          @if (planned().length > 0) {
+            <section class="entries" aria-labelledby="planejados">
+              <h2 class="entries-title" id="planejados">Planejados</h2>
+              <ul class="entry-list" role="list">
+                @for (expense of planned(); track expense.id) {
+                  <li>
+                    <app-expense-card
+                      class="planned"
+                      invoiceView
+                      [expense]="expense"
+                      (editRequested)="editRequests.editExpense(expense)"
+                      (deleteRequested)="confirmDelete(expense)"
+                    />
+                  </li>
+                }
+              </ul>
+            </section>
+          }
+        }
+      </div>
+    }
+  }
+}
+
+<app-confirm-dialog />

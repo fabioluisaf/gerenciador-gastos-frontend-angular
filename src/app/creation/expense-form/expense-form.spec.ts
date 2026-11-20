@@ -148,7 +148,7 @@ describe('ExpenseForm', () => {
     fixture.detectChanges();
   }
 
-  it('should allow a planned single expense without date', () => {
+  it('should allow a planned credit expense without date once its invoice is chosen', () => {
     type('.amount-input', '5000');
     type('input[placeholder="Ex.: Mercado do mês"]', 'Viagem');
     type('input[placeholder="Ex.: Casa"]', 'Lazer');
@@ -159,10 +159,29 @@ describe('ExpenseForm', () => {
     fixture.detectChanges();
 
     submit();
+    expect(element.textContent).toContain('Informe a data ou o mês da fatura.');
+    expect(created).toEqual([]);
+
+    openDateField('Mês da fatura').querySelectorAll<HTMLButtonElement>('.month')[5].click();
+    fixture.detectChanges();
+    submit();
 
     expect(created[0]).toEqual(
       expect.objectContaining({ realized: false, date: null, installments: 1 }),
     );
+    expect(created[0].invoicePeriod).toMatch(/^\d{4}-06$/);
+  });
+
+  it('should require a date for planned expenses outside credit', () => {
+    type('.amount-input', '5000');
+    type('input[placeholder="Ex.: Mercado do mês"]', 'Aluguel');
+    type('input[placeholder="Ex.: Casa"]', 'Casa');
+    element.querySelector<HTMLInputElement>('.method input[value="pix"]')!.click();
+    choosePlanned();
+    expect(shortcuts(openDateField('Data')).map((chip) => chip.textContent?.trim())).toEqual([
+      'Hoje',
+      'Ontem',
+    ]);
   });
 
   it('should plan an installment purchase, which still needs a date', () => {

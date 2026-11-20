@@ -52,11 +52,12 @@ describe('ControlBar', () => {
     expect(
       element.querySelector('a[aria-label="Métodos de pagamento"]')?.getAttribute('href'),
     ).toBe('/metodos-pagamento');
+    expect(element.querySelector('a[aria-label="Faturas"]')?.getAttribute('href')).toBe('/faturas');
     expect(
       [...element.querySelectorAll<HTMLButtonElement>('button.control')].map(
         (button) => button.type,
       ),
-    ).toEqual(['button', 'button', 'button']);
+    ).toEqual(['button', 'button']);
     expect(element.querySelector('nav button.create')?.getAttribute('aria-label')).toBe('Criar');
   });
 
