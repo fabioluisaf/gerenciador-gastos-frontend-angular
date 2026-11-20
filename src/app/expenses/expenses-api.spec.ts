@@ -18,6 +18,15 @@ describe('ExpensesApi', () => {
 
   afterEach(() => http.verify());
 
+  function flushUsage(counts: [string, number][]): void {
+    http.expectOne('/api/metodos-pagamento/uso').flush({
+      dados: counts.map(([metodoPagamentoId, quantidadeGastos]) => ({
+        metodoPagamentoId,
+        quantidadeGastos,
+      })),
+    });
+  }
+
   it('should request a page of realized expenses and map them to the domain model', () => {
     const result = vi.fn();
     api.list('realized', 1, 50).subscribe(result);
@@ -172,6 +181,7 @@ describe('ExpensesApi', () => {
         },
       ]),
     );
+    flushUsage([]);
 
     expect(result).toHaveBeenCalledWith({
       realized: 100,
@@ -213,6 +223,7 @@ describe('ExpensesApi', () => {
         ),
       );
     http.expectOne((req) => req.url === '/api/gastos/totais/metodo-pagamento').flush(page([]));
+    flushUsage([]);
 
     expect(result.mock.calls[0][0].byCategory.map((line: { id: string }) => line.id)).toEqual([
       'água',
@@ -223,7 +234,7 @@ describe('ExpensesApi', () => {
     ]);
   });
 
-  it('should order the payment totals by type and then by institution and name', () => {
+  it('should order the payment totals by type, then by how often each method is used', () => {
     const result = vi.fn();
     api.getMonthTotals('2026-11').subscribe(result);
 
@@ -251,13 +262,20 @@ describe('ExpensesApi', () => {
           payment('boleto', 'BOLETO', 'Caixa', 700),
           payment('debito', 'DEBITO', 'Caixa', 600),
           payment('credito-caixa', 'CREDITO', 'Caixa', 1),
+          payment('pix-nubank', 'PIX', 'Nubank', 1),
         ]),
       );
+    flushUsage([
+      ['credito-nubank', 30],
+      ['credito-caixa', 4],
+      ['pix', 2],
+    ]);
 
     expect(result.mock.calls[0][0].byPayment.map((line: { id: string }) => line.id)).toEqual([
-      'credito-caixa',
       'credito-nubank',
+      'credito-caixa',
       'pix',
+      'pix-nubank',
       'debito',
       'boleto',
       'doc',

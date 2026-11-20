@@ -8,6 +8,7 @@ import {
 import { provideRouter, withComponentInputBinding, withViewTransitions } from '@angular/router';
 import { routes } from './app.routes';
 import { provideAppLocale } from './core/locale';
+import { FontSizeService } from './core/font-size';
 import { ThemeService } from './core/theme';
 import { tagViewTransitionTypes } from './core/view-transition-types';
 
@@ -17,6 +18,7 @@ export const appConfig: ApplicationConfig = {
     provideAppLocale(),
     provideAppInitializer(() => {
       inject(ThemeService);
+      inject(FontSizeService);
     }),
     provideHttpClient(),
     provideRouter(

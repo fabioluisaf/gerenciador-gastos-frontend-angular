@@ -14,7 +14,7 @@
           @if (item.installment; as installment) {
             <span class="installment">
               <span aria-hidden="true">·</span>
-              Parcelado em {{ installment.count }}x
+              em {{ installment.count }}x
             </span>
           }
         </div>
@@ -81,6 +81,10 @@
         </button>
       }
     </div>
-    <app-expense-actions-menu class="actions-menu" (deleteRequested)="deleteRequested.emit()" />
+    <app-actions-menu
+      class="actions-menu"
+      label="Ações do gasto"
+      (deleteRequested)="deleteRequested.emit()"
+    />
   </article>
 </app-swipe-actions>

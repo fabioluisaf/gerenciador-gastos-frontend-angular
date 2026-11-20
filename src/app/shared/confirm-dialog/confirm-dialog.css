@@ -51,7 +51,7 @@
 
 .title {
   margin: 0 0 0.5rem;
-  font-size: 1.125rem;
+  font-size: calc(1.125rem * var(--font-scale));
 }
 
 .message {
@@ -63,7 +63,7 @@
 .error {
   margin: 0.75rem 0 0;
   color: var(--color-danger);
-  font-size: 0.875rem;
+  font-size: calc(0.875rem * var(--font-scale));
 }
 
 .actions {

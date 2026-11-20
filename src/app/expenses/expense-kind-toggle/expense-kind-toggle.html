@@ -1,23 +1,9 @@
-<nav class="toggle" aria-label="Tipo de gasto">
-  <a
-    class="option"
-    routerLink="/gastos"
-    routerLinkActive="active"
-    ariaCurrentWhenActive="page"
-    [routerLinkActiveOptions]="exact"
-  >
-    <span class="highlight" aria-hidden="true"></span>
-    <svg lucideCheck aria-hidden="true"></svg>
-    Realizados
-  </a>
-  <a
-    class="option"
-    routerLink="/gastos/planejados"
-    routerLinkActive="active"
-    ariaCurrentWhenActive="page"
-  >
-    <span class="highlight" aria-hidden="true"></span>
-    <svg lucideClock aria-hidden="true"></svg>
-    Planejados
-  </a>
-</nav>
+<app-segmented-selector label="Tipo de gasto" memoryKey="tipo-de-gasto" [options]="options">
+  <ng-template let-option>
+    @if (option.value === 'realized') {
+      <svg lucideCheck aria-hidden="true"></svg>
+    } @else {
+      <svg lucideClock aria-hidden="true"></svg>
+    }
+  </ng-template>
+</app-segmented-selector>

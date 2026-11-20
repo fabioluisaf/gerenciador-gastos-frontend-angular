@@ -18,6 +18,21 @@ export const PAYMENT_TYPE_ORDER: readonly PaymentType[] = [
   'TED',
 ];
 
+interface RankedPayment {
+  id: string;
+  paymentType: PaymentType;
+  institution: { name: string };
+}
+
+export function byPaymentTypeThenUsage(
+  usage: ReadonlyMap<string, number>,
+): (a: RankedPayment, b: RankedPayment) => number {
+  return (a, b) =>
+    PAYMENT_TYPE_ORDER.indexOf(a.paymentType) - PAYMENT_TYPE_ORDER.indexOf(b.paymentType) ||
+    (usage.get(b.id) ?? 0) - (usage.get(a.id) ?? 0) ||
+    a.institution.name.localeCompare(b.institution.name, 'pt-BR');
+}
+
 export type ExpenseKind = 'realized' | 'planned';
 
 export interface Institution {

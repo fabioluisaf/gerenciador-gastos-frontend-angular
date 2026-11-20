@@ -1,32 +1,49 @@
 <app-bottom-sheet label="Configurações" (closed)="onClosed()">
   <h2 class="title">Configurações</h2>
-  <fieldset class="setting">
-    <legend class="setting-label">Tema</legend>
-    <div class="options">
-      @for (option of themeOptions; track option.value) {
-        <label class="option" [class.active]="themes.preference() === option.value">
-          <input
-            type="radio"
-            name="tema"
-            class="visually-hidden"
-            [value]="option.value"
-            [checked]="themes.preference() === option.value"
-            (change)="themes.setPreference(option.value)"
-          />
-          @switch (option.value) {
-            @case ('system') {
-              <svg lucideSunMoon aria-hidden="true"></svg>
-            }
-            @case ('light') {
-              <svg lucideSun aria-hidden="true"></svg>
-            }
-            @case ('dark') {
-              <svg lucideMoon aria-hidden="true"></svg>
-            }
-          }
-          {{ option.label }}
-        </label>
+
+  <app-segmented-selector
+    class="setting"
+    label="Tema"
+    labelVisible
+    [options]="themeOptions"
+    [value]="themes.preference()"
+    (valueChange)="themes.setPreference($event)"
+  >
+    <ng-template let-option>
+      @switch (option.value) {
+        @case ('system') {
+          <svg lucideSunMoon aria-hidden="true"></svg>
+        }
+        @case ('light') {
+          <svg lucideSun aria-hidden="true"></svg>
+        }
+        @case ('dark') {
+          <svg lucideMoon aria-hidden="true"></svg>
+        }
       }
-    </div>
-  </fieldset>
+    </ng-template>
+  </app-segmented-selector>
+
+  <app-segmented-selector
+    class="setting"
+    label="Tamanho da fonte"
+    labelVisible
+    [options]="fontSizeOptions"
+    [value]="fontSizes.size()"
+    (valueChange)="fontSizes.setSize($event)"
+  >
+    <ng-template let-option>
+      @switch (option.value) {
+        @case ('small') {
+          <svg lucideAArrowDown aria-hidden="true"></svg>
+        }
+        @case ('medium') {
+          <svg lucideALargeSmall aria-hidden="true"></svg>
+        }
+        @case ('large') {
+          <svg lucideAArrowUp aria-hidden="true"></svg>
+        }
+      }
+    </ng-template>
+  </app-segmented-selector>
 </app-bottom-sheet>

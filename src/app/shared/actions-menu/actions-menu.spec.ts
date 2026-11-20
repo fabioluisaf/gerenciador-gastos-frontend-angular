@@ -1,12 +1,12 @@
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ExpenseActionsMenu } from './expense-actions-menu';
+import { ActionsMenu } from './actions-menu';
 
 @Component({
-  imports: [ExpenseActionsMenu],
+  imports: [ActionsMenu],
   template: `
     <div (click)="parentClicks = parentClicks + 1">
-      <app-expense-actions-menu (deleteRequested)="deletes = deletes + 1" />
+      <app-actions-menu label="Ações do gasto" (deleteRequested)="deletes = deletes + 1" />
     </div>
   `,
 })
@@ -15,7 +15,7 @@ class Host {
   parentClicks = 0;
 }
 
-describe('ExpenseActionsMenu', () => {
+describe('ActionsMenu', () => {
   let fixture: ComponentFixture<Host>;
   let element: HTMLElement;
 
@@ -40,7 +40,7 @@ describe('ExpenseActionsMenu', () => {
     menu.dispatchEvent(Object.assign(new Event('toggle'), { newState: 'open' }));
     await fixture.whenStable();
 
-    expect(element.querySelector('app-expense-actions-menu')?.classList).toContain('open');
+    expect(element.querySelector('app-actions-menu')?.classList).toContain('open');
     expect(element.querySelector('.more')?.getAttribute('aria-expanded')).toBe('true');
   });
 

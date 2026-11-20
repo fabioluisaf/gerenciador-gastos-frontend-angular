@@ -21,15 +21,15 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: var(--swipe-action-justify, center);
   gap: 0.25rem;
   overflow: hidden;
-  padding: 0;
+  padding: var(--swipe-action-padding, 0);
   border: 0;
   border-radius: var(--swipe-radius);
   color: var(--color-text-inverse);
   font: inherit;
-  font-size: 0.8125rem;
+  font-size: calc(0.8125rem * var(--font-scale));
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;

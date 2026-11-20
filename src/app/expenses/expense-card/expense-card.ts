@@ -22,7 +22,7 @@ import {
 } from '@lucide/angular';
 import { SwipeActions } from '../../shared/swipe-actions/swipe-actions';
 import { Expense, PAYMENT_TYPE_LABELS } from '../expense';
-import { ExpenseActionsMenu } from '../expense-actions-menu/expense-actions-menu';
+import { ActionsMenu } from '../../shared/actions-menu/actions-menu';
 import { ExpensesApi } from '../expenses-api';
 import { todayIsoDate } from '../timeline';
 
@@ -51,7 +51,7 @@ function isCut(element: HTMLElement | null): boolean {
   selector: 'app-expense-card',
   imports: [
     CurrencyPipe,
-    ExpenseActionsMenu,
+    ActionsMenu,
     NgOptimizedImage,
     LucideChevronDown,
     LucideCircle,

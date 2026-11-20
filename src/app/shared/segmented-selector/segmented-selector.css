@@ -1,0 +1,82 @@
+:host {
+  --selector-background: var(--color-floating);
+  --selector-border: var(--color-floating-border);
+  --selector-shadow: var(--shadow-floating);
+  --selector-option-height: 2.25rem;
+  --selector-option-direction: row;
+
+  display: block;
+}
+
+.label {
+  display: block;
+  margin-block-end: 0.75rem;
+  color: var(--color-text-muted);
+  font-size: calc(0.875rem * var(--font-scale));
+  font-weight: 600;
+}
+
+.options {
+  display: grid;
+  grid-auto-columns: 1fr;
+  grid-auto-flow: column;
+  gap: 0.25rem;
+  padding: 0.25rem;
+  border: 1px solid var(--selector-border);
+  border-radius: 9999px;
+  background-color: var(--selector-background);
+  box-shadow: var(--selector-shadow);
+}
+
+.option {
+  position: relative;
+  display: flex;
+  flex-direction: var(--selector-option-direction);
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-inline-size: 0;
+  min-block-size: var(--selector-option-height);
+  padding: 0.25rem 0.5rem;
+  border-radius: 9999px;
+  color: var(--color-text-muted);
+  font-size: calc(0.9375rem * var(--font-scale));
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-duration-fast) ease,
+    color var(--motion-duration-fast) ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.option-label {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.option.active {
+  color: var(--color-primary);
+}
+
+@media (hover: hover) {
+  .option:not(.active):hover {
+    background-color: color-mix(in srgb, var(--color-text) 10%, transparent);
+    color: var(--color-text);
+  }
+}
+
+.option:focus-visible,
+.option:has(:focus-visible) {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .option {
+    transition: none;
+  }
+}

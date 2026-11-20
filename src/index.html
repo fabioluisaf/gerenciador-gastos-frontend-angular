@@ -15,6 +15,10 @@
             : matchMedia('(prefers-color-scheme: light)').matches
               ? 'light'
               : 'dark';
+        const fontSize = localStorage.getItem('tamanho-fonte');
+        if (fontSize === 'medium' || fontSize === 'large') {
+          document.documentElement.dataset.fontSize = fontSize;
+        }
       } catch {}
     </script>
   </head>

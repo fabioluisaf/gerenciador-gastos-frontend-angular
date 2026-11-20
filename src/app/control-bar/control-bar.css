@@ -22,7 +22,9 @@
 
 .control-bar {
   display: flex;
-  gap: 0.5rem;
+  box-sizing: border-box;
+  inline-size: min(100vw - 1.5rem, 30rem);
+  gap: var(--control-gap);
   padding: 0.5rem;
   border: 1px solid var(--color-floating-border);
   border-radius: 9999px;
@@ -34,95 +36,57 @@
 
 .control {
   position: relative;
-  isolation: isolate;
   display: grid;
+  flex: 1 1 0;
   place-items: center;
-  inline-size: 3rem;
-  block-size: 3rem;
+  min-inline-size: 0;
+  block-size: var(--control-size);
   padding: 0;
   border: 0;
-  border-radius: 50%;
+  border-radius: 9999px;
   background-color: transparent;
   color: var(--color-text);
   cursor: pointer;
-  transition: background-color var(--motion-duration-fast) ease;
+  transition:
+    background-color var(--motion-duration-fast) ease,
+    color var(--motion-duration-fast) ease;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.control:hover {
-  background-color: color-mix(in srgb, var(--color-text) 10%, transparent);
+.control svg {
+  inline-size: calc(var(--control-size) * 0.44);
+  block-size: calc(var(--control-size) * 0.44);
 }
 
 .control.create {
-  inline-size: 3.25rem;
-  block-size: 3.25rem;
+  block-size: calc(var(--control-size) + 0.25rem);
   margin-block: -0.125rem;
   background-color: var(--color-primary);
   color: var(--color-text-inverse);
 }
 
-.control.create:hover {
-  background-color: var(--color-primary-hover);
-}
-
 .control.create svg {
-  inline-size: 1.625rem;
-  block-size: 1.625rem;
-}
-
-.highlight {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: inherit;
+  inline-size: calc(var(--control-size) * 0.5);
+  block-size: calc(var(--control-size) * 0.5);
 }
 
 .control.active {
   color: var(--color-primary);
 }
 
-.control.active:hover {
-  background-color: transparent;
-}
+@media (hover: hover) {
+  .control:not(.active, .create):hover {
+    background-color: color-mix(in srgb, var(--color-text) 10%, transparent);
+  }
 
-.control.active .highlight {
-  background-color: color-mix(in srgb, var(--color-primary) 25%, transparent);
-  view-transition-name: control-bar-highlight;
-  view-transition-group: nearest;
+  .control.create:hover {
+    background-color: var(--color-primary-hover);
+  }
 }
 
 .control:focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
-}
-
-@media (width < 64rem) {
-  .control-bar {
-    box-sizing: border-box;
-    inline-size: min(100vw - 1.5rem, 30rem);
-    gap: var(--control-gap);
-  }
-
-  .control {
-    flex: 1 1 0;
-    min-inline-size: 0;
-    inline-size: auto;
-    block-size: var(--control-size);
-    border-radius: 9999px;
-  }
-
-  .control svg {
-    inline-size: calc(var(--control-size) * 0.44);
-    block-size: calc(var(--control-size) * 0.44);
-  }
-
-  .control.create {
-    block-size: calc(var(--control-size) + 0.25rem);
-  }
-
-  .control.create svg {
-    inline-size: calc(var(--control-size) * 0.5);
-    block-size: calc(var(--control-size) * 0.5);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

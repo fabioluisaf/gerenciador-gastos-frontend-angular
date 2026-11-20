@@ -3,26 +3,19 @@ import { inject, Injectable } from '@angular/core';
 import { forkJoin, map, Observable } from 'rxjs';
 import { API_URL, ApiPage, ApiResponse, Page, toPage } from '../core/api';
 import {
+  byPaymentTypeThenUsage,
   Expense,
   ExpenseFilter,
   ExpenseKind,
   ExpensePeriod,
-  Institution,
   InstallmentPart,
   MonthTotals,
-  PAYMENT_TYPE_ORDER,
-  PaymentTotalLine,
   PaymentType,
   TotalLine,
 } from './expense';
+import { PaymentUsage, PaymentUsageApi } from '../payment-methods/payment-usage-api';
+import { InstitutionDto, toInstitution } from './institution-dto';
 import { parsePeriodKey } from './timeline';
-
-interface InstitutionDto {
-  id: string;
-  nome: string;
-  possuiIcone: boolean;
-  cor: string | null;
-}
 
 interface ExpenseDto {
   id: string;
@@ -88,28 +81,16 @@ function toIsoDate(date: string | null): string | null {
   return `${year}-${month}-${day}`;
 }
 
-function toInstitution(dto: InstitutionDto): Institution {
-  return {
-    id: dto.id,
-    name: dto.nome,
-    iconUrl: dto.possuiIcone ? `${API_URL}/instituicoes-financeiras/${dto.id}/icone` : null,
-    color: dto.cor,
-  };
-}
-
 function byLabel(a: TotalLine, b: TotalLine): number {
   return a.label.localeCompare(b.label, 'pt-BR', { sensitivity: 'base' });
 }
 
-function byPaymentTypeThenName(a: PaymentTotalLine, b: PaymentTotalLine): number {
-  return (
-    PAYMENT_TYPE_ORDER.indexOf(a.paymentType) - PAYMENT_TYPE_ORDER.indexOf(b.paymentType) ||
-    a.institution.name.localeCompare(b.institution.name, 'pt-BR') ||
-    a.label.localeCompare(b.label, 'pt-BR')
-  );
-}
-
-function toMonthTotals(categories: CategoryTotalDto[], payments: PaymentTotalDto[]): MonthTotals {
+function toMonthTotals(
+  categories: CategoryTotalDto[],
+  payments: PaymentTotalDto[],
+  usage: PaymentUsage,
+): MonthTotals {
+  const byUsage = byPaymentTypeThenUsage(usage);
   const byCategory = categories
     .map(({ categoria, realizado, planejado }) => ({
       id: categoria,
@@ -131,7 +112,7 @@ function toMonthTotals(categories: CategoryTotalDto[], payments: PaymentTotalDto
         paymentType: dto.tipo,
         institution: toInstitution(dto.instituicaoFinanceira),
       }))
-      .sort(byPaymentTypeThenName),
+      .sort((a, b) => byUsage(a, b) || a.label.localeCompare(b.label, 'pt-BR')),
   };
 }
 
@@ -168,6 +149,7 @@ function withFilters(params: HttpParams, filters: readonly ExpenseFilter[]): Htt
 @Injectable({ providedIn: 'root' })
 export class ExpensesApi {
   private readonly http = inject(HttpClient);
+  private readonly usage = inject(PaymentUsageApi);
 
   list(
     kind: ExpenseKind,
@@ -231,6 +213,11 @@ export class ExpensesApi {
       this.http.get<ApiPage<PaymentTotalDto>>(`${API_URL}/gastos/totais/metodo-pagamento`, {
         params,
       }),
-    ]).pipe(map(([categories, payments]) => toMonthTotals(categories.dados, payments.dados)));
+      this.usage.counts(),
+    ]).pipe(
+      map(([categories, payments, usage]) =>
+        toMonthTotals(categories.dados, payments.dados, usage),
+      ),
+    );
   }
 }

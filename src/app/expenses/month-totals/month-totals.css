@@ -6,7 +6,7 @@
 .title {
   margin: 0;
   color: var(--color-text-muted);
-  font-size: 0.875rem;
+  font-size: calc(0.875rem * var(--font-scale));
   font-style: italic;
   font-weight: 400;
 }
@@ -22,14 +22,14 @@
 }
 
 .overall-realized {
-  font-size: 1.75rem;
+  font-size: calc(1.75rem * var(--font-scale));
   font-variant-numeric: tabular-nums;
   font-weight: 700;
 }
 
 .overall-planned {
   color: var(--color-text-muted);
-  font-size: 0.875rem;
+  font-size: calc(0.875rem * var(--font-scale));
 }
 
 .group {
@@ -41,7 +41,7 @@
 
 .group-title {
   margin: 0;
-  font-size: 0.9375rem;
+  font-size: calc(0.9375rem * var(--font-scale));
   font-weight: 600;
 }
 
@@ -51,7 +51,7 @@
   margin: 0;
   padding: 0;
   list-style: none;
-  font-size: 0.875rem;
+  font-size: calc(0.875rem * var(--font-scale));
 }
 
 .row-button {

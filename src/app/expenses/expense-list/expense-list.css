@@ -23,7 +23,7 @@
   gap: 0.75rem;
   margin: 0 0 1rem;
   color: var(--color-text);
-  font-size: 1.125rem;
+  font-size: calc(1.125rem * var(--font-scale));
   font-weight: 700;
 }
 
@@ -41,7 +41,7 @@
   gap: 0.75rem;
   margin: 0 0 0.75rem;
   color: var(--color-text-muted);
-  font-size: 0.875rem;
+  font-size: calc(0.875rem * var(--font-scale));
   font-style: italic;
   font-weight: 400;
 }

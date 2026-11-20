@@ -15,7 +15,7 @@
   border: 0;
   border-radius: 9999px;
   background-color: transparent;
-  color: var(--color-text-muted);
+  color: var(--actions-menu-color, var(--color-text-muted));
   cursor: pointer;
   transition:
     background-color var(--motion-duration-fast) ease,
@@ -29,8 +29,8 @@
 
 .more:hover,
 :host(.open) .more {
-  background-color: color-mix(in srgb, var(--color-text) 10%, transparent);
-  color: var(--color-text);
+  background-color: color-mix(in srgb, currentColor 10%, transparent);
+  color: var(--actions-menu-active-color, var(--color-text));
 }
 
 .more:focus-visible {
@@ -63,7 +63,7 @@
   background-color: transparent;
   color: inherit;
   font: inherit;
-  font-size: 0.9375rem;
+  font-size: calc(0.9375rem * var(--font-scale));
   text-align: start;
   cursor: pointer;
 }

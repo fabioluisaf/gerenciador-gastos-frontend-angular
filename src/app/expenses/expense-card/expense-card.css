@@ -64,7 +64,7 @@
   flex-shrink: 0;
   gap: 0.375rem;
   color: var(--color-text-muted);
-  font-size: 0.875rem;
+  font-size: calc(0.875rem * var(--font-scale));
   white-space: nowrap;
 }
 
@@ -97,7 +97,7 @@
 .name {
   min-inline-size: 0;
   margin: 0;
-  font-size: 1rem;
+  font-size: calc(1rem * var(--font-scale));
   font-weight: 600;
 }
 
@@ -115,7 +115,7 @@
 .description {
   margin: 0;
   color: var(--color-text-muted);
-  font-size: 0.875rem;
+  font-size: calc(0.875rem * var(--font-scale));
 }
 
 .action-icon {
@@ -131,7 +131,7 @@
 }
 
 .actions-menu {
-  align-self: start;
+  align-self: center;
 }
 
 .details {
@@ -152,7 +152,7 @@
   border-radius: 9999px;
   background-color: var(--color-surface-alt);
   color: var(--color-text-muted);
-  font-size: 0.8125rem;
+  font-size: calc(0.8125rem * var(--font-scale));
 }
 
 :host(.planned) .tag {
@@ -170,7 +170,7 @@
 .installments-status {
   margin: 0;
   color: var(--color-text-muted);
-  font-size: 0.875rem;
+  font-size: calc(0.875rem * var(--font-scale));
 }
 
 .installments {
@@ -188,7 +188,7 @@
   padding: 0;
   list-style: none;
   color: var(--color-text-muted);
-  font-size: 0.875rem;
+  font-size: calc(0.875rem * var(--font-scale));
   font-variant-numeric: tabular-nums;
 }
 

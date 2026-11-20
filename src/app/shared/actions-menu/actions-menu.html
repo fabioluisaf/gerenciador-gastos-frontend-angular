@@ -1,7 +1,7 @@
 <button
   type="button"
   class="more"
-  aria-label="Ações do gasto"
+  [attr.aria-label]="label()"
   [attr.popovertarget]="menuId"
   [attr.aria-expanded]="open()"
   [style.anchor-name]="anchorName"
@@ -17,7 +17,7 @@
   (toggle)="onToggle($event)"
 >
   <button type="button" class="menu-item danger" (click)="requestDelete(menu)">
-    <svg lucideTrash2 aria-hidden="true"></svg>
+    <svg lucideTrash aria-hidden="true"></svg>
     Excluir
   </button>
 </div>

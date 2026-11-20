@@ -7,6 +7,7 @@ import {
   LucideSettings,
   LucideWalletCards,
 } from '@lucide/angular';
+import { SlidingIndicator } from '../shared/sliding-indicator';
 import { ControlBarState } from './control-bar-state';
 
 @Component({
@@ -19,6 +20,7 @@ import { ControlBarState } from './control-bar-state';
     LucideReceiptText,
     LucideSettings,
     LucideWalletCards,
+    SlidingIndicator,
   ],
   templateUrl: './control-bar.html',
   styleUrl: './control-bar.css',

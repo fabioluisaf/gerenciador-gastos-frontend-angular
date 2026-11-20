@@ -1,0 +1,49 @@
+@if (labelVisible()) {
+  <span class="label" [id]="id + '-label'">{{ label() }}</span>
+}
+
+@if (navigates()) {
+  <nav class="options" [appSlidingIndicator]="memoryKey()" [attr.aria-label]="label()">
+    @for (option of options(); track option.value) {
+      <a
+        class="option"
+        [routerLink]="option.link"
+        routerLinkActive="active"
+        ariaCurrentWhenActive="page"
+        [routerLinkActiveOptions]="option.exact ? exactMatch : prefixMatch"
+      >
+        <ng-container
+          [ngTemplateOutlet]="icon() ?? null"
+          [ngTemplateOutletContext]="{ $implicit: option }"
+        />
+        <span class="option-label">{{ option.label }}</span>
+      </a>
+    }
+  </nav>
+} @else {
+  <div
+    class="options"
+    role="radiogroup"
+    [appSlidingIndicator]="memoryKey()"
+    [attr.aria-labelledby]="labelVisible() ? id + '-label' : null"
+    [attr.aria-label]="labelVisible() ? null : label()"
+  >
+    @for (option of options(); track option.value) {
+      <label class="option" [class.active]="option.value === value()">
+        <input
+          type="radio"
+          class="visually-hidden"
+          [name]="id"
+          [value]="option.value"
+          [checked]="option.value === value()"
+          (change)="valueChange.emit(option.value)"
+        />
+        <ng-container
+          [ngTemplateOutlet]="icon() ?? null"
+          [ngTemplateOutletContext]="{ $implicit: option }"
+        />
+        <span class="option-label">{{ option.label }}</span>
+      </label>
+    }
+  </div>
+}
