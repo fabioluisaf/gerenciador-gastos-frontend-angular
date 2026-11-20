@@ -17,18 +17,15 @@
       <div class="summary">
         <div class="heading">
           <h4 class="name">{{ item.name }}</h4>
+          @if (invoiceView() && item.installment; as installment) {
+            <span class="installment">{{ installment.number }}/{{ installment.count }}</span>
+          }
         </div>
         <p class="amount" [class.refund]="isRefund()">
-          @if (item.installment; as installment) {
-            <span class="installment">
-              {{
-                invoiceView()
-                  ? 'parcela ' + installment.number + '/' + installment.count
-                  : 'em ' + installment.count + 'x'
-              }}
-            </span>
-          }
           <span class="amount-value">{{ amount() | currency }}</span>
+          @if (!invoiceView() && item.installment; as installment) {
+            <span class="installment">em {{ installment.count }}x</span>
+          }
         </p>
       </div>
 

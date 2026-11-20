@@ -66,7 +66,9 @@ describe('ExpenseCard', () => {
     );
 
     expect(normalized(element.querySelector('.amount-value')?.textContent)).toBe('R$ 300,00');
-    expect(normalized(element.querySelector('.amount .installment')?.textContent)).toBe('em 3x');
+    expect(
+      [...element.querySelector('.amount')!.children].map((part) => normalized(part.textContent)),
+    ).toEqual(['R$ 300,00', 'em 3x']);
     expect(element.querySelector('.heading .installment')).toBeNull();
     expect(normalized(element.querySelector('.name')?.textContent)).toBe('Mercado');
     expect(tags(element)).toEqual(['Casa', 'Nubank · Crédito']);

@@ -119,7 +119,8 @@ describe('InvoicesPage', () => {
       [...element.querySelectorAll('.entries-title')].map((title) => title.textContent),
     ).toEqual(['Lançados', 'Planejados']);
     const planned = element.querySelectorAll('app-expense-card')[1];
-    expect(planned.querySelector('.installment')?.textContent?.trim()).toBe('parcela 2/10');
+    expect(planned.querySelector('.heading .installment')?.textContent?.trim()).toBe('2/10');
+    expect(planned.querySelector('.amount .installment')).toBeNull();
     expect(planned.querySelector('.amount-value')?.textContent).toMatch(/R\$\s300,00/);
   });
 

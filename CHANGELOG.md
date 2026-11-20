@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.1
+- Compras parceladas mostram "em Nx" à direita do valor na lista de gastos.
+- Na fatura, a parcela aparece no fim do nome do gasto, como "2/10".
+
 ## 2.0.0
 - **Interface refeita do zero**, pensada primeiro para o celular: navegação por uma barra flutuante (Gastos, Métodos de pagamento, Criar, Faturas e Configurações), com transições animadas entre as telas.
 - Lista de gastos realizados e planejados com rolagem infinita, separada por mês e dia, com filtros por categoria e método de pagamento e totais do mês (painel lateral no computador, card resumido e gaveta no celular).

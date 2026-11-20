@@ -60,9 +60,16 @@
 }
 
 .installment {
+  flex-shrink: 0;
   color: var(--color-text-muted);
   font-size: calc(0.875rem * var(--font-scale));
+  font-variant-numeric: tabular-nums;
   font-weight: 400;
+  white-space: nowrap;
+}
+
+.expanded .heading .installment {
+  margin-inline-start: 0.375rem;
 }
 
 .name,
