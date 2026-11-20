@@ -17,7 +17,14 @@
   >
     <svg lucideWalletCards aria-hidden="true"></svg>
   </a>
-  <button type="button" class="control create" aria-label="Criar">
+  <button
+    type="button"
+    class="control create"
+    aria-label="Criar"
+    aria-haspopup="dialog"
+    [attr.aria-expanded]="createOpen()"
+    (click)="createRequested.emit()"
+  >
     <svg lucidePlus aria-hidden="true"></svg>
   </button>
   <button type="button" class="control" aria-label="Faturas">

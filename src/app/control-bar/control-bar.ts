@@ -33,6 +33,8 @@ import { ControlBarState } from './control-bar-state';
 export class ControlBar {
   protected readonly state = inject(ControlBarState);
 
+  readonly createOpen = input(false);
   readonly settingsOpen = input(false);
+  readonly createRequested = output<void>();
   readonly settingsRequested = output<void>();
 }

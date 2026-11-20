@@ -181,7 +181,7 @@ describe('PaymentMethodsPage', () => {
       'Ações de B',
     );
 
-    element.querySelector<HTMLButtonElement>('.pile-item .menu-item')!.click();
+    element.querySelector<HTMLButtonElement>('.pile-item .menu-item.danger')!.click();
     await settle(fixture);
     expect(element.querySelector('dialog .message')?.textContent).toBe('"B" será excluído.');
   });

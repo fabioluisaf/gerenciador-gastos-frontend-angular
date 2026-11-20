@@ -24,6 +24,8 @@
   <div
     class="options"
     role="radiogroup"
+    [class.wrapped]="columns() !== null"
+    [style.grid-template-columns]="columns() ? 'repeat(' + columns() + ', minmax(0, 1fr))' : null"
     [appSlidingIndicator]="memoryKey()"
     [attr.aria-labelledby]="labelVisible() ? id + '-label' : null"
     [attr.aria-label]="labelVisible() ? null : label()"

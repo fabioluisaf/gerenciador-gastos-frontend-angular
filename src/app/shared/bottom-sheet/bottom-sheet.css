@@ -100,6 +100,7 @@
   box-sizing: border-box;
   min-block-size: 0;
   padding: 0.25rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom));
+  overflow-x: hidden;
   overflow-y: auto;
 }
 

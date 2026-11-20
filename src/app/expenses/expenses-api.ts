@@ -10,6 +10,7 @@ import {
   ExpensePeriod,
   InstallmentPart,
   MonthTotals,
+  NewExpense,
   PaymentType,
   TotalLine,
 } from './expense';
@@ -42,6 +43,36 @@ interface InstallmentPurchaseDto {
     numeroParcela: number;
     valor: number;
     fatura: { dataVencimento: string } | null;
+  }[];
+}
+
+interface InvoiceDto {
+  dataFechamento: string;
+}
+
+interface ExpenseDetailDto {
+  data: string | null;
+  nome: string;
+  valor: number;
+  categoria: string;
+  metodoPagamento: { id: string };
+  fatura: InvoiceDto | null;
+  descricao: string | null;
+  realizado: boolean;
+}
+
+interface PurchaseDetailDto {
+  nome: string;
+  categoria: string;
+  metodoPagamento: { id: string };
+  descricao: string | null;
+  valorTotal: number;
+  quantidadeParcelas: number;
+  parcelas: {
+    numeroParcela: number;
+    data: string;
+    fatura: InvoiceDto | null;
+    realizado: boolean;
   }[];
 }
 
@@ -176,6 +207,95 @@ export class ExpensesApi {
           dados.map(({ ano, mes, quantidade }) => ({ year: ano, month: mes, count: quantidade })),
         ),
       );
+  }
+
+  create(expense: NewExpense): Observable<void> {
+    const common = {
+      nome: expense.name,
+      categoria: expense.category,
+      metodoPagamentoId: expense.paymentMethodId,
+      data: expense.date,
+      descricao: expense.description,
+      faturaPeriodo: expense.invoicePeriod,
+    };
+    const request =
+      expense.installments > 1
+        ? this.http.post(`${API_URL}/compras-parceladas`, {
+            ...common,
+            valorTotal: expense.amount,
+            quantidadeParcelas: expense.installments,
+            realizado: expense.realized,
+          })
+        : this.http.post(`${API_URL}/gastos`, {
+            ...common,
+            valor: expense.amount,
+            realizado: expense.realized,
+          });
+    return request.pipe(map(() => undefined));
+  }
+
+  loadForEdit(expense: Expense): Observable<NewExpense> {
+    const purchaseId = expense.installment?.purchaseId;
+    if (purchaseId) {
+      return this.http
+        .get<ApiResponse<PurchaseDetailDto>>(`${API_URL}/compras-parceladas/${purchaseId}`)
+        .pipe(
+          map(({ dados }) => {
+            const first = [...dados.parcelas].sort((a, b) => a.numeroParcela - b.numeroParcela)[0];
+            return {
+              name: dados.nome,
+              amount: dados.valorTotal,
+              category: dados.categoria,
+              paymentMethodId: dados.metodoPagamento.id,
+              date: toIsoDate(first?.data ?? null),
+              description: dados.descricao,
+              realized: first?.realizado ?? true,
+              installments: dados.quantidadeParcelas,
+              invoicePeriod: first?.fatura?.dataFechamento.slice(0, 7) ?? null,
+            };
+          }),
+        );
+    }
+    return this.http.get<ApiResponse<ExpenseDetailDto>>(`${API_URL}/gastos/${expense.id}`).pipe(
+      map(({ dados }) => ({
+        name: dados.nome,
+        amount: dados.valor,
+        category: dados.categoria,
+        paymentMethodId: dados.metodoPagamento.id,
+        date: toIsoDate(dados.data),
+        description: dados.descricao,
+        realized: dados.realizado,
+        installments: 1,
+        invoicePeriod: dados.fatura?.dataFechamento.slice(0, 7) ?? null,
+      })),
+    );
+  }
+
+  update(expense: Expense, changes: NewExpense): Observable<void> {
+    const common = {
+      nome: changes.name,
+      categoria: changes.category,
+      metodoPagamentoId: changes.paymentMethodId,
+      data: changes.date,
+      descricao: changes.description,
+      faturaPeriodo: changes.invoicePeriod,
+      realizado: changes.realized,
+    };
+    const purchaseId = expense.installment?.purchaseId;
+    const request = purchaseId
+      ? this.http.put(`${API_URL}/compras-parceladas/${purchaseId}`, {
+          ...common,
+          valorTotal: changes.amount,
+          quantidadeParcelas: changes.installments,
+        })
+      : this.http.put(`${API_URL}/gastos/${expense.id}`, { ...common, valor: changes.amount });
+    return request.pipe(map(() => undefined));
+  }
+
+  listCategories(): Observable<string[]> {
+    return this.http
+      .get<ApiResponse<{ categoria: string }[]>>(`${API_URL}/gastos/categorias`)
+      .pipe(map(({ dados }) => dados.map(({ categoria }) => categoria)));
   }
 
   delete(expense: Expense): Observable<void> {

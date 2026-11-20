@@ -1,5 +1,6 @@
 import {
   afterNextRender,
+  booleanAttribute,
   DestroyRef,
   Directive,
   ElementRef,
@@ -57,6 +58,7 @@ export class SlidingIndicator {
 
   readonly appSlidingIndicator = input('');
   readonly activeSelector = input('.active');
+  readonly swell = input(true, { transform: booleanAttribute });
 
   private indicator: HTMLElement | null = null;
   private resizes: ResizeObserver | null = null;
@@ -156,7 +158,9 @@ export class SlidingIndicator {
     this.apply(box);
     const timing = { duration: SLIDING_INDICATOR_DURATION_MS, easing: 'ease-in-out' };
     this.indicator?.animate?.([{ scale: '1 1' }, { scale: '1.3 0.82' }, { scale: '1 1' }], timing);
-    this.host.animate?.([{ scale: '1' }, { scale: '1.04' }, { scale: '1' }], timing);
+    if (this.swell()) {
+      this.host.animate?.([{ scale: '1' }, { scale: '1.04' }, { scale: '1' }], timing);
+    }
   }
 
   private hide(): void {

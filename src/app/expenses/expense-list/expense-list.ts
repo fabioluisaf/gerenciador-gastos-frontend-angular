@@ -20,6 +20,8 @@ import {
 } from '@angular/core';
 import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription, tap } from 'rxjs';
+import { DataChanges } from '../../core/data-changes';
+import { EditRequests } from '../../core/edit-requests';
 import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
 import { InViewport } from '../../shared/in-viewport';
 import { TimelineScrubber } from '../../shared/timeline-scrubber/timeline-scrubber';
@@ -68,6 +70,8 @@ export class ExpenseList {
   private readonly injector = inject(Injector);
   private readonly document = inject(DOCUMENT);
   private readonly locale = inject(LOCALE_ID);
+  private readonly dataChanges = inject(DataChanges);
+  protected readonly editRequests = inject(EditRequests);
 
   protected readonly loadMargin = '600px 0px 600px 0px';
   protected readonly dayElementId = dayElementId;
@@ -120,6 +124,17 @@ export class ExpenseList {
       cancelAnimationFrame(this.activePeriodFrame);
     });
 
+    let seenExpenses = this.dataChanges.expenses();
+    effect(() => {
+      const version = this.dataChanges.expenses();
+      if (version !== seenExpenses) {
+        seenExpenses = version;
+        untracked(() => {
+          this.restartFromTop();
+          this.periods.reload();
+        });
+      }
+    });
     effect(() => {
       const filters = this.filters();
       if (this.appliedFilters !== undefined && this.appliedFilters !== filters) {

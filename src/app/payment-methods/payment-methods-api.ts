@@ -4,7 +4,7 @@ import { forkJoin, map, Observable } from 'rxjs';
 import { API_URL, ApiPage } from '../core/api';
 import { byPaymentTypeThenUsage, PaymentType } from '../expenses/expense';
 import { InstitutionDto, toInstitution } from '../expenses/institution-dto';
-import { PaymentMethod } from './payment-method';
+import { NewPaymentMethod, PaymentMethod } from './payment-method';
 import { PaymentUsage, PaymentUsageApi } from './payment-usage-api';
 
 interface PaymentMethodDto {
@@ -49,6 +49,29 @@ export class PaymentMethodsApi {
           .sort((a, b) => byUsage(a, b) || a.name.localeCompare(b.name, 'pt-BR'));
       }),
     );
+  }
+
+  create(method: NewPaymentMethod): Observable<void> {
+    return this.http
+      .post(`${API_URL}/metodos-pagamento`, {
+        tipo: method.paymentType,
+        instituicaoFinanceiraId: method.institutionId,
+        nome: method.name,
+        diaFechamento: method.closingDay,
+        diaVencimento: method.dueDay,
+      })
+      .pipe(map(() => undefined));
+  }
+
+  update(method: PaymentMethod, changes: NewPaymentMethod): Observable<void> {
+    return this.http
+      .put(`${API_URL}/metodos-pagamento/${method.id}`, {
+        instituicaoFinanceiraId: changes.institutionId,
+        nome: changes.name,
+        diaFechamento: changes.closingDay,
+        diaVencimento: changes.dueDay,
+      })
+      .pipe(map(() => undefined));
   }
 
   delete(method: PaymentMethod): Observable<void> {

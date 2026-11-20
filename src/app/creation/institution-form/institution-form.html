@@ -1,0 +1,117 @@
+<form class="form" novalidate (submit)="save($event)">
+  <div
+    class="preview"
+    aria-hidden="true"
+    [class.neutral]="!color()"
+    [class.dark-text]="darkText()"
+    [style.--preview-color]="color()"
+  >
+    <span class="avatar">
+      @if (iconPreview(); as src) {
+        <img class="avatar-image" [src]="src" alt="" />
+      } @else {
+        {{ initial() }}
+      }
+    </span>
+    <span class="preview-name">{{ name().trim() || 'Nova instituição' }}</span>
+  </div>
+
+  <div class="field">
+    <label class="field-label" [for]="id + '-nome'">Nome</label>
+    <input
+      class="field-input"
+      autocomplete="off"
+      placeholder="Ex.: Inter"
+      [id]="id + '-nome'"
+      [maxLength]="maxTextLength"
+      [value]="name()"
+      [attr.aria-invalid]="errorFor('name') ? true : null"
+      [attr.aria-describedby]="errorFor('name') ? id + '-nome-erro' : null"
+      (input)="name.set(textValue($event))"
+    />
+    @if (errorFor('name'); as message) {
+      <p class="field-error" [id]="id + '-nome-erro'">{{ message }}</p>
+    }
+  </div>
+
+  <fieldset class="field">
+    <legend class="field-label">Cor</legend>
+    <div class="swatches">
+      @for (preset of presetColors; track preset) {
+        <label class="swatch" [style.--swatch]="preset" [class.selected]="color() === preset">
+          <input
+            type="radio"
+            class="visually-hidden"
+            [name]="id + '-cor'"
+            [checked]="color() === preset"
+            (change)="color.set(preset)"
+          />
+          <span class="visually-hidden">{{ preset }}</span>
+        </label>
+      }
+      <label class="swatch custom" [class.selected]="customColor() !== null">
+        <input
+          type="color"
+          class="color-picker"
+          aria-label="Outra cor"
+          [value]="customColor() ?? '#7c3aed'"
+          (input)="color.set(textValue($event).toUpperCase())"
+        />
+        <svg lucidePipette aria-hidden="true"></svg>
+      </label>
+      <label class="swatch none" [class.selected]="color() === null">
+        <input
+          type="radio"
+          class="visually-hidden"
+          [name]="id + '-cor'"
+          [checked]="color() === null"
+          (change)="color.set(null)"
+        />
+        <svg lucideBan aria-hidden="true"></svg>
+        <span class="visually-hidden">Sem cor</span>
+      </label>
+    </div>
+  </fieldset>
+
+  <div class="field">
+    <span class="field-label" [id]="id + '-icone'">Ícone (opcional)</span>
+    <div class="icon-actions">
+      <label class="chip upload">
+        <input
+          type="file"
+          class="visually-hidden"
+          [accept]="acceptedIconTypes"
+          [attr.aria-describedby]="id + '-icone-detalhe'"
+          (change)="pickIcon($event)"
+        />
+        <svg lucideImagePlus aria-hidden="true"></svg>
+        {{ icon() ? 'Trocar imagem' : 'Escolher imagem' }}
+      </label>
+      @if (icon()) {
+        <button type="button" class="chip" (click)="removeIcon()">
+          <svg lucideX aria-hidden="true"></svg>
+          Remover
+        </button>
+      }
+    </div>
+    <p class="field-hint" [id]="id + '-icone-detalhe'">
+      @if (errorFor('icon'); as message) {
+        <span class="field-error" role="alert">{{ message }}</span>
+      } @else if (icon(); as file) {
+        {{ file.name }}
+      } @else {
+        PNG, JPG, WEBP ou GIF de até 1 MB.
+      }
+    </p>
+  </div>
+
+  @if (failed()) {
+    <p class="form-error" role="alert">
+      Não foi possível salvar a instituição. Confira os dados e tente de novo.
+    </p>
+  }
+
+  <button type="submit" class="primary-button" [disabled]="saving()">
+    {{ saving() ? 'Salvando…' : 'Salvar instituição' }}
+  </button>
+</form>

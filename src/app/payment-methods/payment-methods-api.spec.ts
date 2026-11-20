@@ -102,4 +102,60 @@ describe('PaymentMethodsApi', () => {
     request.flush(null, { status: 204, statusText: 'No Content' });
     expect(done).toHaveBeenCalled();
   });
+
+  it('should create a method with the API field names', () => {
+    api
+      .create({
+        paymentType: 'CREDITO',
+        institutionId: 'nu',
+        name: 'Cartao Nubank',
+        closingDay: 14,
+        dueDay: 21,
+      })
+      .subscribe();
+
+    const request = http.expectOne('/api/metodos-pagamento');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({
+      tipo: 'CREDITO',
+      instituicaoFinanceiraId: 'nu',
+      nome: 'Cartao Nubank',
+      diaFechamento: 14,
+      diaVencimento: 21,
+    });
+    request.flush({ dados: {} });
+  });
+
+  it('should update a method without sending its type', () => {
+    api
+      .update(
+        {
+          id: 'cartao',
+          name: 'Cartao Nubank',
+          paymentType: 'CREDITO',
+          institution: { id: 'nu', name: 'Nubank', iconUrl: null, color: null },
+          closingDay: 14,
+          dueDay: 21,
+          usageCount: 3,
+        },
+        {
+          paymentType: 'CREDITO',
+          institutionId: 'nu',
+          name: 'Roxinho',
+          closingDay: 10,
+          dueDay: 17,
+        },
+      )
+      .subscribe();
+
+    const request = http.expectOne('/api/metodos-pagamento/cartao');
+    expect(request.request.method).toBe('PUT');
+    expect(request.request.body).toEqual({
+      instituicaoFinanceiraId: 'nu',
+      nome: 'Roxinho',
+      diaFechamento: 10,
+      diaVencimento: 17,
+    });
+    request.flush({ dados: {} });
+  });
 });

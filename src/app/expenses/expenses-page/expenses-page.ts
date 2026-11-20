@@ -4,17 +4,20 @@ import {
   Component,
   computed,
   DestroyRef,
+  effect,
   inject,
   input,
   linkedSignal,
   LOCALE_ID,
   signal,
+  untracked,
   viewChild,
 } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { LucideChevronUp } from '@lucide/angular';
 import { forkJoin } from 'rxjs';
 import { ControlBarState } from '../../control-bar/control-bar-state';
+import { DataChanges } from '../../core/data-changes';
 import { ContainScroll } from '../../shared/contain-scroll';
 import { BottomSheet } from '../../shared/bottom-sheet/bottom-sheet';
 import { SwipeUp } from '../../shared/swipe-up';
@@ -119,6 +122,16 @@ export class ExpensesPage {
     inject(DestroyRef).onDestroy(() => {
       wideScreen?.removeEventListener('change', closeSheetOnWideScreen);
       this.controlBar.show();
+    });
+
+    const dataChanges = inject(DataChanges);
+    let seenExpenses = dataChanges.expenses();
+    effect(() => {
+      const version = dataChanges.expenses();
+      if (version !== seenExpenses) {
+        seenExpenses = version;
+        untracked(() => this.refreshSummaries());
+      }
     });
   }
 

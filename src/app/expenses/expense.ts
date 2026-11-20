@@ -95,6 +95,18 @@ export function filterKey(filter: ExpenseFilter): string {
   return `${filter.kind}:${filter.id}`;
 }
 
+export interface NewExpense {
+  name: string;
+  amount: number;
+  category: string;
+  paymentMethodId: string;
+  date: string | null;
+  description: string | null;
+  realized: boolean;
+  installments: number;
+  invoicePeriod: string | null;
+}
+
 export interface ExpensePeriod {
   year: number | null;
   month: number | null;

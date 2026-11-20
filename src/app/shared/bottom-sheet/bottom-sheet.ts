@@ -44,6 +44,11 @@ export class BottomSheet {
     afterNextRender(() => this.dialog().nativeElement.showModal(), { injector: this.injector });
   }
 
+  expand(): void {
+    this.expanded.set(true);
+    this.height.set(null);
+  }
+
   close(): void {
     this.dialog().nativeElement.close();
   }

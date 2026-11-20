@@ -79,4 +79,22 @@ describe('ControlBar', () => {
     fixture.detectChanges();
     expect(settings.getAttribute('aria-expanded')).toBe('true');
   });
+
+  it('should ask for the creation sheet and reflect whether it is open', () => {
+    const fixture = TestBed.createComponent(ControlBar);
+    const requested = vi.fn();
+    fixture.componentInstance.createRequested.subscribe(requested);
+    fixture.detectChanges();
+    const create: HTMLButtonElement = fixture.nativeElement.querySelector('button.create');
+
+    expect(create.getAttribute('aria-haspopup')).toBe('dialog');
+    expect(create.getAttribute('aria-expanded')).toBe('false');
+
+    create.click();
+    expect(requested).toHaveBeenCalledOnce();
+
+    fixture.componentRef.setInput('createOpen', true);
+    fixture.detectChanges();
+    expect(create.getAttribute('aria-expanded')).toBe('true');
+  });
 });

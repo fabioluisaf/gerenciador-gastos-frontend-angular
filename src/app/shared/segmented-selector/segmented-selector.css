@@ -28,6 +28,11 @@
   box-shadow: var(--selector-shadow);
 }
 
+.options.wrapped {
+  grid-auto-flow: row;
+  border-radius: 1.25rem;
+}
+
 .option {
   position: relative;
   display: flex;

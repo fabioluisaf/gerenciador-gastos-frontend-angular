@@ -17,7 +17,11 @@
     <ul class="cards" role="list">
       @for (expense of day.expenses; track expense.id) {
         <li>
-          <app-expense-card [expense]="expense" (deleteRequested)="confirmDelete(expense)" />
+          <app-expense-card
+            [expense]="expense"
+            (editRequested)="editRequests.editExpense(expense)"
+            (deleteRequested)="confirmDelete(expense)"
+          />
         </li>
       }
     </ul>

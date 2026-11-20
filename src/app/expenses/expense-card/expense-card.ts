@@ -18,6 +18,7 @@ import {
   LucideCircle,
   LucideCircleCheck,
   LucideCircleDot,
+  LucidePencil,
   LucideTrash2,
 } from '@lucide/angular';
 import { SwipeActions } from '../../shared/swipe-actions/swipe-actions';
@@ -57,6 +58,7 @@ function isCut(element: HTMLElement | null): boolean {
     LucideCircle,
     LucideCircleCheck,
     LucideCircleDot,
+    LucidePencil,
     LucideTrash2,
     SwipeActions,
   ],
@@ -76,6 +78,7 @@ export class ExpenseCard {
   private readonly view = inject(DOCUMENT).defaultView;
 
   readonly expense = input.required<Expense>();
+  readonly editRequested = output<void>();
   readonly deleteRequested = output<void>();
 
   protected readonly detailsId = `gasto-detalhes-${nextId++}`;

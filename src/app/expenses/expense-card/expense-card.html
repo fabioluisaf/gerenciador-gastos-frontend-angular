@@ -1,5 +1,11 @@
 @let item = expense();
-<app-swipe-actions endLabel="Excluir" (endTriggered)="deleteRequested.emit()">
+<app-swipe-actions
+  startLabel="Editar"
+  endLabel="Excluir"
+  (startTriggered)="editRequested.emit()"
+  (endTriggered)="deleteRequested.emit()"
+>
+  <svg lucidePencil swipeStartIcon class="action-icon" aria-hidden="true"></svg>
   <svg lucideTrash2 swipeEndIcon class="action-icon" aria-hidden="true"></svg>
   <article
     class="expense-card"
@@ -84,6 +90,7 @@
     <app-actions-menu
       class="actions-menu"
       label="Ações do gasto"
+      (editRequested)="editRequested.emit()"
       (deleteRequested)="deleteRequested.emit()"
     />
   </article>

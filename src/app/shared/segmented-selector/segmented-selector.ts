@@ -38,6 +38,7 @@ export class SegmentedSelector<T extends string = string> {
   readonly options = input.required<readonly SelectorOption<T>[]>();
   readonly value = input<T>();
   readonly memoryKey = input('');
+  readonly columns = input<number | null>(null);
   readonly valueChange = output<T>();
 
   protected readonly icon = contentChild<TemplateRef<SelectorOptionContext<T>>>(TemplateRef);

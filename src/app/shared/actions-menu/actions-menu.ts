@@ -1,11 +1,11 @@
 import { ChangeDetectionStrategy, Component, input, output, signal } from '@angular/core';
-import { LucideEllipsis, LucideTrash } from '@lucide/angular';
+import { LucideEllipsis, LucidePencil, LucideTrash } from '@lucide/angular';
 
 let nextId = 0;
 
 @Component({
   selector: 'app-actions-menu',
-  imports: [LucideEllipsis, LucideTrash],
+  imports: [LucideEllipsis, LucidePencil, LucideTrash],
   templateUrl: './actions-menu.html',
   styleUrl: './actions-menu.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -16,6 +16,7 @@ let nextId = 0;
 })
 export class ActionsMenu {
   readonly label = input.required<string>();
+  readonly editRequested = output<void>();
   readonly deleteRequested = output<void>();
 
   protected readonly menuId = `acoes-${nextId++}`;
@@ -24,6 +25,11 @@ export class ActionsMenu {
 
   protected onToggle(event: Event): void {
     this.open.set((event as ToggleEvent).newState === 'open');
+  }
+
+  protected requestEdit(menu: HTMLElement): void {
+    menu.hidePopover();
+    this.editRequested.emit();
   }
 
   protected requestDelete(menu: HTMLElement): void {

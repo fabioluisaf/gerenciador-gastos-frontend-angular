@@ -378,4 +378,189 @@ describe('ExpensesApi', () => {
       { number: 2, amount: 50, invoiceDueDate: '2026-12-21' },
     ]);
   });
+
+  it('should create a single expense with the API field names', () => {
+    const done = vi.fn();
+    api
+      .create({
+        name: 'Mercado',
+        amount: 123.45,
+        category: 'Casa',
+        paymentMethodId: 'pix',
+        date: '2026-11-20',
+        description: null,
+        realized: true,
+        installments: 1,
+        invoicePeriod: null,
+      })
+      .subscribe({ complete: done });
+
+    const request = http.expectOne('/api/gastos');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({
+      nome: 'Mercado',
+      categoria: 'Casa',
+      metodoPagamentoId: 'pix',
+      data: '2026-11-20',
+      descricao: null,
+      faturaPeriodo: null,
+      valor: 123.45,
+      realizado: true,
+    });
+    request.flush({ dados: {} }, { status: 201, statusText: 'Created' });
+    expect(done).toHaveBeenCalled();
+  });
+
+  it('should create an installment purchase when there is more than one installment', () => {
+    api
+      .create({
+        name: 'Geladeira',
+        amount: 3000,
+        category: 'Casa',
+        paymentMethodId: 'credito',
+        date: '2026-11-20',
+        description: 'Frost free',
+        realized: false,
+        installments: 10,
+        invoicePeriod: '2026-12',
+      })
+      .subscribe();
+
+    const request = http.expectOne('/api/compras-parceladas');
+    expect(request.request.body).toEqual({
+      nome: 'Geladeira',
+      categoria: 'Casa',
+      metodoPagamentoId: 'credito',
+      data: '2026-11-20',
+      descricao: 'Frost free',
+      faturaPeriodo: '2026-12',
+      valorTotal: 3000,
+      quantidadeParcelas: 10,
+      realizado: false,
+    });
+    request.flush({ dados: {} });
+  });
+
+  it('should list the categories as the API orders them', () => {
+    const result = vi.fn();
+    api.listCategories().subscribe(result);
+
+    http.expectOne('/api/gastos/categorias').flush({
+      dados: [
+        { categoria: 'Transporte', quantidadeGastos: 30 },
+        { categoria: 'Casa', quantidadeGastos: 27 },
+      ],
+    });
+
+    expect(result).toHaveBeenCalledWith(['Transporte', 'Casa']);
+  });
+
+  it('should load a single expense for editing from its details', () => {
+    const result = vi.fn();
+    api.loadForEdit(buildExpense({ id: 'gasto-9' })).subscribe(result);
+
+    http.expectOne('/api/gastos/gasto-9').flush({
+      dados: {
+        data: '08/12/2026',
+        nome: 'Cinema',
+        valor: 25,
+        categoria: 'Lazer',
+        metodoPagamento: { id: 'credito' },
+        fatura: { dataFechamento: '2026-12-14', dataVencimento: '2026-12-21' },
+        descricao: null,
+        realizado: true,
+      },
+    });
+
+    expect(result).toHaveBeenCalledWith({
+      name: 'Cinema',
+      amount: 25,
+      category: 'Lazer',
+      paymentMethodId: 'credito',
+      date: '2026-12-08',
+      description: null,
+      realized: true,
+      installments: 1,
+      invoicePeriod: '2026-12',
+    });
+  });
+
+  it('should load an installment purchase for editing from its first installment', () => {
+    const result = vi.fn();
+    const expense = buildExpense({
+      installment: { number: 2, count: 3, purchaseId: 'compra-1', purchaseAmount: 300 },
+    });
+    api.loadForEdit(expense).subscribe(result);
+
+    http.expectOne('/api/compras-parceladas/compra-1').flush({
+      dados: {
+        nome: 'Geladeira',
+        categoria: 'Casa',
+        metodoPagamento: { id: 'credito' },
+        descricao: 'Frost free',
+        valorTotal: 300,
+        quantidadeParcelas: 3,
+        parcelas: [
+          {
+            numeroParcela: 2,
+            data: '10/11/2026',
+            fatura: { dataFechamento: '2026-12-14' },
+            realizado: false,
+          },
+          {
+            numeroParcela: 1,
+            data: '10/11/2026',
+            fatura: { dataFechamento: '2026-11-14' },
+            realizado: false,
+          },
+        ],
+      },
+    });
+
+    expect(result).toHaveBeenCalledWith(
+      expect.objectContaining({
+        amount: 300,
+        installments: 3,
+        date: '2026-11-10',
+        realized: false,
+        invoicePeriod: '2026-11',
+      }),
+    );
+  });
+
+  it('should update a single expense or the whole purchase', () => {
+    const changes = {
+      name: 'Geladeira',
+      amount: 600,
+      category: 'Casa',
+      paymentMethodId: 'credito',
+      date: '2026-11-10',
+      description: null,
+      realized: true,
+      installments: 4,
+      invoicePeriod: null,
+    };
+    api.update(buildExpense({ id: 'gasto-9' }), { ...changes, installments: 1 }).subscribe();
+    api
+      .update(
+        buildExpense({
+          installment: { number: 1, count: 3, purchaseId: 'compra-1', purchaseAmount: 300 },
+        }),
+        changes,
+      )
+      .subscribe();
+
+    const single = http.expectOne('/api/gastos/gasto-9');
+    expect(single.request.method).toBe('PUT');
+    expect(single.request.body).toEqual(
+      expect.objectContaining({ valor: 600, realizado: true, faturaPeriodo: null }),
+    );
+    const purchase = http.expectOne('/api/compras-parceladas/compra-1');
+    expect(purchase.request.method).toBe('PUT');
+    expect(purchase.request.body).toEqual(
+      expect.objectContaining({ valorTotal: 600, quantidadeParcelas: 4, realizado: true }),
+    );
+    single.flush({ dados: {} });
+    purchase.flush({ dados: {} });
+  });
 });

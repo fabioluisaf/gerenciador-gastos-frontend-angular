@@ -6,11 +6,16 @@ import { ActionsMenu } from './actions-menu';
   imports: [ActionsMenu],
   template: `
     <div (click)="parentClicks = parentClicks + 1">
-      <app-actions-menu label="Ações do gasto" (deleteRequested)="deletes = deletes + 1" />
+      <app-actions-menu
+        label="Ações do gasto"
+        (editRequested)="edits = edits + 1"
+        (deleteRequested)="deletes = deletes + 1"
+      />
     </div>
   `,
 })
 class Host {
+  edits = 0;
   deletes = 0;
   parentClicks = 0;
 }
@@ -48,12 +53,26 @@ describe('ActionsMenu', () => {
     const hidePopover = vi.spyOn(HTMLElement.prototype, 'hidePopover').mockImplementation(() => {});
 
     element.querySelector<HTMLButtonElement>('.more')!.click();
-    element.querySelector<HTMLButtonElement>('.menu-item')!.click();
+    element.querySelector<HTMLButtonElement>('.menu-item.danger')!.click();
     await fixture.whenStable();
 
     expect(fixture.componentInstance.deletes).toBe(1);
     expect(fixture.componentInstance.parentClicks).toBe(0);
     expect(hidePopover).toHaveBeenCalled();
+    hidePopover.mockRestore();
+  });
+
+  it('should offer editing before deleting and ask for it', async () => {
+    const hidePopover = vi.spyOn(HTMLElement.prototype, 'hidePopover').mockImplementation(() => {});
+    const items = [...element.querySelectorAll<HTMLButtonElement>('.menu-item')];
+
+    expect(items.map((item) => item.textContent?.trim())).toEqual(['Editar', 'Excluir']);
+    items[0].click();
+    await fixture.whenStable();
+
+    expect(fixture.componentInstance.edits).toBe(1);
+    expect(fixture.componentInstance.deletes).toBe(0);
+    expect(fixture.componentInstance.parentClicks).toBe(0);
     hidePopover.mockRestore();
   });
 });

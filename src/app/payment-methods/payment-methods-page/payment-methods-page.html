@@ -4,34 +4,37 @@
   @if (principal(); as main) {
     <div class="wallet" [class.expanded]="expanded()" [class.animating]="animating()">
       <section class="principal" aria-label="Método principal">
-        <app-swipe-actions
-          class="swipe"
-          endLabel="Excluir"
-          [style.view-transition-name]="transitionName(main)"
-          (endTriggered)="confirmDelete(main)"
-        >
-          <svg lucideTrash swipeEndIcon class="action-icon" aria-hidden="true"></svg>
-          <div class="card-wrap">
-            <app-payment-method-card [method]="main">
-              <app-actions-menu
-                cardActions
-                class="card-actions"
-                [label]="'Ações de ' + main.name"
-                (deleteRequested)="confirmDelete(main)"
-              />
-            </app-payment-method-card>
-            @if (expanded()) {
-              <button
-                type="button"
-                class="card-hit"
-                aria-label="Recolher os outros métodos"
-                aria-controls="outros-metodos"
-                aria-expanded="true"
-                (click)="collapse()"
-              ></button>
-            }
-          </div>
-        </app-swipe-actions>
+        <div class="method-row" [style.view-transition-name]="transitionName(main)">
+          <app-swipe-actions
+            class="swipe"
+            startLabel="Editar"
+            endLabel="Excluir"
+            (startTriggered)="editRequests.editPaymentMethod(main)"
+            (endTriggered)="confirmDelete(main)"
+          >
+            <svg lucidePencil swipeStartIcon class="action-icon" aria-hidden="true"></svg>
+            <svg lucideTrash swipeEndIcon class="action-icon" aria-hidden="true"></svg>
+            <div class="card-wrap">
+              <app-payment-method-card [method]="main" />
+              @if (expanded()) {
+                <button
+                  type="button"
+                  class="card-hit"
+                  aria-label="Recolher os outros métodos"
+                  aria-controls="outros-metodos"
+                  aria-expanded="true"
+                  (click)="collapse()"
+                ></button>
+              }
+            </div>
+          </app-swipe-actions>
+          <app-actions-menu
+            class="card-actions"
+            [label]="'Ações de ' + main.name"
+            (editRequested)="editRequests.editPaymentMethod(main)"
+            (deleteRequested)="confirmDelete(main)"
+          />
+        </div>
       </section>
 
       @if (others().length > 0) {
@@ -46,33 +49,39 @@
                 (pointerleave)="cancelReveal()"
                 (focusin)="reveal(item)"
               >
-                <app-swipe-actions
-                  class="swipe"
-                  [endLabel]="expanded() ? 'Excluir' : null"
-                  (endTriggered)="confirmDelete(method)"
-                >
-                  <svg lucideTrash swipeEndIcon class="action-icon" aria-hidden="true"></svg>
-                  <div class="card-wrap">
-                    <app-payment-method-card [method]="method">
+                <div class="method-row">
+                  <app-swipe-actions
+                    class="swipe"
+                    [startLabel]="expanded() ? 'Editar' : null"
+                    [endLabel]="expanded() ? 'Excluir' : null"
+                    (startTriggered)="editRequests.editPaymentMethod(method)"
+                    (endTriggered)="confirmDelete(method)"
+                  >
+                    <svg lucidePencil swipeStartIcon class="action-icon" aria-hidden="true"></svg>
+                    <svg lucideTrash swipeEndIcon class="action-icon" aria-hidden="true"></svg>
+                    <div class="card-wrap">
+                      <app-payment-method-card [method]="method" />
                       @if (expanded()) {
-                        <app-actions-menu
-                          cardActions
-                          class="card-actions"
-                          [label]="'Ações de ' + method.name"
-                          (deleteRequested)="confirmDelete(method)"
-                        />
+                        <button
+                          type="button"
+                          class="card-hit"
+                          [attr.aria-label]="'Colocar ' + method.name + ' no topo'"
+                          (click)="bringToTop(method)"
+                        ></button>
                       }
-                    </app-payment-method-card>
-                    @if (expanded()) {
-                      <button
-                        type="button"
-                        class="card-hit"
-                        [attr.aria-label]="'Colocar ' + method.name + ' no topo'"
-                        (click)="bringToTop(method)"
-                      ></button>
-                    }
-                  </div>
-                </app-swipe-actions>
+                    </div>
+                  </app-swipe-actions>
+                  @if (expanded()) {
+                    <app-actions-menu
+                      class="card-actions"
+                      [label]="'Ações de ' + method.name"
+                      (editRequested)="editRequests.editPaymentMethod(method)"
+                      (deleteRequested)="confirmDelete(method)"
+                    />
+                  } @else {
+                    <span class="card-actions-space" aria-hidden="true"></span>
+                  }
+                </div>
               </li>
             }
           </ul>

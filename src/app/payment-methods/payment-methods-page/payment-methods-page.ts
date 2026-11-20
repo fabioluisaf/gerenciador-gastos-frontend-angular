@@ -10,8 +10,10 @@ import {
   viewChild,
 } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
-import { LucideTrash } from '@lucide/angular';
+import { LucidePencil, LucideTrash } from '@lucide/angular';
 import { tap } from 'rxjs';
+import { DataChanges } from '../../core/data-changes';
+import { EditRequests } from '../../core/edit-requests';
 import { ActionsMenu } from '../../shared/actions-menu/actions-menu';
 import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
 import { SwipeActions } from '../../shared/swipe-actions/swipe-actions';
@@ -28,20 +30,25 @@ function mostUsed(methods: readonly PaymentMethod[]): PaymentMethod {
 
 @Component({
   selector: 'app-payment-methods-page',
-  imports: [ActionsMenu, ConfirmDialog, LucideTrash, PaymentMethodCard, SwipeActions],
+  imports: [ActionsMenu, ConfirmDialog, LucidePencil, LucideTrash, PaymentMethodCard, SwipeActions],
   templateUrl: './payment-methods-page.html',
   styleUrl: './payment-methods-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PaymentMethodsPage {
   private readonly api = inject(PaymentMethodsApi);
+  private readonly dataChanges = inject(DataChanges);
+  protected readonly editRequests = inject(EditRequests);
   private readonly document = inject(DOCUMENT);
   private readonly changeDetector = inject(ChangeDetectorRef);
   private readonly confirmDialog = viewChild.required(ConfirmDialog);
   private readonly chosenId = signal<string | null>(null);
   private revealTimer: ReturnType<typeof setTimeout> | undefined;
 
-  protected readonly methods = rxResource({ stream: () => this.api.list() });
+  protected readonly methods = rxResource({
+    params: () => this.dataChanges.paymentMethods(),
+    stream: () => this.api.list(),
+  });
   protected readonly expanded = signal(false);
   protected readonly animating = signal(false);
 

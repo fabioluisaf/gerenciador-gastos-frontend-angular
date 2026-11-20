@@ -16,6 +16,10 @@
   [style.position-anchor]="anchorName"
   (toggle)="onToggle($event)"
 >
+  <button type="button" class="menu-item" (click)="requestEdit(menu)">
+    <svg lucidePencil aria-hidden="true"></svg>
+    Editar
+  </button>
   <button type="button" class="menu-item danger" (click)="requestDelete(menu)">
     <svg lucideTrash aria-hidden="true"></svg>
     Excluir

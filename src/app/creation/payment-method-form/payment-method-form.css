@@ -1,0 +1,36 @@
+:host {
+  display: block;
+}
+
+.preview {
+  inline-size: min(100%, 22rem);
+  margin-inline: auto;
+}
+
+.choices {
+  --selector-background: var(--color-surface-alt);
+  --selector-border: var(--color-border);
+  --selector-shadow: none;
+  --selector-option-height: 2.75rem;
+}
+
+.choice-icon {
+  flex-shrink: 0;
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+}
+
+.institution-icon {
+  flex-shrink: 0;
+  border-radius: 0.3125rem;
+}
+
+.empty-institutions {
+  display: grid;
+  justify-items: start;
+  gap: 0.5rem;
+}
+
+.field-hint:empty {
+  display: none;
+}

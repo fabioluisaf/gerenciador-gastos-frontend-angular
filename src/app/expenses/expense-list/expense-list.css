@@ -20,6 +20,7 @@
 .month-label {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0.75rem;
   margin: 0 0 1rem;
   color: var(--color-text);
@@ -27,11 +28,19 @@
   font-weight: 700;
 }
 
+.month-label::before,
 .month-label::after {
   content: '';
   flex: 1;
   block-size: 2px;
   border-radius: 9999px;
+}
+
+.month-label::before {
+  background: linear-gradient(90deg, transparent, var(--color-primary));
+}
+
+.month-label::after {
   background: linear-gradient(90deg, var(--color-primary), transparent);
 }
 

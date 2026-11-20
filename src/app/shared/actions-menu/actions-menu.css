@@ -7,14 +7,15 @@
   display: grid;
   flex-shrink: 0;
   place-items: center;
-  inline-size: 2rem;
-  block-size: 2rem;
-  margin-block: -0.25rem;
-  margin-inline-end: -0.375rem;
+  inline-size: var(--actions-menu-size, 2rem);
+  block-size: var(--actions-menu-size, 2rem);
+  margin-block: var(--actions-menu-margin-block, -0.25rem);
+  margin-inline-end: var(--actions-menu-margin-end, -0.375rem);
   padding: 0;
-  border: 0;
+  border: var(--actions-menu-border, 0);
   border-radius: 9999px;
-  background-color: transparent;
+  background-color: var(--actions-menu-background, transparent);
+  box-shadow: var(--actions-menu-shadow, none);
   color: var(--actions-menu-color, var(--color-text-muted));
   cursor: pointer;
   transition:

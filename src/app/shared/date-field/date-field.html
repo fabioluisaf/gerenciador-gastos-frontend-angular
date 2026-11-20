@@ -1,0 +1,105 @@
+<div class="field">
+  <span class="field-label" [id]="id + '-rotulo'">{{ label() }}</span>
+  <button
+    #trigger
+    type="button"
+    class="field-input trigger"
+    [class.open]="open()"
+    [attr.aria-labelledby]="id + '-rotulo ' + id + '-valor'"
+    [attr.aria-expanded]="open()"
+    [attr.aria-controls]="id + '-painel'"
+    [attr.aria-invalid]="invalid() ? true : null"
+    [attr.aria-describedby]="describedBy()"
+    (click)="toggle()"
+  >
+    <span class="trigger-text" [id]="id + '-valor'" [class.empty]="!value()">
+      {{ display() }}
+    </span>
+    @if (mode() === 'month') {
+      <svg lucideCalendarRange class="trigger-icon" aria-hidden="true"></svg>
+    } @else {
+      <svg lucideCalendar class="trigger-icon" aria-hidden="true"></svg>
+    }
+  </button>
+  <ng-content />
+
+  @if (open()) {
+    <div
+      class="panel"
+      role="group"
+      [id]="id + '-painel'"
+      [attr.aria-label]="label()"
+      (keydown.escape)="close()"
+    >
+      <div class="panel-header">
+        <button
+          type="button"
+          class="nav"
+          [attr.aria-label]="mode() === 'month' ? 'Ano anterior' : 'Mês anterior'"
+          (click)="step(-1)"
+        >
+          <svg lucideChevronLeft aria-hidden="true"></svg>
+        </button>
+        <span class="panel-title" aria-live="polite">{{ title() }}</span>
+        <button
+          type="button"
+          class="nav"
+          [attr.aria-label]="mode() === 'month' ? 'Próximo ano' : 'Próximo mês'"
+          (click)="step(1)"
+        >
+          <svg lucideChevronRight aria-hidden="true"></svg>
+        </button>
+      </div>
+
+      @if (mode() === 'month') {
+        <div class="months" appSlidingIndicator activeSelector=".selected" [swell]="false">
+          @for (month of months(); track month.value) {
+            <button
+              type="button"
+              class="cell month"
+              [class.selected]="month.value === value()"
+              [attr.aria-label]="month.label"
+              [attr.aria-pressed]="month.value === value()"
+              (click)="pick(month.value)"
+            >
+              {{ month.short }}
+            </button>
+          }
+        </div>
+      } @else {
+        <div class="weekdays" aria-hidden="true">
+          @for (weekday of weekdays; track $index) {
+            <span>{{ weekday }}</span>
+          }
+        </div>
+        <div class="days" appSlidingIndicator activeSelector=".selected" [swell]="false">
+          @for (day of days(); track day.iso) {
+            <button
+              type="button"
+              class="cell day"
+              [class.outside]="day.outside"
+              [class.today]="day.iso === today"
+              [class.selected]="day.iso === value()"
+              [attr.aria-label]="day.label"
+              [attr.aria-pressed]="day.iso === value()"
+              [attr.aria-current]="day.iso === today ? 'date' : null"
+              (click)="pick(day.iso)"
+            >
+              {{ day.day }}
+            </button>
+          }
+        </div>
+      }
+
+      <div class="shortcuts">
+        @if (mode() === 'date') {
+          <button type="button" class="chip" (click)="pickRelative(0)">Hoje</button>
+          <button type="button" class="chip" (click)="pickRelative(1)">Ontem</button>
+        }
+        @if (clearLabel(); as clear) {
+          <button type="button" class="chip" (click)="pick('')">{{ clear }}</button>
+        }
+      </div>
+    </div>
+  }
+</div>

@@ -1,0 +1,33 @@
+.tabs {
+  --selector-background: var(--color-surface-alt);
+  --selector-border: var(--color-border);
+  --selector-shadow: none;
+  --selector-option-height: 2.75rem;
+
+  position: sticky;
+  inset-block-start: -0.25rem;
+  z-index: 1;
+  margin: 0.25rem -1.25rem 1.25rem;
+  padding: 0.25rem 1.25rem 0.75rem;
+  background-color: var(--sheet-background, var(--color-floating));
+}
+
+.edit-title {
+  margin: 0.5rem 0 1.25rem;
+  font-size: calc(1.25rem * var(--font-scale));
+}
+
+.tab-icon {
+  flex-shrink: 0;
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+.loading {
+  margin: 0;
+  color: var(--color-text-muted);
+}

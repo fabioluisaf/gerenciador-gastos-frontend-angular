@@ -9,3 +9,11 @@ export interface PaymentMethod {
   dueDay: number | null;
   usageCount: number;
 }
+
+export interface NewPaymentMethod {
+  paymentType: PaymentType;
+  institutionId: string;
+  name: string;
+  closingDay: number | null;
+  dueDay: number | null;
+}
