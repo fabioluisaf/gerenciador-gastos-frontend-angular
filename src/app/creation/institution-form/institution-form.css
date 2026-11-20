@@ -1,0 +1,143 @@
+:host {
+  display: block;
+}
+
+.preview {
+  --preview-text: #ffffff;
+
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 1rem 1.25rem;
+  border-radius: 1.25rem;
+  background:
+    radial-gradient(120% 120% at 100% 0%, rgb(255 255 255 / 0.2), transparent 55%),
+    linear-gradient(
+      135deg,
+      var(--preview-color),
+      color-mix(in srgb, var(--preview-color) 70%, #000000)
+    );
+  box-shadow: 0 0.5rem 1.25rem rgb(0 0 0 / 0.2);
+  color: var(--preview-text);
+}
+
+.preview.dark-text {
+  --preview-text: #18151f;
+}
+
+.preview.neutral {
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+  box-shadow: none;
+  color: var(--color-text);
+}
+
+.avatar {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  overflow: hidden;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  border-radius: 0.75rem;
+  background-color: rgb(255 255 255 / 0.2);
+  font-size: calc(1.125rem * var(--font-scale));
+  font-weight: 700;
+}
+
+.avatar-image {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.preview-name {
+  min-inline-size: 0;
+  overflow: hidden;
+  font-size: calc(1.125rem * var(--font-scale));
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.625rem;
+}
+
+.swatch {
+  position: relative;
+  display: grid;
+  place-items: center;
+  inline-size: 2.5rem;
+  block-size: 2.5rem;
+  border-radius: 9999px;
+  background-color: var(--swatch, var(--color-surface-alt));
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.12);
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition: box-shadow var(--motion-duration-fast) ease;
+}
+
+.swatch.selected {
+  box-shadow:
+    0 0 0 2px var(--color-surface),
+    0 0 0 4px var(--color-primary);
+}
+
+.swatch:has(:focus-visible) {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 4px;
+}
+
+.swatch svg {
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+}
+
+.swatch.custom {
+  background: conic-gradient(#ef4444, #f59e0b, #22c55e, #3b82f6, #a855f7, #ef4444);
+  color: #ffffff;
+}
+
+.color-picker {
+  position: absolute;
+  inset: 0;
+  inline-size: 100%;
+  block-size: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.icon-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.icon-actions .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.icon-actions svg {
+  inline-size: 1rem;
+  block-size: 1rem;
+}
+
+.upload {
+  cursor: pointer;
+}
+
+.upload:has(:focus-visible) {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swatch {
+    transition: none;
+  }
+}

@@ -1,0 +1,150 @@
+.confirm {
+  --confirm-duration: 200ms;
+
+  box-sizing: border-box;
+  inline-size: min(100% - 2rem, 24rem);
+  padding: 1.5rem;
+  border: 1px solid var(--color-floating-border);
+  border-radius: 1.25rem;
+  background-color: var(--color-floating);
+  box-shadow: var(--shadow-floating);
+  color: var(--color-text);
+  opacity: 0;
+  scale: 0.96;
+  transition:
+    opacity var(--confirm-duration) ease,
+    scale var(--confirm-duration) ease,
+    translate var(--confirm-duration) ease,
+    overlay var(--confirm-duration) allow-discrete,
+    display var(--confirm-duration) allow-discrete;
+}
+
+.confirm[open] {
+  opacity: 1;
+  scale: 1;
+}
+
+@starting-style {
+  .confirm[open] {
+    opacity: 0;
+    scale: 0.96;
+  }
+}
+
+.confirm::backdrop {
+  background-color: rgb(0 0 0 / 0);
+  transition:
+    background-color var(--confirm-duration) ease,
+    overlay var(--confirm-duration) allow-discrete,
+    display var(--confirm-duration) allow-discrete;
+}
+
+.confirm[open]::backdrop {
+  background-color: rgb(0 0 0 / 0.5);
+}
+
+@starting-style {
+  .confirm[open]::backdrop {
+    background-color: rgb(0 0 0 / 0);
+  }
+}
+
+.title {
+  margin: 0 0 0.5rem;
+  font-size: calc(1.125rem * var(--font-scale));
+}
+
+.message {
+  margin: 0;
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+}
+
+.error {
+  margin: 0.75rem 0 0;
+  color: var(--color-danger);
+  font-size: calc(0.875rem * var(--font-scale));
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-block-start: 1.5rem;
+}
+
+.actions button {
+  min-block-size: 2.75rem;
+  padding: 0.5rem 1.125rem;
+  border-radius: 9999px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.actions button:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
+.actions button:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.cancel {
+  border: 1px solid var(--color-border);
+  background-color: transparent;
+  color: var(--color-text);
+}
+
+.cancel:hover:not(:disabled) {
+  background-color: var(--color-hover);
+}
+
+.danger {
+  border: 0;
+  background-color: var(--color-danger);
+  color: var(--color-text-inverse);
+}
+
+.danger:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+@media (max-width: 63.999rem) {
+  .confirm {
+    inline-size: 100%;
+    max-inline-size: 40rem;
+    margin: auto auto 0;
+    padding-block-end: calc(1.5rem + env(safe-area-inset-bottom));
+    border-block-end: 0;
+    border-radius: 1.5rem 1.5rem 0 0;
+    opacity: 1;
+    scale: 1;
+    translate: 0 100%;
+  }
+
+  .confirm[open] {
+    translate: 0 0;
+  }
+
+  @starting-style {
+    .confirm[open] {
+      opacity: 1;
+      scale: 1;
+      translate: 0 100%;
+    }
+  }
+
+  .actions button {
+    flex: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .confirm,
+  .confirm::backdrop {
+    transition: none;
+  }
+}

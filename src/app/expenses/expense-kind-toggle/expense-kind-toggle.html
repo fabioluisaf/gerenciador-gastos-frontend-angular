@@ -1,0 +1,9 @@
+<app-segmented-selector label="Tipo de gasto" memoryKey="tipo-de-gasto" [options]="options">
+  <ng-template let-option>
+    @if (option.value === 'realized') {
+      <svg lucideCheck aria-hidden="true"></svg>
+    } @else {
+      <svg lucideClock aria-hidden="true"></svg>
+    }
+  </ng-template>
+</app-segmented-selector>

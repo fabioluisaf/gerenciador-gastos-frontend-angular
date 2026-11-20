@@ -1,0 +1,26 @@
+<dialog
+  #dialog
+  class="sheet"
+  [attr.aria-label]="label()"
+  [class.expanded]="expanded()"
+  [class.dragging]="dragging()"
+  [style.block-size.px]="height()"
+  (close)="onClosed()"
+  (click)="closeOnBackdropClick($event)"
+>
+  <button
+    type="button"
+    class="sheet-handle"
+    [appSheetHandle]="dialog"
+    [attr.aria-label]="expanded() ? 'Reduzir painel' : 'Expandir painel'"
+    [attr.aria-expanded]="expanded()"
+    (dragged)="resize($event)"
+    (released)="settle($event)"
+    (click)="toggleSize()"
+  >
+    <span class="sheet-handle-bar"></span>
+  </button>
+  <div class="sheet-body" appContainScroll>
+    <ng-content />
+  </div>
+</dialog>

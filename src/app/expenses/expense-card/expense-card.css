@@ -1,0 +1,276 @@
+.expense-card {
+  --start-color: var(--institution-color, var(--color-border));
+  --end-color: var(--payment-color, var(--color-border));
+  --fill-strength: 22%;
+  --fill-base: var(--color-surface);
+  --border-strength: 60%;
+  --border-base: var(--color-border);
+
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.25rem;
+  padding: 0.875rem 0.625rem 0.875rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 1rem;
+  background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--start-color) var(--fill-strength), var(--fill-base)),
+      color-mix(in srgb, var(--end-color) var(--fill-strength), var(--fill-base))
+    )
+    padding-box;
+}
+
+.expense-card::before {
+  position: absolute;
+  inset: -1px;
+  padding: 1px;
+  border-radius: inherit;
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--start-color) var(--border-strength), var(--border-base)),
+    color-mix(in srgb, var(--end-color) var(--border-strength), var(--border-base))
+  );
+  content: '';
+  mask:
+    linear-gradient(#000 0 0) content-box exclude,
+    linear-gradient(#000 0 0);
+  pointer-events: none;
+}
+
+:host(.planned) .expense-card {
+  --fill-strength: 10%;
+  --fill-base: transparent;
+  --border-strength: 40%;
+  --border-base: transparent;
+}
+
+.summary {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.heading {
+  display: flex;
+  align-items: baseline;
+  gap: 0.375rem;
+  min-inline-size: 0;
+}
+
+.installment {
+  flex-shrink: 0;
+  color: var(--color-text-muted);
+  font-size: calc(0.875rem * var(--font-scale));
+  font-variant-numeric: tabular-nums;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.expanded .heading .installment {
+  margin-inline-start: 0.375rem;
+}
+
+.name,
+.description {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.expanded .name,
+.expanded .description {
+  overflow: visible;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.expanded .heading {
+  display: block;
+}
+
+.expanded .name {
+  display: inline;
+}
+
+.name {
+  min-inline-size: 0;
+  margin: 0;
+  font-size: calc(1rem * var(--font-scale));
+  font-weight: 600;
+}
+
+.amount {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: baseline;
+  gap: 0.375rem;
+  margin: 0;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.amount.refund {
+  color: var(--color-success);
+}
+
+.description {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: calc(0.875rem * var(--font-scale));
+}
+
+.action-icon {
+  inline-size: 1.375rem;
+  block-size: 1.375rem;
+}
+
+.body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.5rem;
+  min-inline-size: 0;
+}
+
+.actions-menu {
+  align-self: center;
+}
+
+.details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.125rem 0.625rem;
+  border: 1px solid color-mix(in srgb, var(--color-text) 22%, transparent);
+  border-radius: 9999px;
+  background-color: var(--color-surface-alt);
+  color: var(--color-text-muted);
+  font-size: calc(0.8125rem * var(--font-scale));
+}
+
+:host(.planned) .tag {
+  background-color: color-mix(in srgb, var(--color-surface-alt) 40%, transparent);
+}
+
+.institution-icon {
+  border-radius: 0.25rem;
+}
+
+:host(.expandable) {
+  cursor: pointer;
+}
+
+.installments-status {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: calc(0.875rem * var(--font-scale));
+}
+
+.installments {
+  padding-block-start: 0.625rem;
+  border-block-start: 1px solid color-mix(in srgb, var(--color-text) 14%, transparent);
+}
+
+.installment-list {
+  display: grid;
+  grid-template-columns: repeat(4, auto);
+  justify-content: center;
+  column-gap: 1.25rem;
+  row-gap: 0.375rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: var(--color-text-muted);
+  font-size: calc(0.875rem * var(--font-scale));
+  font-variant-numeric: tabular-nums;
+}
+
+.installment-row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  align-items: center;
+}
+
+.installment-number,
+.installment-amount {
+  text-align: end;
+}
+
+.status-icon {
+  inline-size: 1rem;
+  block-size: 1rem;
+}
+
+.installment-row.paid .status-icon {
+  color: var(--color-success);
+}
+
+.installment-row.current {
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.installment-row.current .status-icon {
+  color: var(--color-info);
+}
+
+.installment-row.future .status-icon {
+  color: var(--color-disabled);
+}
+
+.expand {
+  display: grid;
+  place-items: center;
+  justify-self: center;
+  inline-size: 2.5rem;
+  block-size: 1.5rem;
+  margin-block: -0.25rem -0.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: 9999px;
+  background-color: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    background-color var(--motion-duration-fast) ease,
+    color var(--motion-duration-fast) ease;
+}
+
+.expand svg {
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  transition: rotate var(--motion-duration-default) ease;
+}
+
+.expand:hover {
+  background-color: color-mix(in srgb, var(--color-text) 10%, transparent);
+  color: var(--color-text);
+}
+
+.expand:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.expand[aria-expanded='true'] svg {
+  rotate: 180deg;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .expand,
+  .expand svg {
+    transition: none;
+  }
+}

@@ -1,0 +1,241 @@
+@if (loadFailed()) {
+  <p class="form-error" role="alert">Não foi possível carregar o gasto.</p>
+} @else if (loading()) {
+  <p class="loading">Carregando…</p>
+} @else {
+  <form class="form" novalidate (submit)="save($event)">
+    <app-date-field
+      label="Data"
+      emptyLabel="Sem data"
+      [value]="date()"
+      [clearLabel]="dateOptional() ? 'Sem data' : null"
+      [invalid]="!!errorFor('date')"
+      [describedBy]="id + '-data-detalhe'"
+      (valueChange)="date.set($event)"
+    >
+      <p class="field-hint" [id]="id + '-data-detalhe'">
+        @if (errorFor('date'); as message) {
+          <span class="field-error">{{ message }}</span>
+        } @else if (dateOptional()) {
+          Opcional se o mês da fatura for escolhido.
+        }
+      </p>
+    </app-date-field>
+
+    <div class="amount">
+      <label class="visually-hidden" [for]="id + '-valor'">Valor</label>
+      <input
+        class="amount-input"
+        inputmode="numeric"
+        autocomplete="off"
+        [id]="id + '-valor'"
+        [value]="amountText()"
+        [attr.aria-invalid]="errorFor('amount') ? true : null"
+        [attr.aria-describedby]="id + '-valor-detalhe'"
+        (input)="onAmountInput($event)"
+      />
+      <p class="amount-detail" [id]="id + '-valor-detalhe'">
+        @if (errorFor('amount'); as message) {
+          <span class="field-error">{{ message }}</span>
+        } @else if (effectiveInstallments() > 1) {
+          em {{ effectiveInstallments() }}x de {{ installmentAmount() | currency }}
+        }
+      </p>
+    </div>
+
+    <app-segmented-selector
+      class="choices"
+      label="Situação do gasto"
+      [options]="kindOptions"
+      [value]="kind()"
+      (valueChange)="kind.set($event)"
+    >
+      <ng-template let-option>
+        @if (option.value === 'realized') {
+          <svg lucideCheck class="kind-icon" aria-hidden="true"></svg>
+        } @else {
+          <svg lucideClock class="kind-icon" aria-hidden="true"></svg>
+        }
+      </ng-template>
+    </app-segmented-selector>
+
+    <div class="field">
+      <label class="field-label" [for]="id + '-nome'">Nome</label>
+      <input
+        class="field-input"
+        autocomplete="off"
+        placeholder="Ex.: Mercado do mês"
+        [id]="id + '-nome'"
+        [maxLength]="maxTextLength"
+        [value]="name()"
+        [attr.aria-invalid]="errorFor('name') ? true : null"
+        [attr.aria-describedby]="errorFor('name') ? id + '-nome-erro' : null"
+        (input)="name.set(textValue($event))"
+      />
+      @if (errorFor('name'); as message) {
+        <p class="field-error" [id]="id + '-nome-erro'">{{ message }}</p>
+      }
+    </div>
+
+    <div class="field">
+      <span class="field-label" [id]="id + '-metodo'">Método de pagamento</span>
+      @if (methodsFailed()) {
+        <p class="field-hint">Não foi possível carregar os métodos de pagamento.</p>
+      } @else {
+        <div
+          class="methods"
+          role="radiogroup"
+          appHorizontalWheelScroll
+          appDragScroll
+          [attr.aria-labelledby]="id + '-metodo'"
+          [attr.aria-invalid]="errorFor('method') ? true : null"
+        >
+          @for (method of visibleMethods(); track method.id) {
+            <label
+              class="method"
+              [class.selected]="method.id === methodId()"
+              [style.--method-color]="method.institution.color"
+            >
+              <input
+                type="radio"
+                class="visually-hidden"
+                [name]="id + '-metodo'"
+                [value]="method.id"
+                [checked]="method.id === methodId()"
+                (change)="methodId.set(method.id)"
+              />
+              @if (method.institution.iconUrl; as iconUrl) {
+                <img class="method-icon" [ngSrc]="iconUrl" width="24" height="24" alt="" />
+              }
+              <span class="method-text">
+                <span class="method-name">{{ method.name }}</span>
+                <span class="method-type">{{ typeLabels[method.paymentType] }}</span>
+              </span>
+            </label>
+          }
+        </div>
+      }
+      @if (errorFor('method'); as message) {
+        <p class="field-error">{{ message }}</p>
+      } @else if (effectiveInstallments() > 1) {
+        <p class="field-hint">Compras parceladas só podem ser feitas no crédito.</p>
+      }
+    </div>
+
+    @if (installmentsAvailable()) {
+      <div class="field">
+        <span class="field-label" [id]="id + '-parcelas'">Parcelas</span>
+        <div class="stepper" role="group" [attr.aria-labelledby]="id + '-parcelas'">
+          <button
+            type="button"
+            class="stepper-button"
+            aria-label="Menos parcelas"
+            [disabled]="installments() === 1"
+            (click)="changeInstallments(-1)"
+          >
+            <svg lucideMinus aria-hidden="true"></svg>
+          </button>
+          <output class="stepper-value" aria-live="polite">
+            {{ installments() === 1 ? 'À vista' : installments() + 'x' }}
+          </output>
+          <button
+            type="button"
+            class="stepper-button"
+            aria-label="Mais parcelas"
+            (click)="changeInstallments(1)"
+          >
+            <svg lucidePlus aria-hidden="true"></svg>
+          </button>
+        </div>
+      </div>
+    }
+
+    @if (isCredit()) {
+      <app-date-field
+        label="Mês da fatura"
+        mode="month"
+        emptyLabel="Automática"
+        clearLabel="Automática"
+        [value]="invoiceMonth()"
+        [describedBy]="id + '-fatura-detalhe'"
+        (valueChange)="invoiceMonth.set($event)"
+      >
+        <p class="field-hint" [id]="id + '-fatura-detalhe'">
+          @if (!invoiceMonth()) {
+            Escolhida pela data do gasto.
+          } @else if (effectiveInstallments() > 1) {
+            Primeira parcela nesta fatura.
+          } @else {
+            Gasto lançado nesta fatura.
+          }
+        </p>
+      </app-date-field>
+    }
+
+    <div class="field">
+      <label class="field-label" [for]="id + '-categoria'">Categoria</label>
+      <input
+        class="field-input"
+        autocomplete="off"
+        placeholder="Ex.: Casa"
+        [id]="id + '-categoria'"
+        [attr.list]="id + '-categorias'"
+        [maxLength]="maxTextLength"
+        [value]="category()"
+        [attr.aria-invalid]="errorFor('category') ? true : null"
+        [attr.aria-describedby]="errorFor('category') ? id + '-categoria-erro' : null"
+        (input)="category.set(textValue($event))"
+      />
+      <datalist [id]="id + '-categorias'">
+        @for (option of allCategories(); track option) {
+          <option [value]="option"></option>
+        }
+      </datalist>
+      @if (errorFor('category'); as message) {
+        <p class="field-error" [id]="id + '-categoria-erro'">{{ message }}</p>
+      }
+      @if (allCategories().length > 0) {
+        <div
+          class="categories"
+          role="group"
+          aria-label="Categorias já usadas"
+          appHorizontalWheelScroll
+          appDragScroll
+        >
+          @for (option of allCategories(); track option) {
+            <button
+              type="button"
+              class="chip"
+              [attr.aria-pressed]="option === category()"
+              (click)="category.set(option)"
+            >
+              {{ option }}
+            </button>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="field">
+      <label class="field-label" [for]="id + '-descricao'">Descrição (opcional)</label>
+      <textarea
+        class="field-input"
+        rows="2"
+        [id]="id + '-descricao'"
+        [maxLength]="maxTextLength"
+        [value]="description()"
+        (input)="description.set(textValue($event))"
+      ></textarea>
+    </div>
+
+    @if (failed()) {
+      <p class="form-error" role="alert">
+        Não foi possível salvar o gasto. Confira os dados e tente de novo.
+      </p>
+    }
+
+    <button type="submit" class="primary-button" [disabled]="saving()">
+      {{ saving() ? 'Salvando…' : editing() ? 'Salvar alterações' : 'Salvar gasto' }}
+    </button>
+  </form>
+}

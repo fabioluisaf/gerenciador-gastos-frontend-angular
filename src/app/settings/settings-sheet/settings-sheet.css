@@ -1,0 +1,20 @@
+.title {
+  margin: 0.5rem 0 1.25rem;
+  font-size: calc(1.25rem * var(--font-scale));
+}
+
+.setting {
+  --selector-background: var(--color-surface-alt);
+  --selector-border: var(--color-border);
+  --selector-shadow: none;
+  --selector-option-height: 3.5rem;
+  --selector-option-direction: column;
+
+  margin-block-end: 1.5rem;
+}
+
+svg {
+  flex-shrink: 0;
+  inline-size: 1.25rem;
+  block-size: 1.25rem;
+}

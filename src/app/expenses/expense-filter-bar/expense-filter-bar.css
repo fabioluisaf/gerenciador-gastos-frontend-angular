@@ -1,0 +1,81 @@
+:host {
+  display: block;
+}
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.375rem 0.375rem 0.875rem;
+  border: 1px solid var(--color-floating-border);
+  border-radius: 9999px;
+  background-color: var(--color-floating);
+  box-shadow: var(--shadow-floating);
+}
+
+.funnel {
+  flex-shrink: 0;
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+  color: var(--color-text-muted);
+}
+
+.chips {
+  display: flex;
+  flex: 1;
+  gap: 0.375rem;
+  min-inline-size: 0;
+  margin: 0;
+  padding: 0;
+  overflow-x: auto;
+  list-style: none;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.chips::-webkit-scrollbar {
+  display: none;
+}
+
+.chip {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.25rem 0.25rem 0.75rem;
+  border-radius: 9999px;
+  background-color: color-mix(in srgb, var(--color-primary) 18%, transparent);
+  font-size: calc(0.875rem * var(--font-scale));
+  white-space: nowrap;
+}
+
+.chip-icon {
+  border-radius: 0.25rem;
+}
+
+.chip-remove {
+  display: grid;
+  place-items: center;
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background-color: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.chip-remove svg {
+  inline-size: 1rem;
+  block-size: 1rem;
+}
+
+.chip-remove:hover {
+  background-color: color-mix(in srgb, var(--color-text) 12%, transparent);
+}
+
+.chip-remove:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
+}

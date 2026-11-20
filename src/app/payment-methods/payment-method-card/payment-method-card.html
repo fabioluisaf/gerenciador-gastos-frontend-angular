@@ -1,0 +1,40 @@
+@let item = method();
+<article class="card" [attr.aria-label]="item.name">
+  <div class="top">
+    <h2 class="heading">
+      @if (item.institution.iconUrl; as iconUrl) {
+        <img class="institution-icon" [ngSrc]="iconUrl" width="32" height="32" alt="" />
+      }
+      <span class="name">{{ item.name }}</span>
+    </h2>
+    <span class="type">{{ typeLabel() }}</span>
+  </div>
+
+  <div class="emblem" aria-hidden="true">
+    @switch (item.paymentType) {
+      @case ('PIX') {
+        <svg lucideQrCode></svg>
+      }
+      @case ('BOLETO') {
+        <svg lucideBarcode></svg>
+      }
+      @case ('DOC') {
+        <svg lucideArrowLeftRight></svg>
+      }
+      @case ('TED') {
+        <svg lucideArrowLeftRight></svg>
+      }
+      @default {
+        <span class="chip"></span>
+        <svg lucideNfc class="contactless"></svg>
+      }
+    }
+  </div>
+
+  <div class="bottom">
+    <p class="institution-name">{{ item.institution.name }}</p>
+    @if (billing(); as days) {
+      <p class="billing">Fecha dia {{ days.closingDay }} · Vence dia {{ days.dueDay }}</p>
+    }
+  </div>
+</article>

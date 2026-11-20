@@ -1,0 +1,49 @@
+<app-bottom-sheet label="Configurações" (closed)="onClosed()">
+  <h2 class="title">Configurações</h2>
+
+  <app-segmented-selector
+    class="setting"
+    label="Tema"
+    labelVisible
+    [options]="themeOptions"
+    [value]="themes.preference()"
+    (valueChange)="themes.setPreference($event)"
+  >
+    <ng-template let-option>
+      @switch (option.value) {
+        @case ('system') {
+          <svg lucideSunMoon aria-hidden="true"></svg>
+        }
+        @case ('light') {
+          <svg lucideSun aria-hidden="true"></svg>
+        }
+        @case ('dark') {
+          <svg lucideMoon aria-hidden="true"></svg>
+        }
+      }
+    </ng-template>
+  </app-segmented-selector>
+
+  <app-segmented-selector
+    class="setting"
+    label="Tamanho da fonte"
+    labelVisible
+    [options]="fontSizeOptions"
+    [value]="fontSizes.size()"
+    (valueChange)="fontSizes.setSize($event)"
+  >
+    <ng-template let-option>
+      @switch (option.value) {
+        @case ('small') {
+          <svg lucideAArrowDown aria-hidden="true"></svg>
+        }
+        @case ('medium') {
+          <svg lucideALargeSmall aria-hidden="true"></svg>
+        }
+        @case ('large') {
+          <svg lucideAArrowUp aria-hidden="true"></svg>
+        }
+      }
+    </ng-template>
+  </app-segmented-selector>
+</app-bottom-sheet>

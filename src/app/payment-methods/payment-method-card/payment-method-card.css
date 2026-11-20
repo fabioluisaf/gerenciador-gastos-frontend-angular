@@ -1,0 +1,148 @@
+:host {
+  --card-text: #ffffff;
+  --card-text-muted: rgb(255 255 255 / 0.78);
+  --card-badge: rgb(255 255 255 / 0.18);
+  --card-sheen: rgb(255 255 255 / 0.22);
+  --card-shade: rgb(0 0 0 / 0.28);
+  --card-ring: rgb(255 255 255 / 0.07);
+
+  display: block;
+}
+
+:host(.dark-text) {
+  --card-text: #18151f;
+  --card-text-muted: rgb(24 21 31 / 0.72);
+  --card-badge: rgb(0 0 0 / 0.1);
+  --card-sheen: rgb(255 255 255 / 0.35);
+  --card-shade: rgb(0 0 0 / 0.12);
+  --card-ring: rgb(0 0 0 / 0.05);
+}
+
+:host(.neutral) {
+  --card-color: var(--color-surface-alt);
+  --card-text: var(--color-text);
+  --card-text-muted: var(--color-text-muted);
+  --card-badge: color-mix(in srgb, var(--color-text) 10%, transparent);
+  --card-sheen: color-mix(in srgb, var(--color-text) 8%, transparent);
+  --card-shade: transparent;
+  --card-ring: color-mix(in srgb, var(--color-text) 4%, transparent);
+}
+
+.card {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 0.75rem;
+  box-sizing: border-box;
+  aspect-ratio: 85.6 / 53.98;
+  padding: 1.25rem 1.5rem 1.375rem;
+  border-radius: 1.375rem;
+  background:
+    radial-gradient(circle at 105% 120%, var(--card-ring) 0 38%, transparent 38.5%),
+    radial-gradient(circle at 115% 130%, var(--card-ring) 0 55%, transparent 55.5%),
+    radial-gradient(120% 90% at 100% 0%, var(--card-sheen), transparent 55%),
+    radial-gradient(90% 80% at 0% 100%, var(--card-shade), transparent 60%),
+    linear-gradient(135deg, var(--card-color), color-mix(in srgb, var(--card-color) 70%, #000000));
+  box-shadow:
+    0 -0.375rem 1.25rem rgb(0 0 0 / 0.22),
+    0 0.75rem 1.75rem rgb(0 0 0 / 0.2),
+    inset 0 1px 0 rgb(255 255 255 / 0.16);
+  color: var(--card-text);
+}
+
+:host(.neutral) .card {
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-floating);
+}
+
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.heading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-inline-size: 0;
+  margin: 0 auto 0 0;
+  font-size: calc(1.125rem * var(--font-scale));
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.institution-icon {
+  flex-shrink: 0;
+  border-radius: 0.5rem;
+}
+
+.name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.type {
+  flex-shrink: 0;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  background-color: var(--card-badge);
+  font-size: calc(0.8125rem * var(--font-scale));
+  font-weight: 600;
+}
+
+.emblem {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--card-text-muted);
+}
+
+.emblem svg {
+  inline-size: 2.25rem;
+  block-size: 2.25rem;
+}
+
+.emblem .contactless {
+  inline-size: 1.5rem;
+  block-size: 1.5rem;
+}
+
+.chip {
+  inline-size: 3.25rem;
+  block-size: 2.375rem;
+  border-radius: 0.4375rem;
+  background:
+    linear-gradient(
+      90deg,
+      transparent 32%,
+      rgb(0 0 0 / 0.18) 32% 35%,
+      transparent 35% 65%,
+      rgb(0 0 0 / 0.18) 65% 68%,
+      transparent 68%
+    ),
+    linear-gradient(transparent 46%, rgb(0 0 0 / 0.18) 46% 54%, transparent 54%),
+    linear-gradient(135deg, #f6e3a1, #c9a43a 55%, #efd27a);
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.18);
+}
+
+.bottom {
+  min-inline-size: 0;
+}
+
+.institution-name {
+  margin: 0;
+  overflow: hidden;
+  font-size: calc(1rem * var(--font-scale));
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.billing {
+  margin: 0.25rem 0 0;
+  color: var(--card-text-muted);
+  font-size: calc(0.875rem * var(--font-scale));
+  font-variant-numeric: tabular-nums;
+}

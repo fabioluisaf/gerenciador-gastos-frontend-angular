@@ -1,0 +1,144 @@
+<form class="form" novalidate (submit)="save($event)">
+  <app-payment-method-card class="preview" aria-hidden="true" [method]="preview()" />
+
+  @if (!editing()) {
+    <app-segmented-selector
+      class="choices"
+      label="Tipo"
+      labelVisible
+      [columns]="3"
+      [options]="typeOptions"
+      [value]="paymentType()"
+      (valueChange)="paymentType.set($event)"
+    >
+      <ng-template let-option>
+        @switch (option.value) {
+          @case ('PIX') {
+            <svg lucideQrCode class="choice-icon" aria-hidden="true"></svg>
+          }
+          @case ('BOLETO') {
+            <svg lucideBarcode class="choice-icon" aria-hidden="true"></svg>
+          }
+          @case ('DOC') {
+            <svg lucideArrowLeftRight class="choice-icon" aria-hidden="true"></svg>
+          }
+          @case ('TED') {
+            <svg lucideArrowLeftRight class="choice-icon" aria-hidden="true"></svg>
+          }
+          @case ('DEBITO') {
+            <svg lucideWallet class="choice-icon" aria-hidden="true"></svg>
+          }
+          @default {
+            <svg lucideCreditCard class="choice-icon" aria-hidden="true"></svg>
+          }
+        }
+      </ng-template>
+    </app-segmented-selector>
+  }
+
+  @if (institutionsFailed()) {
+    <p class="field-hint">Não foi possível carregar as instituições.</p>
+  } @else if (institutionsLoaded() && institutionOptions().length === 0) {
+    <div class="empty-institutions">
+      <p class="field-hint">Cadastre uma instituição antes de criar o método.</p>
+      <button type="button" class="chip" (click)="institutionRequested.emit()">
+        Criar instituição
+      </button>
+    </div>
+  } @else if (institutionsLoaded()) {
+    <app-segmented-selector
+      class="choices"
+      label="Instituição"
+      labelVisible
+      [columns]="institutionOptions().length > 2 ? 3 : 2"
+      [options]="institutionOptions()"
+      [value]="institutionId() ?? undefined"
+      (valueChange)="institutionId.set($event)"
+    >
+      <ng-template let-option>
+        @for (item of loadedInstitutions(); track item.id) {
+          @if (item.id === option.value && item.iconUrl) {
+            <img class="institution-icon" [ngSrc]="item.iconUrl" width="20" height="20" alt="" />
+          }
+        }
+      </ng-template>
+    </app-segmented-selector>
+    @if (errorFor('institution'); as message) {
+      <p class="field-error">{{ message }}</p>
+    }
+  }
+
+  <div class="field">
+    <label class="field-label" [for]="id + '-nome'">Nome</label>
+    <input
+      class="field-input"
+      autocomplete="off"
+      [id]="id + '-nome'"
+      [maxLength]="maxTextLength"
+      [value]="name()"
+      [attr.aria-invalid]="errorFor('name') ? true : null"
+      [attr.aria-describedby]="id + '-nome-detalhe'"
+      (input)="typedName.set(textValue($event))"
+    />
+    <p class="field-hint" [id]="id + '-nome-detalhe'">
+      @if (errorFor('name'); as message) {
+        <span class="field-error">{{ message }}</span>
+      } @else if (typedName() === null && !editing()) {
+        Sugerido pelo tipo e pela instituição.
+      }
+    </p>
+  </div>
+
+  @if (isCredit()) {
+    <div class="field-row">
+      <div class="field">
+        <label class="field-label" [for]="id + '-fechamento'">Fecha dia</label>
+        <input
+          type="number"
+          class="field-input"
+          inputmode="numeric"
+          min="1"
+          max="31"
+          placeholder="1 a 31"
+          [id]="id + '-fechamento'"
+          [value]="closingDay()"
+          [attr.aria-invalid]="errorFor('closingDay') ? true : null"
+          [attr.aria-describedby]="errorFor('closingDay') ? id + '-fechamento-erro' : null"
+          (input)="closingDay.set(textValue($event))"
+        />
+        @if (errorFor('closingDay'); as message) {
+          <p class="field-error" [id]="id + '-fechamento-erro'">{{ message }}</p>
+        }
+      </div>
+      <div class="field">
+        <label class="field-label" [for]="id + '-vencimento'">Vence dia</label>
+        <input
+          type="number"
+          class="field-input"
+          inputmode="numeric"
+          min="1"
+          max="31"
+          placeholder="1 a 31"
+          [id]="id + '-vencimento'"
+          [value]="dueDay()"
+          [attr.aria-invalid]="errorFor('dueDay') ? true : null"
+          [attr.aria-describedby]="errorFor('dueDay') ? id + '-vencimento-erro' : null"
+          (input)="dueDay.set(textValue($event))"
+        />
+        @if (errorFor('dueDay'); as message) {
+          <p class="field-error" [id]="id + '-vencimento-erro'">{{ message }}</p>
+        }
+      </div>
+    </div>
+  }
+
+  @if (failed()) {
+    <p class="form-error" role="alert">
+      Não foi possível salvar o método. Confira os dados e tente de novo.
+    </p>
+  }
+
+  <button type="submit" class="primary-button" [disabled]="saving()">
+    {{ saving() ? 'Salvando…' : editing() ? 'Salvar alterações' : 'Salvar método' }}
+  </button>
+</form>

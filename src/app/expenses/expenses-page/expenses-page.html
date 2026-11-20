@@ -1,0 +1,81 @@
+<h1 class="visually-hidden">{{ heading() }}</h1>
+
+<div class="layout">
+  <div class="list-column">
+    <div class="list-header">
+      <app-expense-kind-toggle />
+      @if (filters().length > 0) {
+        <app-expense-filter-bar [filters]="filters()" (removed)="toggleFilter($event)" />
+      }
+    </div>
+    <app-expense-list
+      class="list"
+      [class.below-filter-bar]="filters().length > 0"
+      [kind]="kind()"
+      [filters]="filters()"
+      [(activePeriod)]="activePeriod"
+      (expenseDeleted)="refreshSummaries()"
+    />
+  </div>
+
+  <aside
+    class="side-panel"
+    aria-label="Totais do mês"
+    appContainScroll
+    [attr.aria-busy]="totals.isLoading()"
+  >
+    <ng-container [ngTemplateOutlet]="totalsContent" />
+  </aside>
+</div>
+
+<button
+  type="button"
+  class="mini-player"
+  aria-haspopup="dialog"
+  [attr.aria-expanded]="sheetOpen()"
+  (click)="openSheet()"
+  (appSwipeUp)="openSheet()"
+>
+  <span class="mini-player-text">
+    <span class="mini-player-label">Total de {{ periodLabel() }}</span>
+    <span class="mini-player-amount" [class.stale]="totals.isLoading()">
+      @if (shownTotals(); as monthTotals) {
+        {{ monthTotals.realized | currency }}
+      } @else {
+        Carregando…
+      }
+    </span>
+  </span>
+  <svg lucideChevronUp aria-hidden="true"></svg>
+</button>
+
+<app-bottom-sheet class="sheet" label="Totais do mês" (closed)="onSheetClosed()">
+  <ng-container [ngTemplateOutlet]="totalsContent" />
+</app-bottom-sheet>
+
+<ng-template #totalsContent>
+  <app-month-strip
+    class="month-strip"
+    label="Mês dos totais"
+    [months]="months()"
+    [selected]="period()"
+    (monthSelected)="selectMonth($event)"
+  />
+  @if (shownTotals(); as monthTotals) {
+    <app-month-totals
+      [class.stale]="totals.isLoading()"
+      [totals]="monthTotals"
+      [periodLabel]="periodLabel()"
+      [kind]="kind()"
+      [activeFilters]="filters()"
+      (filterToggled)="toggleFilter($event)"
+    />
+  } @else if (totals.error()) {
+    <p class="totals-feedback">
+      Não foi possível carregar os totais.
+      <button type="button" class="retry" (click)="totals.reload()">Tentar novamente</button>
+    </p>
+  } @else {
+    <p class="totals-feedback">Carregando totais…</p>
+  }
+</ng-template>

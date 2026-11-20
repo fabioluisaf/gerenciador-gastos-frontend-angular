@@ -1,0 +1,13 @@
+<span class="label">
+  @if (institution()?.iconUrl; as iconUrl) {
+    <img class="icon" [ngSrc]="iconUrl" width="16" height="16" alt="" />
+  }
+  {{ label() }}
+</span>
+<span class="amounts">
+  {{ realized() | currency }}
+  <span class="planned">de {{ planned() | currency }}</span>
+</span>
+<span class="bar" aria-hidden="true" [style.inline-size.%]="barSize()">
+  <span class="bar-fill" [style.inline-size.%]="progress()"></span>
+</span>

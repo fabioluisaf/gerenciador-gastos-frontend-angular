@@ -1,0 +1,27 @@
+<button
+  type="button"
+  class="more"
+  [attr.aria-label]="label()"
+  [attr.popovertarget]="menuId"
+  [attr.aria-expanded]="open()"
+  [style.anchor-name]="anchorName"
+>
+  <svg lucideEllipsis aria-hidden="true"></svg>
+</button>
+<div
+  #menu
+  class="menu"
+  popover
+  [id]="menuId"
+  [style.position-anchor]="anchorName"
+  (toggle)="onToggle($event)"
+>
+  <button type="button" class="menu-item" (click)="requestEdit(menu)">
+    <svg lucidePencil aria-hidden="true"></svg>
+    Editar
+  </button>
+  <button type="button" class="menu-item danger" (click)="requestDelete(menu)">
+    <svg lucideTrash aria-hidden="true"></svg>
+    Excluir
+  </button>
+</div>

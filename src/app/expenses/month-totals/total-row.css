@@ -1,0 +1,46 @@
+:host {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 0.25rem 0.75rem;
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.icon {
+  flex-shrink: 0;
+  border-radius: 0.25rem;
+}
+
+.amounts {
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+  white-space: nowrap;
+}
+
+.planned {
+  display: block;
+  color: var(--color-text-muted);
+  font-size: calc(0.8125rem * var(--font-scale));
+}
+
+.bar {
+  grid-column: 1 / -1;
+  block-size: 0.25rem;
+  border-radius: 9999px;
+  background-color: color-mix(in srgb, var(--color-text) 16%, transparent);
+  overflow: hidden;
+}
+
+.bar-fill {
+  display: block;
+  block-size: 100%;
+  border-radius: inherit;
+  background-color: var(--bar-color, var(--color-primary));
+}

@@ -1,0 +1,74 @@
+<app-bottom-sheet [label]="title()" (closed)="onClosed()">
+  @if (editing()) {
+    <h2 class="edit-title">{{ title() }}</h2>
+    @for (request of editingRequests(); track request) {
+      @defer (on immediate) {
+        @if (request.kind === 'expense') {
+          <app-expense-form [expense]="request.expense" (saved)="editSaved()" />
+        } @else {
+          <app-payment-method-form [method]="request.method" (saved)="editSaved()" />
+        }
+      } @loading (minimum 200ms) {
+        <p class="loading">Carregando…</p>
+      }
+    }
+  } @else {
+    <h2 class="visually-hidden">Criar</h2>
+    <app-segmented-selector
+      class="tabs"
+      label="O que criar"
+      [options]="tabs"
+      [value]="tab()"
+      (valueChange)="chooseTab($event)"
+    >
+      <ng-template let-option>
+        @switch (option.value) {
+          @case ('expense') {
+            <svg lucideReceiptText class="tab-icon" aria-hidden="true"></svg>
+          }
+          @case ('payment-method') {
+            <svg lucideWalletCards class="tab-icon" aria-hidden="true"></svg>
+          }
+          @case ('institution') {
+            <svg lucideLandmark class="tab-icon" aria-hidden="true"></svg>
+          }
+        }
+      </ng-template>
+    </app-segmented-selector>
+
+    @if (visited().has('expense')) {
+      <section class="panel" aria-label="Novo gasto" [hidden]="tab() !== 'expense'">
+        @defer (on immediate) {
+          <app-expense-form (saved)="expenseSaved()" />
+        } @loading (minimum 200ms) {
+          <p class="loading">Carregando…</p>
+        }
+      </section>
+    }
+    @if (visited().has('payment-method')) {
+      <section
+        class="panel"
+        aria-label="Novo método de pagamento"
+        [hidden]="tab() !== 'payment-method'"
+      >
+        @defer (on immediate) {
+          <app-payment-method-form
+            (saved)="paymentMethodSaved()"
+            (institutionRequested)="requestInstitution()"
+          />
+        } @loading (minimum 200ms) {
+          <p class="loading">Carregando…</p>
+        }
+      </section>
+    }
+    @if (visited().has('institution')) {
+      <section class="panel" aria-label="Nova instituição" [hidden]="tab() !== 'institution'">
+        @defer (on immediate) {
+          <app-institution-form (saved)="institutionSaved()" />
+        } @loading (minimum 200ms) {
+          <p class="loading">Carregando…</p>
+        }
+      </section>
+    }
+  }
+</app-bottom-sheet>

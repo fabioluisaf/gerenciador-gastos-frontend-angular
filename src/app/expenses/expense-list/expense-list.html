@@ -1,0 +1,59 @@
+@if (hasNewer()) {
+  <div appInViewport [rootMargin]="loadMargin" (inViewportChange)="topVisible.set($event)"></div>
+}
+
+@for (day of days(); track day.key) {
+  <section
+    #day
+    class="day"
+    [class.month-start]="day.startsMonth"
+    [id]="dayElementId(day.key)"
+    [attr.aria-labelledby]="dayElementId(day.key) + '-titulo'"
+  >
+    @if (day.startsMonth && day.month) {
+      <h2 class="month-label">{{ monthTitle(day.month + '-01') }}</h2>
+    }
+    <h3 class="day-label" [id]="dayElementId(day.key) + '-titulo'">{{ day.date | dayLabel }}</h3>
+    <ul class="cards" role="list">
+      @for (expense of day.expenses; track expense.id) {
+        <li>
+          <app-expense-card
+            [expense]="expense"
+            (editRequested)="editRequests.editExpense(expense)"
+            (deleteRequested)="confirmDelete(expense)"
+          />
+        </li>
+      }
+    </ul>
+  </section>
+}
+
+<output class="feedback">
+  @switch (status()) {
+    @case ('loading') {
+      <span>Carregando gastos…</span>
+    }
+    @case ('error') {
+      <span>Não foi possível carregar os gastos.</span>
+      <button type="button" class="retry" (click)="retry()">Tentar novamente</button>
+    }
+  }
+  @if (isEmpty()) {
+    <span>{{ emptyMessage() }}</span>
+  }
+</output>
+
+@if (hasOlder()) {
+  <div appInViewport [rootMargin]="loadMargin" (inViewportChange)="bottomVisible.set($event)"></div>
+}
+
+@if (marks().length > 0) {
+  <app-timeline-scrubber
+    label="Linha do tempo dos gastos"
+    [marks]="marks()"
+    [activeId]="activePeriod()"
+    (selected)="jumpTo($event)"
+  />
+}
+
+<app-confirm-dialog />

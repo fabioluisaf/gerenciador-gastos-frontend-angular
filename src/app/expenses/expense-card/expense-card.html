@@ -1,0 +1,99 @@
+@let item = expense();
+<app-swipe-actions
+  startLabel="Editar"
+  endLabel="Excluir"
+  (startTriggered)="editRequested.emit()"
+  (endTriggered)="deleteRequested.emit()"
+>
+  <svg lucidePencil swipeStartIcon class="action-icon" aria-hidden="true"></svg>
+  <svg lucideTrash2 swipeEndIcon class="action-icon" aria-hidden="true"></svg>
+  <article
+    class="expense-card"
+    [class.expanded]="expanded()"
+    [style.--institution-color]="item.institution.color"
+    [style.--payment-color]="paymentColor()"
+  >
+    <div class="body">
+      <div class="summary">
+        <div class="heading">
+          <h4 class="name">{{ item.name }}</h4>
+          @if (invoiceView() && item.installment; as installment) {
+            <span class="installment">{{ installment.number }}/{{ installment.count }}</span>
+          }
+        </div>
+        <p class="amount" [class.refund]="isRefund()">
+          <span class="amount-value">{{ amount() | currency }}</span>
+          @if (!invoiceView() && item.installment; as installment) {
+            <span class="installment">em {{ installment.count }}x</span>
+          }
+        </p>
+      </div>
+
+      <ul class="details" role="list">
+        <li class="tag">{{ item.category }}</li>
+        <li class="tag">
+          @if (item.institution.iconUrl; as iconUrl) {
+            <img class="institution-icon" [ngSrc]="iconUrl" width="16" height="16" alt="" />
+          }
+          {{ item.institution.name }} · {{ paymentLabel() }}
+        </li>
+      </ul>
+
+      @if (item.description; as description) {
+        <p class="description">{{ description }}</p>
+      }
+
+      @if (expanded() && item.installment) {
+        <section class="installments" [id]="detailsId" aria-label="Parcelas">
+          @if (installmentsLoading()) {
+            <p class="installments-status">Carregando parcelas…</p>
+          } @else if (installmentsFailed()) {
+            <p class="installments-status">Não foi possível carregar as parcelas.</p>
+          } @else {
+            <ol class="installment-list" role="list">
+              @for (part of installments(); track part.number) {
+                <li class="installment-row" [class]="part.status">
+                  <span class="installment-number"
+                    >{{ part.number }}/{{ item.installment.count }}</span
+                  >
+                  <span class="installment-invoice">{{ part.invoiceLabel }}</span>
+                  <span class="installment-amount">{{ part.amount | currency }}</span>
+                  @switch (part.status) {
+                    @case ('paid') {
+                      <svg lucideCircleCheck class="status-icon" aria-hidden="true"></svg>
+                    }
+                    @case ('current') {
+                      <svg lucideCircleDot class="status-icon" aria-hidden="true"></svg>
+                    }
+                    @default {
+                      <svg lucideCircle class="status-icon" aria-hidden="true"></svg>
+                    }
+                  }
+                  <span class="visually-hidden">{{ statusLabels[part.status] }}</span>
+                </li>
+              }
+            </ol>
+          }
+        </section>
+      }
+
+      @if (expandable()) {
+        <button
+          type="button"
+          class="expand"
+          [attr.aria-expanded]="expanded()"
+          [attr.aria-controls]="expanded() && item.installment ? detailsId : null"
+          [attr.aria-label]="expanded() ? 'Recolher gasto' : 'Expandir gasto'"
+        >
+          <svg lucideChevronDown aria-hidden="true"></svg>
+        </button>
+      }
+    </div>
+    <app-actions-menu
+      class="actions-menu"
+      label="Ações do gasto"
+      (editRequested)="editRequested.emit()"
+      (deleteRequested)="deleteRequested.emit()"
+    />
+  </article>
+</app-swipe-actions>

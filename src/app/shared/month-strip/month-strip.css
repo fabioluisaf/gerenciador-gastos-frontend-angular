@@ -1,0 +1,133 @@
+:host {
+  --month-strip-accent: var(--color-secondary);
+  --month-strip-divider: var(--color-totals-border);
+
+  display: block;
+}
+
+.scroller {
+  --fade-start: 0rem;
+  --fade-end: 0rem;
+  --year-row-size: 1.625rem;
+
+  position: relative;
+  display: flex;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  mask-image:
+    linear-gradient(#000, #000),
+    linear-gradient(
+      90deg,
+      transparent,
+      #000 var(--fade-start),
+      #000 calc(100% - var(--fade-end)),
+      transparent
+    );
+  mask-position: top, bottom;
+  mask-size:
+    100% var(--year-row-size),
+    100% calc(100% - var(--year-row-size));
+  mask-repeat: no-repeat;
+}
+
+.scroller.fade-start {
+  --fade-start: 3rem;
+}
+
+.scroller.fade-end {
+  --fade-end: 3rem;
+}
+
+.year {
+  display: grid;
+  flex-shrink: 0;
+  gap: 0.375rem;
+}
+
+.year-row {
+  display: flex;
+  align-items: center;
+  block-size: 1.25rem;
+}
+
+.year + .year .year-row {
+  border-inline-start: 1px solid var(--month-strip-divider);
+}
+
+.year-label {
+  position: sticky;
+  inset-inline-start: 0;
+  padding-inline: 0.625rem;
+  color: var(--color-text-muted);
+  font-size: calc(0.8125rem * var(--font-scale));
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.months {
+  display: flex;
+  gap: 0.25rem;
+  padding-inline: 0.125rem;
+}
+
+.indicator {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  border-radius: 9999px;
+  background-color: color-mix(in srgb, var(--month-strip-accent) 22%, transparent);
+  pointer-events: none;
+}
+
+.indicator.moving {
+  transition:
+    translate 420ms cubic-bezier(0.65, 0, 0.35, 1),
+    inline-size 420ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+.month {
+  position: relative;
+  padding: 0.375rem 0.625rem;
+  border: 0;
+  border-radius: 9999px;
+  background-color: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: calc(0.875rem * var(--font-scale));
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color var(--motion-duration-fast) ease,
+    color var(--motion-duration-fast) ease;
+}
+
+.scroller.dragging .month {
+  cursor: grabbing;
+}
+
+.month:hover {
+  background-color: color-mix(in srgb, var(--color-text) 10%, transparent);
+  color: var(--color-text);
+}
+
+.month[aria-pressed='true'] {
+  color: var(--month-strip-accent);
+  font-weight: 600;
+}
+
+.month[aria-pressed='true']:hover {
+  background-color: transparent;
+}
+
+.month:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .month,
+  .indicator {
+    transition: none;
+  }
+}

@@ -1,0 +1,113 @@
+<h1 class="title">Métodos de pagamento</h1>
+
+@if (methods.hasValue()) {
+  @if (principal(); as main) {
+    <div class="wallet" [class.expanded]="expanded()" [class.animating]="animating()">
+      <section class="principal" aria-label="Método principal">
+        <div class="method-row" [style.view-transition-name]="transitionName(main)">
+          <app-swipe-actions
+            class="swipe"
+            startLabel="Editar"
+            endLabel="Excluir"
+            (startTriggered)="editRequests.editPaymentMethod(main)"
+            (endTriggered)="confirmDelete(main)"
+          >
+            <svg lucidePencil swipeStartIcon class="action-icon" aria-hidden="true"></svg>
+            <svg lucideTrash swipeEndIcon class="action-icon" aria-hidden="true"></svg>
+            <div class="card-wrap">
+              <app-payment-method-card [method]="main" />
+              @if (expanded()) {
+                <button
+                  type="button"
+                  class="card-hit"
+                  aria-label="Recolher os outros métodos"
+                  aria-controls="outros-metodos"
+                  aria-expanded="true"
+                  (click)="collapse()"
+                ></button>
+              }
+            </div>
+          </app-swipe-actions>
+          <app-actions-menu
+            class="card-actions"
+            [label]="'Ações de ' + main.name"
+            (editRequested)="editRequests.editPaymentMethod(main)"
+            (deleteRequested)="confirmDelete(main)"
+          />
+        </div>
+      </section>
+
+      @if (others().length > 0) {
+        <div class="pile">
+          <ul class="pile-list" id="outros-metodos" role="list" aria-label="Outros métodos">
+            @for (method of others(); track method.id) {
+              <li
+                #item
+                class="pile-item"
+                [style.view-transition-name]="transitionName(method)"
+                (pointermove)="scheduleReveal(item, $event)"
+                (pointerleave)="cancelReveal()"
+                (focusin)="reveal(item)"
+              >
+                <div class="method-row">
+                  <app-swipe-actions
+                    class="swipe"
+                    [startLabel]="expanded() ? 'Editar' : null"
+                    [endLabel]="expanded() ? 'Excluir' : null"
+                    (startTriggered)="editRequests.editPaymentMethod(method)"
+                    (endTriggered)="confirmDelete(method)"
+                  >
+                    <svg lucidePencil swipeStartIcon class="action-icon" aria-hidden="true"></svg>
+                    <svg lucideTrash swipeEndIcon class="action-icon" aria-hidden="true"></svg>
+                    <div class="card-wrap">
+                      <app-payment-method-card [method]="method" />
+                      @if (expanded()) {
+                        <button
+                          type="button"
+                          class="card-hit"
+                          [attr.aria-label]="'Colocar ' + method.name + ' no topo'"
+                          (click)="bringToTop(method)"
+                        ></button>
+                      }
+                    </div>
+                  </app-swipe-actions>
+                  @if (expanded()) {
+                    <app-actions-menu
+                      class="card-actions"
+                      [label]="'Ações de ' + method.name"
+                      (editRequested)="editRequests.editPaymentMethod(method)"
+                      (deleteRequested)="confirmDelete(method)"
+                    />
+                  } @else {
+                    <span class="card-actions-space" aria-hidden="true"></span>
+                  }
+                </div>
+              </li>
+            }
+          </ul>
+          @if (!expanded()) {
+            <button
+              type="button"
+              class="pile-hit"
+              aria-controls="outros-metodos"
+              aria-expanded="false"
+              [attr.aria-label]="'Mostrar os outros ' + others().length + ' métodos'"
+              (click)="expand()"
+            ></button>
+          }
+        </div>
+      }
+    </div>
+  } @else {
+    <p class="status">Nenhum método de pagamento cadastrado.</p>
+  }
+} @else if (methods.error()) {
+  <p class="status">
+    Não foi possível carregar os métodos de pagamento.
+    <button type="button" class="retry" (click)="methods.reload()">Tentar de novo</button>
+  </p>
+} @else {
+  <p class="status" aria-live="polite">Carregando…</p>
+}
+
+<app-confirm-dialog />
