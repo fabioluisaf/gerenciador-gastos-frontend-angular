@@ -72,4 +72,29 @@ describe('DragScroll', () => {
 
     expect(element.scrollLeft).toBe(200);
   });
+
+  it('should keep dragging when the mouse leaves the strip before the drag starts', () => {
+    pointer('pointerdown', 100);
+    document.dispatchEvent(
+      Object.assign(new MouseEvent('pointermove', { clientX: 40 }), { pointerId: 1 }),
+    );
+
+    expect(element.scrollLeft).toBe(260);
+
+    document.dispatchEvent(
+      Object.assign(new MouseEvent('pointerup', { clientX: 40 }), { pointerId: 1 }),
+    );
+    document.dispatchEvent(
+      Object.assign(new MouseEvent('pointermove', { clientX: 0 }), { pointerId: 1 }),
+    );
+
+    expect(element.scrollLeft).toBe(260);
+  });
+
+  it('should block the native drag of images inside the strip', () => {
+    const dragStart = new Event('dragstart', { bubbles: true, cancelable: true });
+    button.dispatchEvent(dragStart);
+
+    expect(dragStart.defaultPrevented).toBe(true);
+  });
 });
