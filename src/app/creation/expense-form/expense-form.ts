@@ -25,6 +25,7 @@ import { PaymentMethodsApi } from '../../payment-methods/payment-methods-api';
 import { DateField } from '../../shared/date-field/date-field';
 import { DragScroll } from '../../shared/drag-scroll';
 import { HorizontalWheelScroll } from '../../shared/horizontal-wheel-scroll';
+import { matchesText } from '../../shared/text-search';
 import {
   SegmentedSelector,
   SelectorOption,
@@ -41,6 +42,11 @@ function today(): string {
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
   return `${now.getFullYear()}-${month}-${day}`;
+}
+
+function moveCaretToEnd(input: HTMLInputElement): void {
+  const end = input.value.length;
+  input.setSelectionRange(end, end);
 }
 
 let nextId = 0;
@@ -145,6 +151,10 @@ export class ExpenseForm {
       : [],
   );
 
+  protected readonly suggestedCategories = computed(() =>
+    this.allCategories().filter((option) => matchesText(option, this.category())),
+  );
+
   protected readonly amountText = computed(() => this.currency.format(this.amountCents() / 100));
   protected readonly isCredit = computed(() => this.selectedMethod()?.paymentType === 'CREDITO');
   protected readonly installmentsAvailable = computed(() =>
@@ -178,6 +188,7 @@ export class ExpenseForm {
   });
 
   protected readonly maxTextLength = MAX_TEXT_LENGTH;
+  private caretToEndOnClick = false;
 
   constructor() {
     effect(() => {
@@ -207,6 +218,22 @@ export class ExpenseForm {
     const digits = input.value.replace(/\D/g, '').slice(0, MAX_AMOUNT_DIGITS);
     this.amountCents.set(Number(digits || '0'));
     input.value = this.amountText();
+  }
+
+  protected onAmountPointerDown(event: PointerEvent): void {
+    this.caretToEndOnClick = event.target !== this.host.ownerDocument.activeElement;
+  }
+
+  protected onAmountFocus(event: FocusEvent): void {
+    const input = event.target as HTMLInputElement;
+    requestAnimationFrame(() => moveCaretToEnd(input));
+  }
+
+  protected onAmountClick(event: MouseEvent): void {
+    if (this.caretToEndOnClick) {
+      this.caretToEndOnClick = false;
+      moveCaretToEnd(event.target as HTMLInputElement);
+    }
   }
 
   protected changeInstallments(step: number): void {

@@ -33,6 +33,9 @@
         [attr.aria-invalid]="errorFor('amount') ? true : null"
         [attr.aria-describedby]="id + '-valor-detalhe'"
         (input)="onAmountInput($event)"
+        (pointerdown)="onAmountPointerDown($event)"
+        (focus)="onAmountFocus($event)"
+        (click)="onAmountClick($event)"
       />
       <p class="amount-detail" [id]="id + '-valor-detalhe'">
         @if (errorFor('amount'); as message) {
@@ -179,22 +182,16 @@
         autocomplete="off"
         placeholder="Ex.: Casa"
         [id]="id + '-categoria'"
-        [attr.list]="id + '-categorias'"
         [maxLength]="maxTextLength"
         [value]="category()"
         [attr.aria-invalid]="errorFor('category') ? true : null"
         [attr.aria-describedby]="errorFor('category') ? id + '-categoria-erro' : null"
         (input)="category.set(textValue($event))"
       />
-      <datalist [id]="id + '-categorias'">
-        @for (option of allCategories(); track option) {
-          <option [value]="option"></option>
-        }
-      </datalist>
       @if (errorFor('category'); as message) {
         <p class="field-error" [id]="id + '-categoria-erro'">{{ message }}</p>
       }
-      @if (allCategories().length > 0) {
+      @if (suggestedCategories().length > 0) {
         <div
           class="categories"
           role="group"
@@ -202,7 +199,7 @@
           appHorizontalWheelScroll
           appDragScroll
         >
-          @for (option of allCategories(); track option) {
+          @for (option of suggestedCategories(); track option) {
             <button
               type="button"
               class="chip"

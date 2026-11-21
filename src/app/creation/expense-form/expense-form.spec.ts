@@ -240,6 +240,41 @@ describe('ExpenseForm', () => {
     ).toEqual(['Casa', 'Lazer']);
   });
 
+  it('should filter the used categories while typing, without the browser suggestion list', () => {
+    const input = element.querySelector<HTMLInputElement>('input[placeholder="Ex.: Casa"]')!;
+    expect(input.hasAttribute('list')).toBe(false);
+    expect(element.querySelector('datalist')).toBeNull();
+
+    input.value = 'LAZ';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(
+      [...element.querySelectorAll('.categories .chip')].map((chip) => chip.textContent?.trim()),
+    ).toEqual(['Lazer']);
+
+    input.value = 'Nova';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(element.querySelector('.categories')).toBeNull();
+  });
+
+  it('should move the caret to the end on the first click in the amount', () => {
+    type('.amount-input', '12345');
+    const amount = element.querySelector<HTMLInputElement>('.amount-input')!;
+    (document.activeElement as HTMLElement | null)?.blur();
+
+    amount.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
+    amount.focus();
+    amount.setSelectionRange(1, 1);
+    amount.click();
+    expect(amount.selectionStart).toBe(amount.value.length);
+
+    amount.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
+    amount.setSelectionRange(1, 1);
+    amount.click();
+    expect(amount.selectionStart).toBe(1);
+  });
+
   it('should keep the form and explain when saving fails', () => {
     TestBed.inject(ExpensesApi).create = () => throwError(() => new Error('400'));
     type('.amount-input', '100');
