@@ -98,4 +98,23 @@ describe('InstitutionForm', () => {
 
     expect(created[0]).toEqual({ name: 'Carteira', color: null, icon: null });
   });
+  it('should open the color picker and save a typed custom color', () => {
+    type('Inter');
+    const toggle = element.querySelector<HTMLButtonElement>('button[aria-label="Outra cor"]')!;
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    toggle.click();
+    fixture.detectChanges();
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    const hex = element.querySelector<HTMLInputElement>('app-color-picker .hex-input')!;
+    expect(hex.value).toBe(INSTITUTION_COLORS[0]);
+    hex.value = '#12ab9f';
+    hex.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(toggle.classList).toContain('selected');
+    expect(
+      element.querySelector<HTMLElement>('.preview')!.style.getPropertyValue('--preview-color'),
+    ).toBe('#12AB9F');
+    element.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
+    expect(created[0].color).toBe('#12AB9F');
+  });
 });

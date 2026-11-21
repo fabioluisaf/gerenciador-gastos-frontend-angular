@@ -101,13 +101,22 @@
   color: #ffffff;
 }
 
+.swatch.custom {
+  border: 0;
+  padding: 0;
+  font: inherit;
+}
+
+.swatch.custom.picked {
+  background: var(--swatch);
+}
+
+.swatch.custom.dark-text {
+  color: #18151f;
+}
+
 .color-picker {
-  position: absolute;
-  inset: 0;
-  inline-size: 100%;
-  block-size: 100%;
-  opacity: 0;
-  cursor: pointer;
+  margin-block-start: 0.75rem;
 }
 
 .icon-actions {

@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { LucideBan, LucideImagePlus, LucidePipette, LucideX } from '@lucide/angular';
+import { ColorPicker } from '../../shared/color-picker/color-picker';
 import { prefersDarkText } from '../../payment-methods/payment-method-card/payment-method-card';
 import { InstitutionsApi, MAX_ICON_BYTES } from '../../payment-methods/institutions-api';
 
@@ -34,7 +35,7 @@ let nextId = 0;
 
 @Component({
   selector: 'app-institution-form',
-  imports: [LucideBan, LucideImagePlus, LucidePipette, LucideX],
+  imports: [ColorPicker, LucideBan, LucideImagePlus, LucidePipette, LucideX],
   templateUrl: './institution-form.html',
   styleUrl: './institution-form.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -50,6 +51,7 @@ export class InstitutionForm {
   protected readonly id = `instituicao-${nextId++}`;
   protected readonly maxTextLength = MAX_TEXT_LENGTH;
   protected readonly presetColors = INSTITUTION_COLORS;
+  protected readonly defaultCustomColor = '#7C3AED';
   protected readonly acceptedIconTypes = ACCEPTED_ICON_TYPES.join(',');
 
   protected readonly name = signal('');
@@ -59,6 +61,7 @@ export class InstitutionForm {
   protected readonly iconRejected = signal<string | null>(null);
   protected readonly submitted = signal(false);
   protected readonly saving = signal(false);
+  protected readonly pickerOpen = signal(false);
   protected readonly failed = signal(false);
 
   protected readonly customColor = computed(() => {
@@ -86,6 +89,14 @@ export class InstitutionForm {
 
   protected textValue(event: Event): string {
     return (event.target as HTMLInputElement).value;
+  }
+
+  protected togglePicker(): void {
+    const opening = !this.pickerOpen();
+    this.pickerOpen.set(opening);
+    if (opening && this.color() === null) {
+      this.color.set(this.defaultCustomColor);
+    }
   }
 
   protected pickIcon(event: Event): void {

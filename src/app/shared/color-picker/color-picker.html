@@ -1,0 +1,49 @@
+<div class="picker" [style.--hue-color]="hueColor()" [style.--picked]="value()">
+  <div
+    class="tone"
+    role="slider"
+    tabindex="0"
+    aria-valuemin="0"
+    aria-valuemax="100"
+    [attr.aria-label]="label() + ': saturação e brilho'"
+    [attr.aria-valuenow]="saturationPercent()"
+    [attr.aria-valuetext]="'Saturação ' + saturationPercent() + '%, brilho ' + valuePercent() + '%'"
+    (pointerdown)="startDrag($event, 'tone')"
+    (pointermove)="drag($event, 'tone')"
+    (keydown)="toneKey($event)"
+  >
+    <span
+      class="thumb"
+      [style.left.%]="saturationPercent()"
+      [style.top.%]="100 - valuePercent()"
+    ></span>
+  </div>
+  <div
+    class="hue"
+    role="slider"
+    tabindex="0"
+    aria-valuemin="0"
+    aria-valuemax="359"
+    [attr.aria-label]="label() + ': matiz'"
+    [attr.aria-valuenow]="roundedHue()"
+    (pointerdown)="startDrag($event, 'hue')"
+    (pointermove)="drag($event, 'hue')"
+    (keydown)="hueKey($event)"
+  >
+    <span class="thumb hue-thumb" [style.left.%]="(hue() / 359) * 100"></span>
+  </div>
+  <div class="hex-row">
+    <span class="sample" aria-hidden="true"></span>
+    <label class="hex-label" [for]="id + '-hex'">Hex</label>
+    <input
+      class="field-input hex-input"
+      autocomplete="off"
+      spellcheck="false"
+      maxlength="7"
+      [id]="id + '-hex'"
+      [value]="hexText()"
+      (input)="typeHex($event)"
+      (blur)="resetHex()"
+    />
+  </div>
+</div>
