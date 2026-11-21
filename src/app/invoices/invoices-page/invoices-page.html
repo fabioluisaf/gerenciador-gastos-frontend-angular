@@ -59,9 +59,9 @@
             }
           </div>
           <p class="summary-total">{{ current.total | currency }}</p>
-          @if (plannedTotal() > 0) {
-            <p class="summary-planned">+ {{ plannedTotal() | currency }} planejados</p>
-          }
+          <p class="summary-planned">
+            de {{ current.total + plannedTotal() | currency }} planejados
+          </p>
           <dl class="summary-dates">
             <div>
               <dt>Fecha</dt>

@@ -108,7 +108,7 @@ describe('InvoicesPage', () => {
     expect(element.querySelector('.status-chip')?.textContent?.trim()).toBe('Aberta');
     expect(element.querySelector('.summary-total')?.textContent).toMatch(/R\$\s657,08/);
     expect(element.querySelector('.summary-planned')?.textContent).toMatch(
-      /\+ R\$\s300,00 planejados/,
+      /de R\$\s957,08 planejados/,
     );
   });
 
