@@ -43,36 +43,12 @@
 
     @if (invoice(); as selectedInvoice) {
       @for (current of [selectedInvoice]; track current.id) {
-        <section
-          class="summary"
-          [class.back]="direction() === 'back'"
-          [class.neutral]="!card()?.institution?.color"
-          [style.--card-color]="card()?.institution?.color"
-          [attr.aria-label]="title(current)"
-        >
-          <div class="summary-header">
-            <h2 class="summary-title">{{ title(current) }}</h2>
-            @if (status(); as currentStatus) {
-              <span class="status-chip" [class]="currentStatus">{{
-                statusLabels[currentStatus]
-              }}</span>
-            }
-          </div>
-          <p class="summary-total">{{ current.total | currency }}</p>
-          <p class="summary-planned">
-            de {{ current.total + plannedTotal() | currency }} planejados
-          </p>
-          <dl class="summary-dates">
-            <div>
-              <dt>Fecha</dt>
-              <dd>{{ dayOf(current.closingDate) }}</dd>
-            </div>
-            <div>
-              <dt>Vence</dt>
-              <dd>{{ dayOf(current.dueDate) }}</dd>
-            </div>
-          </dl>
-        </section>
+        <app-invoice-summary
+          [invoice]="current"
+          [color]="card()?.institution?.color ?? null"
+          [plannedTotal]="plannedTotal()"
+          [direction]="direction()"
+        />
       }
 
       <div class="entries-area" [class.stale]="entriesStale()" [attr.aria-busy]="entriesStale()">

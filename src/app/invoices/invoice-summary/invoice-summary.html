@@ -1,0 +1,25 @@
+@let current = invoice();
+<section
+  class="summary"
+  [class.back]="direction() === 'back'"
+  [class.neutral]="!color()"
+  [style.--card-color]="color()"
+  [attr.aria-label]="title()"
+>
+  <div class="summary-header">
+    <h2 class="summary-title">{{ title() }}</h2>
+    <span class="status-chip" [class]="status()">{{ statusLabels[status()] }}</span>
+  </div>
+  <p class="summary-total">{{ current.total | currency }}</p>
+  <p class="summary-planned">de {{ current.total + plannedTotal() | currency }} planejados</p>
+  <dl class="summary-dates">
+    <div>
+      <dt>Fecha</dt>
+      <dd>{{ closingDay() }}</dd>
+    </div>
+    <div>
+      <dt>Vence</dt>
+      <dd>{{ dueDay() }}</dd>
+    </div>
+  </dl>
+</section>

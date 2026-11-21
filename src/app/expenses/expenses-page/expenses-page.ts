@@ -37,6 +37,7 @@ import { ExpenseNameSearch } from '../expense-name-search/expense-name-search';
 import { ExpenseList } from '../expense-list/expense-list';
 import { ExpensesApi } from '../expenses-api';
 import { MonthStrip } from '../../shared/month-strip/month-strip';
+import { MonthInvoiceCard } from '../../invoices/month-invoice-card/month-invoice-card';
 import { MonthTotals } from '../month-totals/month-totals';
 import {
   currentPeriodKey,
@@ -47,6 +48,7 @@ import {
 } from '../timeline';
 
 const WIDE_SCREEN_QUERY = '(min-width: 64rem)';
+const INVOICE_COLUMN_QUERY = '(min-width: 90rem)';
 
 @Component({
   selector: 'app-expenses-page',
@@ -61,6 +63,7 @@ const WIDE_SCREEN_QUERY = '(min-width: 64rem)';
     ExpenseList,
     ExpenseNameSearch,
     FilteredTotal,
+    MonthInvoiceCard,
     MonthStrip,
     MonthTotals,
     LucideChevronUp,
@@ -96,6 +99,7 @@ export class ExpensesPage {
   });
   protected readonly periodLabel = computed(() => formatPeriodLabel(this.period(), this.locale));
   protected readonly sheetOpen = signal(false);
+  protected readonly invoiceColumn = signal(false);
   protected readonly filters = this.expenseFilters.active;
   private readonly searchOpen = signal(false);
   protected readonly searchVisible = computed(
@@ -150,7 +154,15 @@ export class ExpensesPage {
   });
 
   constructor() {
-    const wideScreen = inject(DOCUMENT).defaultView?.matchMedia(WIDE_SCREEN_QUERY);
+    const view = inject(DOCUMENT).defaultView;
+    const wideScreen = view?.matchMedia(WIDE_SCREEN_QUERY);
+    const invoiceScreen = view?.matchMedia(INVOICE_COLUMN_QUERY);
+    const showInvoiceColumn = (event: { matches: boolean }) =>
+      this.invoiceColumn.set(event.matches);
+    if (invoiceScreen) {
+      showInvoiceColumn(invoiceScreen);
+    }
+    invoiceScreen?.addEventListener('change', showInvoiceColumn);
     const closeSheetOnWideScreen = (event: MediaQueryListEvent) => {
       if (event.matches) {
         this.closeSheet();
@@ -159,6 +171,7 @@ export class ExpensesPage {
     wideScreen?.addEventListener('change', closeSheetOnWideScreen);
     inject(DestroyRef).onDestroy(() => {
       wideScreen?.removeEventListener('change', closeSheetOnWideScreen);
+      invoiceScreen?.removeEventListener('change', showInvoiceColumn);
       this.controlBar.show();
     });
 

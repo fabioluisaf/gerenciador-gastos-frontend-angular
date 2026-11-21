@@ -1,11 +1,10 @@
-import { CurrencyPipe, formatDate, NgOptimizedImage, NgTemplateOutlet } from '@angular/common';
+import { NgOptimizedImage, NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
   computed,
   inject,
   linkedSignal,
-  LOCALE_ID,
   signal,
   viewChild,
 } from '@angular/core';
@@ -29,7 +28,8 @@ import {
   SelectorOption,
 } from '../../shared/segmented-selector/segmented-selector';
 import { MonthStrip } from '../../shared/month-strip/month-strip';
-import { currentInvoice, Invoice, invoiceStatus, InvoiceStatus } from '../invoice';
+import { currentInvoice, Invoice } from '../invoice';
+import { InvoiceSummary } from '../invoice-summary/invoice-summary';
 import {
   categoriesOf,
   entryTotals,
@@ -46,31 +46,20 @@ const STATUS_FILTER_OPTIONS: readonly SelectorOption<InvoiceStatusFilter>[] = [
   { value: 'planned', label: 'Planejados' },
 ];
 
-const STATUS_LABELS: Readonly<Record<InvoiceStatus, string>> = {
-  open: 'Aberta',
-  closed: 'Fechada',
-  past: 'Encerrada',
-};
-
 interface InvoiceEntries {
   realized: Expense[];
   planned: Expense[];
-}
-
-function isoToDate(iso: string): Date {
-  const [year, month, day] = iso.split('-').map(Number);
-  return new Date(year, month - 1, day);
 }
 
 @Component({
   selector: 'app-invoices-page',
   imports: [
     ConfirmDialog,
-    CurrencyPipe,
     DayLabelPipe,
     ExpenseCard,
     FilteredTotal,
     HorizontalWheelScroll,
+    InvoiceSummary,
     LucideChevronDown,
     LucideSearch,
     NgOptimizedImage,
@@ -87,12 +76,10 @@ export class InvoicesPage {
   private readonly invoicesApi = inject(InvoicesApi);
   private readonly expensesApi = inject(ExpensesApi);
   private readonly dataChanges = inject(DataChanges);
-  private readonly locale = inject(LOCALE_ID);
   private readonly confirmDialog = viewChild.required(ConfirmDialog);
 
   protected readonly editRequests = inject(EditRequests);
   protected readonly today = todayIsoDate();
-  protected readonly statusLabels = STATUS_LABELS;
   protected readonly statusOptions = STATUS_FILTER_OPTIONS;
   protected readonly nameQuery = signal('');
   protected readonly statusFilter = signal<InvoiceStatusFilter>('all');
@@ -150,10 +137,6 @@ export class InvoicesPage {
   protected readonly direction = linkedSignal<number, 'forward' | 'back'>({
     source: () => this.invoiceList().findIndex(({ id }) => id === this.invoiceId()),
     computation: (index, previous) => (previous && index < previous.source ? 'back' : 'forward'),
-  });
-  protected readonly status = computed(() => {
-    const invoice = this.invoice();
-    return invoice ? invoiceStatus(invoice, this.today) : null;
   });
 
   private readonly entries = rxResource({
@@ -223,14 +206,6 @@ export class InvoicesPage {
     if (invoice) {
       this.invoiceId.set(invoice.id);
     }
-  }
-
-  protected title(invoice: Invoice): string {
-    return `Fatura de ${formatDate(isoToDate(invoice.dueDate), "MMMM 'de' y", this.locale)}`;
-  }
-
-  protected dayOf(iso: string): string {
-    return formatDate(isoToDate(iso), "d 'de' MMM", this.locale).replace('.', '');
   }
 
   protected confirmDelete(expense: Expense): void {

@@ -1,6 +1,11 @@
 <h1 class="visually-hidden">{{ heading() }}</h1>
 
 <div class="layout">
+  @if (invoiceColumn()) {
+    <aside class="invoice-panel" aria-label="Fatura do mês">
+      <app-month-invoice-card [period]="period()" />
+    </aside>
+  }
   <div class="list-column">
     <div class="list-header">
       <div class="header-row">
