@@ -137,10 +137,10 @@ describe('InvoicesPage', () => {
 
     expect(element.querySelectorAll('app-expense-card')).toHaveLength(1);
     expect(element.querySelector('.filtered-total')?.textContent?.replace(/\s+/g, ' ')).toMatch(
-      /1 gasto\s*R\$\s0,00 de R\$\s300,00/,
+      /1 gasto\s*R\$\s0,00 de R\$\s300,00 planejados/,
     );
 
-    element.querySelector<HTMLButtonElement>('.clear-filters')!.click();
+    element.querySelector<HTMLButtonElement>('app-filtered-total .clear')!.click();
     fixture.detectChanges();
     expect(element.querySelectorAll('app-expense-card')).toHaveLength(2);
     expect(element.querySelector('.filtered-total')).toBeNull();

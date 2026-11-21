@@ -45,6 +45,7 @@ describe('ExpensesPage', () => {
           provide: ExpensesApi,
           useValue: {
             getMonthTotals,
+            getFilteredTotals: () => of({ realized: 12, planned: 30 }),
             list: () => of({ items: [], hasNext: false }),
             listPeriods: () => of([]),
           },
@@ -197,5 +198,33 @@ describe('ExpensesPage', () => {
     fixture.destroy();
 
     expect(TestBed.inject(ControlBarState).hidden()).toBe(false);
+  });
+
+  it('should open the name search in the list header and show the filtered totals', async () => {
+    const toggle = element.querySelector<HTMLButtonElement>('.search-toggle')!;
+    expect(element.querySelector('app-expense-name-search')).toBeNull();
+
+    toggle.click();
+    await fixture.whenStable();
+    const input = element.querySelector<HTMLInputElement>(
+      '.list-header app-expense-name-search input',
+    )!;
+    expect(document.activeElement).toBe(input);
+
+    TestBed.inject(ExpenseFilters).setName('mercado');
+    await fixture.whenStable();
+    expect(element.querySelector('.mini-player-label')?.textContent?.trim()).toMatch(
+      /^Filtrados em/,
+    );
+    expect(element.querySelector('.mini-player-amount')?.textContent).toMatch(/R\$\s12,00/);
+    expect(element.querySelector('aside app-filtered-total')?.textContent).toMatch(
+      /R\$\s12,00 de R\$\s30,00 planejados/,
+    );
+
+    toggle.click();
+    await fixture.whenStable();
+    expect(TestBed.inject(ExpenseFilters).active()).toEqual([]);
+    expect(element.querySelector('app-expense-name-search')).toBeNull();
+    expect(element.querySelector('app-filtered-total')).toBeNull();
   });
 });

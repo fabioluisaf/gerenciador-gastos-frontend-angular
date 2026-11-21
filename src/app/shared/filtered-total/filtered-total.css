@@ -1,0 +1,53 @@
+:host {
+  display: block;
+}
+
+.filtered-total {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.125rem 0.75rem;
+  margin: 0;
+  padding: 0.5rem 0.5rem 0.5rem 0.875rem;
+  border-radius: 0.875rem;
+  background-color: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+  color: var(--color-text-muted);
+  font-size: calc(0.875rem * var(--font-scale));
+}
+
+.label {
+  font-weight: 600;
+}
+
+.count {
+  font-weight: 400;
+}
+
+.amount {
+  font-variant-numeric: tabular-nums;
+}
+
+.amount strong {
+  color: var(--color-text);
+}
+
+.clear {
+  margin-inline-start: auto;
+  padding: 0.25rem 0.5rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--color-primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.clear:hover {
+  background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.clear:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}

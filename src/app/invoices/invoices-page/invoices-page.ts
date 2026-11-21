@@ -22,6 +22,7 @@ import { todayIsoDate } from '../../expenses/timeline';
 import { PaymentMethod } from '../../payment-methods/payment-method';
 import { PaymentMethodsApi } from '../../payment-methods/payment-methods-api';
 import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
+import { FilteredTotal } from '../../shared/filtered-total/filtered-total';
 import { HorizontalWheelScroll } from '../../shared/horizontal-wheel-scroll';
 import {
   SegmentedSelector,
@@ -68,6 +69,7 @@ function isoToDate(iso: string): Date {
     CurrencyPipe,
     DayLabelPipe,
     ExpenseCard,
+    FilteredTotal,
     HorizontalWheelScroll,
     LucideChevronDown,
     LucideSearch,

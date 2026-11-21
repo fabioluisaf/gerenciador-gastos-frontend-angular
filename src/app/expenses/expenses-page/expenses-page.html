@@ -3,7 +3,25 @@
 <div class="layout">
   <div class="list-column">
     <div class="list-header">
-      <app-expense-kind-toggle />
+      <div class="header-row">
+        <app-expense-kind-toggle class="kind-toggle" />
+        <button
+          type="button"
+          class="search-toggle"
+          [attr.aria-label]="searchVisible() ? 'Fechar busca por nome' : 'Buscar por nome'"
+          [attr.aria-expanded]="searchVisible()"
+          (click)="toggleSearch()"
+        >
+          @if (searchVisible()) {
+            <svg lucideX aria-hidden="true"></svg>
+          } @else {
+            <svg lucideSearch aria-hidden="true"></svg>
+          }
+        </button>
+      </div>
+      @if (searchVisible()) {
+        <app-expense-name-search />
+      }
       @if (filters().length > 0) {
         <app-expense-filter-bar [filters]="filters()" (removed)="toggleFilter($event)" />
       }
@@ -11,6 +29,7 @@
     <app-expense-list
       class="list"
       [class.below-filter-bar]="filters().length > 0"
+      [class.below-search]="searchVisible()"
       [kind]="kind()"
       [filters]="filters()"
       [(activePeriod)]="activePeriod"
@@ -37,14 +56,25 @@
   (appSwipeUp)="openSheet()"
 >
   <span class="mini-player-text">
-    <span class="mini-player-label">Total de {{ periodLabel() }}</span>
-    <span class="mini-player-amount" [class.stale]="totals.isLoading()">
-      @if (shownTotals(); as monthTotals) {
-        {{ monthTotals.realized | currency }}
-      } @else {
-        Carregando…
-      }
-    </span>
+    @if (filters().length > 0) {
+      <span class="mini-player-label">Filtrados em {{ periodLabel() }}</span>
+      <span class="mini-player-amount" [class.stale]="filteredTotals.isLoading()">
+        @if (shownFilteredTotals(); as filtered) {
+          {{ filtered.realized | currency }}
+        } @else {
+          Carregando…
+        }
+      </span>
+    } @else {
+      <span class="mini-player-label">Total de {{ periodLabel() }}</span>
+      <span class="mini-player-amount" [class.stale]="totals.isLoading()">
+        @if (shownTotals(); as monthTotals) {
+          {{ monthTotals.realized | currency }}
+        } @else {
+          Carregando…
+        }
+      </span>
+    }
   </span>
   <svg lucideChevronUp aria-hidden="true"></svg>
 </button>
@@ -61,6 +91,15 @@
     [selected]="period()"
     (monthSelected)="selectMonth($event)"
   />
+  @if (filters().length > 0) {
+    <app-filtered-total
+      class="filtered-total"
+      [class.stale]="filteredTotals.isLoading()"
+      [realized]="shownFilteredTotals()?.realized ?? null"
+      [planned]="shownFilteredTotals()?.planned ?? null"
+      (cleared)="clearFilters()"
+    />
+  }
   @if (shownTotals(); as monthTotals) {
     <app-month-totals
       [class.stale]="totals.isLoading()"

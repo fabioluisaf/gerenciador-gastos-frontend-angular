@@ -138,6 +138,24 @@ describe('ExpensesApi', () => {
     }
   });
 
+  it('should send the name filter and total the filtered expenses of the month', () => {
+    const result = vi.fn();
+    const filters = [
+      { kind: 'name' as const, id: 'açaí', label: '“açaí”' },
+      { kind: 'category' as const, id: 'Lazer', label: 'Lazer' },
+    ];
+    api.getFilteredTotals('2026-02', filters).subscribe(result);
+
+    const request = http.expectOne((req) => req.url === '/api/gastos/totais');
+    expect(request.request.params.get('inicio')).toBe('2026-02-01');
+    expect(request.request.params.get('fim')).toBe('2026-02-28');
+    expect(request.request.params.get('nome')).toBe('açaí');
+    expect(request.request.params.getAll('categoria')).toEqual(['Lazer']);
+    request.flush({ dados: { realizado: 10.5, planejado: 14.5 } });
+
+    expect(result).toHaveBeenCalledWith({ realized: 10.5, planned: 14.5 });
+  });
+
   it('should report that there is no next page on the last page', () => {
     const result = vi.fn();
     api.list('realized', 2, 50).subscribe(result);

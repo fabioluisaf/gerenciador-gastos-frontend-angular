@@ -1,11 +1,13 @@
 import { CurrencyPipe, DOCUMENT, NgTemplateOutlet } from '@angular/common';
 import {
+  afterNextRender,
   ChangeDetectionStrategy,
   Component,
   computed,
   DestroyRef,
   effect,
   inject,
+  Injector,
   input,
   linkedSignal,
   LOCALE_ID,
@@ -14,17 +16,24 @@ import {
   viewChild,
 } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
-import { LucideChevronUp } from '@lucide/angular';
+import { LucideChevronUp, LucideSearch, LucideX } from '@lucide/angular';
 import { forkJoin } from 'rxjs';
 import { ControlBarState } from '../../control-bar/control-bar-state';
 import { DataChanges } from '../../core/data-changes';
 import { ContainScroll } from '../../shared/contain-scroll';
 import { BottomSheet } from '../../shared/bottom-sheet/bottom-sheet';
 import { SwipeUp } from '../../shared/swipe-up';
-import { ExpenseFilter, ExpenseKind, MonthTotals as MonthTotalsData } from '../expense';
+import { FilteredTotal } from '../../shared/filtered-total/filtered-total';
+import {
+  ExpenseFilter,
+  ExpenseKind,
+  FilteredTotals,
+  MonthTotals as MonthTotalsData,
+} from '../expense';
 import { ExpenseFilterBar } from '../expense-filter-bar/expense-filter-bar';
 import { ExpenseFilters } from '../expense-filters';
 import { ExpenseKindToggle } from '../expense-kind-toggle/expense-kind-toggle';
+import { ExpenseNameSearch } from '../expense-name-search/expense-name-search';
 import { ExpenseList } from '../expense-list/expense-list';
 import { ExpensesApi } from '../expenses-api';
 import { MonthStrip } from '../../shared/month-strip/month-strip';
@@ -50,9 +59,13 @@ const WIDE_SCREEN_QUERY = '(min-width: 64rem)';
     ExpenseFilterBar,
     ExpenseKindToggle,
     ExpenseList,
+    ExpenseNameSearch,
+    FilteredTotal,
     MonthStrip,
     MonthTotals,
     LucideChevronUp,
+    LucideSearch,
+    LucideX,
   ],
   templateUrl: './expenses-page.html',
   styleUrl: './expenses-page.css',
@@ -65,6 +78,8 @@ export class ExpensesPage {
   private readonly expenseFilters = inject(ExpenseFilters);
   private readonly sheet = viewChild.required(BottomSheet);
   private readonly list = viewChild.required(ExpenseList);
+  private readonly dataVersion = inject(DataChanges).expenses;
+  private readonly injector = inject(Injector);
 
   readonly kind = input<ExpenseKind>('realized');
 
@@ -82,6 +97,11 @@ export class ExpensesPage {
   protected readonly periodLabel = computed(() => formatPeriodLabel(this.period(), this.locale));
   protected readonly sheetOpen = signal(false);
   protected readonly filters = this.expenseFilters.active;
+  private readonly searchOpen = signal(false);
+  protected readonly searchVisible = computed(
+    () => this.searchOpen() || this.expenseFilters.name() !== '',
+  );
+  private readonly nameSearch = viewChild(ExpenseNameSearch);
 
   private readonly knownPeriods = rxResource({
     stream: () => forkJoin([this.api.listPeriods('realized'), this.api.listPeriods('planned')]),
@@ -111,6 +131,24 @@ export class ExpensesPage {
     computation: ({ value, failed }, previous) => (failed ? undefined : (value ?? previous?.value)),
   });
 
+  protected readonly filteredTotals = rxResource({
+    params: () => {
+      const filters = this.filters();
+      return filters.length > 0
+        ? { period: this.period(), filters, version: this.dataVersion() }
+        : undefined;
+    },
+    stream: ({ params }) => this.api.getFilteredTotals(params.period, params.filters),
+  });
+  protected readonly shownFilteredTotals = linkedSignal<
+    FilteredTotals | undefined,
+    FilteredTotals | undefined
+  >({
+    source: () => (this.filteredTotals.hasValue() ? this.filteredTotals.value() : undefined),
+    computation: (value, previous) =>
+      value ?? (this.filters().length > 0 ? previous?.value : undefined),
+  });
+
   constructor() {
     const wideScreen = inject(DOCUMENT).defaultView?.matchMedia(WIDE_SCREEN_QUERY);
     const closeSheetOnWideScreen = (event: MediaQueryListEvent) => {
@@ -138,6 +176,7 @@ export class ExpensesPage {
   protected refreshSummaries(): void {
     this.totals.reload();
     this.knownPeriods.reload();
+    this.filteredTotals.reload();
   }
 
   protected selectMonth(key: string): void {
@@ -146,6 +185,20 @@ export class ExpensesPage {
 
   protected toggleFilter(filter: ExpenseFilter): void {
     this.expenseFilters.toggle(filter);
+  }
+
+  protected toggleSearch(): void {
+    if (this.searchVisible()) {
+      this.searchOpen.set(false);
+      this.expenseFilters.setName('');
+      return;
+    }
+    this.searchOpen.set(true);
+    afterNextRender(() => this.nameSearch()?.focus(), { injector: this.injector });
+  }
+
+  protected clearFilters(): void {
+    this.expenseFilters.clear();
   }
 
   protected openSheet(): void {

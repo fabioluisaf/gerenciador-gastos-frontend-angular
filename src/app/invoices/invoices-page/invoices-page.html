@@ -118,17 +118,12 @@
               </ul>
             }
             @if (filtering()) {
-              <p class="filtered-total" aria-live="polite">
-                <span
-                  >{{ filteredTotals().count }}
-                  {{ filteredTotals().count === 1 ? 'gasto' : 'gastos' }}</span
-                >
-                <span class="filtered-amount"
-                  >{{ filteredTotals().realized | currency }} de
-                  {{ filteredTotals().planned | currency }}</span
-                >
-                <button type="button" class="clear-filters" (click)="clearFilters()">Limpar</button>
-              </p>
+              <app-filtered-total
+                [count]="filteredTotals().count"
+                [realized]="filteredTotals().realized"
+                [planned]="filteredTotals().planned"
+                (cleared)="clearFilters()"
+              />
             }
           </section>
 
