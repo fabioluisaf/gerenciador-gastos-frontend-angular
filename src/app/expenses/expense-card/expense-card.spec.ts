@@ -57,6 +57,16 @@ describe('ExpenseCard', () => {
     expect(element.textContent).not.toContain('2026');
   });
 
+  it('should hide the payment method inside an invoice', () => {
+    configure();
+    const fixture = TestBed.createComponent(ExpenseCard);
+    fixture.componentRef.setInput('expense', buildExpense());
+    fixture.componentRef.setInput('invoiceView', true);
+    fixture.detectChanges();
+
+    expect(tags(fixture.nativeElement)).toEqual(['Casa']);
+  });
+
   it('should show the whole installment purchase instead of the installment', () => {
     const element = render(
       buildExpense({
