@@ -11,6 +11,7 @@
       [clearLabel]="dateOptional() ? 'Sem data' : null"
       [invalid]="!!errorFor('date')"
       [describedBy]="id + '-data-detalhe'"
+      [startOpen]="copying()"
       (valueChange)="date.set($event)"
     >
       <p class="field-hint" [id]="id + '-data-detalhe'">

@@ -180,6 +180,7 @@
     invoiceView
     [expense]="expense"
     (editRequested)="editRequests.editExpense(expense)"
+    (copyRequested)="editRequests.copyExpense(expense)"
     (deleteRequested)="confirmDelete(expense)"
   />
 </ng-template>

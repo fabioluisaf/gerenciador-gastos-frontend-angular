@@ -289,6 +289,42 @@ describe('ExpenseForm', () => {
     expect(saved).not.toHaveBeenCalled();
   });
 
+  it('should copy an expense as a new one, asking for the date with the calendar open', async () => {
+    TestBed.inject(ExpensesApi).loadForEdit = () =>
+      of({
+        name: 'Cinema',
+        amount: 42.5,
+        category: 'Lazer',
+        paymentMethodId: 'credito',
+        date: '2026-11-10',
+        description: 'Com pipoca',
+        realized: true,
+        installments: 3,
+        invoicePeriod: '2026-12',
+      });
+    fixture.componentRef.setInput('copyOf', buildExpense());
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(element.querySelector<HTMLInputElement>('.amount-input')!.value).toMatch(/R\$\s42,50/);
+    expect(
+      element
+        .querySelector('app-date-field .trigger, app-date-field button')
+        ?.getAttribute('aria-expanded'),
+    ).toBe('true');
+    expect(element.querySelector('.stepper-value')?.textContent?.trim()).toBe('3x');
+
+    submit();
+    expect(created).toEqual([]);
+    expect(element.querySelector('app-date-field .field-error')?.textContent).toBe(
+      'Informe a data do gasto.',
+    );
+    expect(element.querySelector('button[type="submit"]')?.textContent?.trim()).toBe(
+      'Salvar gasto',
+    );
+  });
+
   describe('when editing', () => {
     let updated: NewExpense[];
 

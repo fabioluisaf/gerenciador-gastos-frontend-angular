@@ -25,6 +25,7 @@ export type CreationTab = 'expense' | 'payment-method' | 'institution';
 
 const EDIT_TITLES: Readonly<Record<EditRequest['kind'], string>> = {
   expense: 'Editar gasto',
+  'copy-expense': 'Copiar gasto',
   'payment-method': 'Editar método',
 };
 
@@ -92,7 +93,8 @@ export class CreationSheet {
   }
 
   protected editSaved(): void {
-    if (this.editing()?.kind === 'expense') {
+    const kind = this.editing()?.kind;
+    if (kind === 'expense' || kind === 'copy-expense') {
       this.dataChanges.expenseSaved();
     } else {
       this.dataChanges.paymentMethodSaved();

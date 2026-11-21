@@ -5,6 +5,8 @@
       @defer (on immediate) {
         @if (request.kind === 'expense') {
           <app-expense-form [expense]="request.expense" (saved)="editSaved()" />
+        } @else if (request.kind === 'copy-expense') {
+          <app-expense-form [copyOf]="request.expense" (saved)="editSaved()" />
         } @else {
           <app-payment-method-form [method]="request.method" (saved)="editSaved()" />
         }

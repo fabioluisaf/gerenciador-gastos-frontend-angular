@@ -81,6 +81,7 @@ export class ExpenseCard {
   readonly expense = input.required<Expense>();
   readonly invoiceView = input(false, { transform: booleanAttribute });
   readonly editRequested = output<void>();
+  readonly copyRequested = output<void>();
   readonly deleteRequested = output<void>();
 
   protected readonly detailsId = `gasto-detalhes-${nextId++}`;

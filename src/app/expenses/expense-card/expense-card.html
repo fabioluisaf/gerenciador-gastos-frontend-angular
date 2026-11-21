@@ -94,7 +94,9 @@
     <app-actions-menu
       class="actions-menu"
       label="Ações do gasto"
+      copyable
       (editRequested)="editRequested.emit()"
+      (copyRequested)="copyRequested.emit()"
       (deleteRequested)="deleteRequested.emit()"
     />
   </article>

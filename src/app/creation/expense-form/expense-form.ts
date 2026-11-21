@@ -81,6 +81,7 @@ export class ExpenseForm {
   });
 
   readonly expense = input<Expense | null>(null);
+  readonly copyOf = input<Expense | null>(null);
   readonly saved = output<void>();
 
   protected readonly id = `gasto-${nextId++}`;
@@ -93,13 +94,16 @@ export class ExpenseForm {
   private readonly methods = rxResource({ stream: () => this.paymentMethodsApi.list() });
   private readonly categories = rxResource({ stream: () => this.expensesApi.listCategories() });
   private readonly original = rxResource({
-    params: () => this.expense() ?? undefined,
+    params: () => this.expense() ?? this.copyOf() ?? undefined,
     stream: ({ params }) => this.expensesApi.loadForEdit(params),
   });
 
   protected readonly editing = computed(() => this.expense() !== null);
+  protected readonly copying = computed(() => !this.editing() && this.copyOf() !== null);
   protected readonly editingPurchase = computed(() => !!this.expense()?.installment);
-  protected readonly loading = computed(() => this.editing() && !this.original.hasValue());
+  protected readonly loading = computed(
+    () => (this.editing() || this.copying()) && !this.original.hasValue(),
+  );
   protected readonly loadFailed = computed(() => this.original.status() === 'error');
 
   protected readonly amountCents = signal(0);
@@ -285,9 +289,9 @@ export class ExpenseForm {
     this.amountCents.set(Math.round(draft.amount * 100));
     this.name.set(draft.name);
     this.kind.set(draft.realized ? 'realized' : 'planned');
-    this.date.set(draft.date ?? '');
+    this.date.set(this.copying() ? '' : (draft.date ?? ''));
     this.installments.set(draft.installments);
-    this.invoiceMonth.set(draft.invoicePeriod ?? '');
+    this.invoiceMonth.set(this.copying() ? '' : (draft.invoicePeriod ?? ''));
     this.category.set(draft.category);
     this.description.set(draft.description ?? '');
   }

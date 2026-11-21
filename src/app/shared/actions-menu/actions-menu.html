@@ -20,6 +20,12 @@
     <svg lucidePencil aria-hidden="true"></svg>
     Editar
   </button>
+  @if (copyable()) {
+    <button type="button" class="menu-item" (click)="requestCopy(menu)">
+      <svg lucideCopy aria-hidden="true"></svg>
+      Copiar
+    </button>
+  }
   <button type="button" class="menu-item danger" (click)="requestDelete(menu)">
     <svg lucideTrash aria-hidden="true"></svg>
     Excluir
