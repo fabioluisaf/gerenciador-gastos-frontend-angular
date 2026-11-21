@@ -1,8 +1,10 @@
 import { TestBed } from '@angular/core/testing';
+import { Observable, of, Subject } from 'rxjs';
 import { ControlBarState } from '../../control-bar/control-bar-state';
 import { FontSizeService } from '../../core/font-size';
 import { ThemeService } from '../../core/theme';
 import { stubDialogs } from '../../shared/testing/dialog-stub';
+import { BackupApi } from '../backup-api';
 import { SettingsSheet } from './settings-sheet';
 
 describe('SettingsSheet', () => {
@@ -19,7 +21,8 @@ describe('SettingsSheet', () => {
     localStorage.clear();
   });
 
-  async function render() {
+  async function render(download: () => Observable<Blob> = () => of(new Blob())) {
+    TestBed.configureTestingModule({ providers: [{ provide: BackupApi, useValue: { download } }] });
     const fixture = TestBed.createComponent(SettingsSheet);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -84,5 +87,46 @@ describe('SettingsSheet', () => {
 
     expect(TestBed.inject(FontSizeService).size()).toBe('large');
     expect(fontSize.querySelector('label.active')?.textContent?.trim()).toBe('Grande');
+  });
+
+  it('should download the backup zip named with today', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(2026, 10, 21, 19, 30));
+    const zip = new Blob(['PK']);
+    URL.createObjectURL = vi.fn(() => 'blob:backup');
+    URL.revokeObjectURL = vi.fn();
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      expect(this.download).toBe('backup-gastos-2026-11-21.zip');
+      expect(this.href).toBe('blob:backup');
+    });
+    const fixture = await render(() => of(zip));
+
+    fixture.nativeElement.querySelector('.backup-button').click();
+
+    expect(URL.createObjectURL).toHaveBeenCalledWith(zip);
+    expect(click).toHaveBeenCalledOnce();
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:backup');
+    click.mockRestore();
+    vi.useRealTimers();
+  });
+
+  it('should show progress and an error when the backup fails', async () => {
+    const response = new Subject<Blob>();
+    const fixture = await render(() => response);
+    const button: HTMLButtonElement = fixture.nativeElement.querySelector('.backup-button');
+
+    button.click();
+    fixture.detectChanges();
+    expect(button.disabled).toBe(true);
+    expect(button.textContent?.trim()).toBe('Gerando backup…');
+
+    response.error(new Error());
+    fixture.detectChanges();
+    expect(button.disabled).toBe(false);
+    expect(fixture.nativeElement.querySelector('[role="alert"]')?.textContent).toContain(
+      'Não foi possível gerar o backup',
+    );
   });
 });

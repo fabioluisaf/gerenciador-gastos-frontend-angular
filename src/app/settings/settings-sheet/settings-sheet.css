@@ -18,3 +18,60 @@ svg {
   inline-size: 1.25rem;
   block-size: 1.25rem;
 }
+
+.backup {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.section-title {
+  margin: 0 0 0.25rem;
+  color: var(--color-text-muted);
+  font-size: calc(0.875rem * var(--font-scale));
+  font-weight: 600;
+}
+
+.backup-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-block-size: 3.25rem;
+  padding-inline: 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  background-color: var(--color-surface-alt);
+  color: var(--color-text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color var(--motion-duration-fast) ease;
+}
+
+.backup-button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+.backup-button:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+.hint {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: calc(0.8125rem * var(--font-scale));
+}
+
+@media (hover: hover) {
+  .backup-button:not(:disabled):hover {
+    border-color: var(--color-primary);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .backup-button {
+    transition: none;
+  }
+}
