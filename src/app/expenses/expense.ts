@@ -117,6 +117,7 @@ export interface NewExpense {
   realized: boolean;
   installments: number;
   invoicePeriod: string | null;
+  installmentAmounts?: number[] | null;
 }
 
 export interface ExpensePeriod {

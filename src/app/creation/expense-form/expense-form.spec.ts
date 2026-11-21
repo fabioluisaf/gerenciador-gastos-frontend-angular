@@ -128,6 +128,37 @@ describe('ExpenseForm', () => {
     expect(saved).toHaveBeenCalledOnce();
   });
 
+  it('should let each installment be edited, making the total their sum', () => {
+    type('.amount-input', '10000');
+    element.querySelector<HTMLButtonElement>('button[aria-label="Mais parcelas"]')!.click();
+    element.querySelector<HTMLButtonElement>('button[aria-label="Mais parcelas"]')!.click();
+    fixture.detectChanges();
+    const parcels = () =>
+      [...element.querySelectorAll<HTMLInputElement>('.parcel-input')].map((input) => input.value);
+    expect(parcels().map((value) => value.replace(/\s/g, ' '))).toEqual([
+      'R$ 33,34',
+      'R$ 33,33',
+      'R$ 33,33',
+    ]);
+
+    type('#' + element.querySelector('.parcel-input')!.id, '5000');
+
+    expect(parcels()[0]).toMatch(/R\$\s50,00/);
+    expect(element.querySelector<HTMLInputElement>('.amount-input')!.value).toMatch(/R\$\s116,66/);
+    expect(element.querySelector('.amount-detail')?.textContent).toContain('valores ajustados');
+
+    type('input[placeholder="Ex.: Mercado do mês"]', 'Sofá');
+    type('input[placeholder="Ex.: Casa"]', 'Casa');
+    submit();
+    expect(created).toEqual([
+      expect.objectContaining({ amount: 116.66, installmentAmounts: [50, 33.33, 33.33] }),
+    ]);
+
+    element.querySelector<HTMLButtonElement>('.split-evenly')!.click();
+    fixture.detectChanges();
+    expect(parcels()[0]).toMatch(/R\$\s38,90/);
+  });
+
   function openDateField(label: string): HTMLElement {
     const field = [...element.querySelectorAll<HTMLElement>('app-date-field')].find(
       (candidate) => candidate.querySelector('.field-label')?.textContent === label,

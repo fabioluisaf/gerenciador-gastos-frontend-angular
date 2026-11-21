@@ -17,7 +17,13 @@ import {
   untracked,
 } from '@angular/core';
 import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { LucideCheck, LucideClock, LucideMinus, LucidePlus } from '@lucide/angular';
+import {
+  LucideCheck,
+  LucideChevronDown,
+  LucideClock,
+  LucideMinus,
+  LucidePlus,
+} from '@lucide/angular';
 import { Expense, ExpenseKind, NewExpense, PAYMENT_TYPE_LABELS } from '../../expenses/expense';
 import { ExpensesApi } from '../../expenses/expenses-api';
 import { PaymentMethod } from '../../payment-methods/payment-method';
@@ -26,6 +32,7 @@ import { DateField } from '../../shared/date-field/date-field';
 import { DragScroll } from '../../shared/drag-scroll';
 import { HorizontalWheelScroll } from '../../shared/horizontal-wheel-scroll';
 import { matchesText } from '../../shared/text-search';
+import { isEvenSplit, splitEvenly } from './installment-split';
 import {
   SegmentedSelector,
   SelectorOption,
@@ -59,6 +66,7 @@ let nextId = 0;
     DragScroll,
     HorizontalWheelScroll,
     LucideCheck,
+    LucideChevronDown,
     LucideClock,
     LucideMinus,
     LucidePlus,
@@ -178,6 +186,15 @@ export class ExpenseForm {
   protected readonly installmentAmount = computed(
     () => this.amountCents() / 100 / this.effectiveInstallments(),
   );
+  private readonly customParcelCents = signal<number[] | null>(null);
+  protected readonly parcelCents = computed(() => {
+    const count = this.effectiveInstallments();
+    const custom = this.customParcelCents();
+    return custom?.length === count ? custom : splitEvenly(this.amountCents(), count);
+  });
+  protected readonly parcelsAdjusted = computed(
+    () => this.customParcelCents()?.length === this.effectiveInstallments(),
+  );
 
   protected readonly errors = computed<Record<Field, string | null>>(() => {
     const name = this.name().trim();
@@ -221,7 +238,31 @@ export class ExpenseForm {
     const input = event.target as HTMLInputElement;
     const digits = input.value.replace(/\D/g, '').slice(0, MAX_AMOUNT_DIGITS);
     this.amountCents.set(Number(digits || '0'));
+    this.customParcelCents.set(null);
     input.value = this.amountText();
+  }
+
+  protected formatCents(cents: number): string {
+    return this.currency.format(cents / 100);
+  }
+
+  protected onParcelInput(index: number, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, '').slice(0, MAX_AMOUNT_DIGITS);
+    const parcels = [...this.parcelCents()];
+    parcels[index] = Number(digits || '0');
+    this.customParcelCents.set(parcels);
+    this.amountCents.set(parcels.reduce((sum, cents) => sum + cents, 0));
+    input.value = this.formatCents(parcels[index]);
+  }
+
+  protected onParcelFocus(event: FocusEvent): void {
+    const input = event.target as HTMLInputElement;
+    requestAnimationFrame(() => moveCaretToEnd(input));
+  }
+
+  protected splitParcelsEvenly(): void {
+    this.customParcelCents.set(null);
   }
 
   protected onAmountPointerDown(event: PointerEvent): void {
@@ -242,6 +283,7 @@ export class ExpenseForm {
 
   protected changeInstallments(step: number): void {
     this.installments.update((count) => Math.min(MAX_INSTALLMENTS, Math.max(1, count + step)));
+    this.customParcelCents.set(null);
   }
 
   protected textValue(event: Event): string {
@@ -273,6 +315,9 @@ export class ExpenseForm {
       realized: this.kind() === 'realized',
       installments: this.effectiveInstallments(),
       invoicePeriod: this.isCredit() ? this.invoiceMonth() || null : null,
+      installmentAmounts: this.parcelsAdjusted()
+        ? this.parcelCents().map((cents) => cents / 100)
+        : null,
     };
     (editing ? this.expensesApi.update(editing, changes) : this.expensesApi.create(changes))
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -294,5 +339,9 @@ export class ExpenseForm {
     this.invoiceMonth.set(this.copying() ? '' : (draft.invoicePeriod ?? ''));
     this.category.set(draft.category);
     this.description.set(draft.description ?? '');
+    const parcels = draft.installmentAmounts?.map((amount) => Math.round(amount * 100)) ?? null;
+    this.customParcelCents.set(
+      parcels && parcels.length > 1 && !isEvenSplit(parcels) ? parcels : null,
+    );
   }
 }

@@ -72,6 +72,7 @@ interface PurchaseDetailDto {
   quantidadeParcelas: number;
   parcelas: {
     numeroParcela: number;
+    valor: number;
     data: string;
     fatura: InvoiceDto | null;
     realizado: boolean;
@@ -185,6 +186,10 @@ function withFilters(params: HttpParams, filters: readonly ExpenseFilter[]): Htt
   );
 }
 
+function parcelAmounts({ installmentAmounts }: NewExpense): { valoresParcelas?: number[] } {
+  return installmentAmounts ? { valoresParcelas: installmentAmounts } : {};
+}
+
 function monthParams(periodKey: string): HttpParams {
   const { year, month } = parsePeriodKey(periodKey);
   const lastDay = new Date(year, month, 0).getDate();
@@ -238,6 +243,7 @@ export class ExpensesApi {
             ...common,
             valorTotal: expense.amount,
             quantidadeParcelas: expense.installments,
+            ...parcelAmounts(expense),
             realizado: expense.realized,
           })
         : this.http.post(`${API_URL}/gastos`, {
@@ -255,7 +261,8 @@ export class ExpensesApi {
         .get<ApiResponse<PurchaseDetailDto>>(`${API_URL}/compras-parceladas/${purchaseId}`)
         .pipe(
           map(({ dados }) => {
-            const first = [...dados.parcelas].sort((a, b) => a.numeroParcela - b.numeroParcela)[0];
+            const parcels = [...dados.parcelas].sort((a, b) => a.numeroParcela - b.numeroParcela);
+            const first = parcels[0];
             return {
               name: dados.nome,
               amount: dados.valorTotal,
@@ -265,6 +272,7 @@ export class ExpensesApi {
               description: dados.descricao,
               realized: first?.realizado ?? true,
               installments: dados.quantidadeParcelas,
+              installmentAmounts: parcels.map(({ valor }) => valor),
               invoicePeriod: first?.fatura?.dataFechamento.slice(0, 7) ?? null,
             };
           }),
@@ -301,6 +309,7 @@ export class ExpensesApi {
           ...common,
           valorTotal: changes.amount,
           quantidadeParcelas: changes.installments,
+          ...parcelAmounts(changes),
         })
       : this.http.put(`${API_URL}/gastos/${expense.id}`, { ...common, valor: changes.amount });
     return request.pipe(map(() => undefined));

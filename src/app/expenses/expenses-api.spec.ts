@@ -462,6 +462,27 @@ describe('ExpensesApi', () => {
     request.flush({ dados: {} });
   });
 
+  it('should send the adjusted installment amounts', () => {
+    api
+      .create({
+        name: 'Geladeira',
+        amount: 100,
+        category: 'Casa',
+        paymentMethodId: 'credito',
+        date: '2026-11-20',
+        description: null,
+        realized: true,
+        installments: 2,
+        invoicePeriod: null,
+        installmentAmounts: [70, 30],
+      })
+      .subscribe();
+
+    const request = http.expectOne('/api/compras-parceladas');
+    expect(request.request.body.valoresParcelas).toEqual([70, 30]);
+    request.flush({ dados: {} });
+  });
+
   it('should list the categories as the API orders them', () => {
     const result = vi.fn();
     api.listCategories().subscribe(result);

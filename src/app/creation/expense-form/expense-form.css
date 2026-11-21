@@ -191,7 +191,92 @@
   display: none;
 }
 
+.parcels {
+  margin-block-start: 0.75rem;
+}
+
+.parcels-summary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0;
+  border-radius: 0.5rem;
+  color: var(--color-primary);
+  font-size: calc(0.875rem * var(--font-scale));
+  font-weight: 600;
+  list-style: none;
+  cursor: pointer;
+}
+
+.parcels-summary::-webkit-details-marker {
+  display: none;
+}
+
+.parcels-summary:focus-visible,
+.split-evenly:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.parcels-toggle {
+  inline-size: 1rem;
+  block-size: 1rem;
+  rotate: -90deg;
+  transition: rotate var(--motion-duration-fast) ease;
+}
+
+.parcels[open] .parcels-toggle {
+  rotate: 0deg;
+}
+
+.parcel-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(9rem, 1fr));
+  gap: 0.5rem;
+  max-block-size: 16rem;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.parcel {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.parcel-label {
+  flex-shrink: 0;
+  min-inline-size: 2rem;
+  color: var(--color-text-muted);
+  font-size: calc(0.875rem * var(--font-scale));
+  font-variant-numeric: tabular-nums;
+}
+
+.parcel-input {
+  min-inline-size: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.split-evenly {
+  margin-block-start: 0.5rem;
+  padding: 0.25rem 0.5rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--color-primary);
+  font: inherit;
+  font-size: calc(0.875rem * var(--font-scale));
+  font-weight: 600;
+  cursor: pointer;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .parcels-toggle {
+    transition: none;
+  }
+
   .amount-input,
   .method {
     transition: none;
