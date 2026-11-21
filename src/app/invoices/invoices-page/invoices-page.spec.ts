@@ -116,12 +116,34 @@ describe('InvoicesPage', () => {
     const { element } = await render();
 
     expect(
-      [...element.querySelectorAll('.entries-title')].map((title) => title.textContent),
-    ).toEqual(['Lançados', 'Planejados']);
-    const planned = element.querySelectorAll('app-expense-card')[1];
-    expect(planned.querySelector('.heading .installment')?.textContent?.trim()).toBe('2/10');
-    expect(planned.querySelector('.amount .installment')).toBeNull();
-    expect(planned.querySelector('.amount-value')?.textContent).toMatch(/R\$\s300,00/);
+      [...element.querySelectorAll('.entries-title')].map((title) =>
+        title.textContent?.replace(/\s+/g, ' ').trim(),
+      ),
+    ).toEqual(['Parcelas 1', 'Com data 1']);
+    expect(element.querySelector('.day-label')?.textContent).toContain('19 de nov de 2026');
+    const installment = element.querySelectorAll('app-expense-card')[0];
+    expect(installment.querySelector('.heading .installment')?.textContent?.trim()).toBe('2/10');
+    expect(installment.querySelector('.amount .installment')).toBeNull();
+    expect(installment.querySelector('.amount-value')?.textContent).toMatch(/R\$\s300,00/);
+  });
+
+  it('should filter the invoice entries by name and show the filtered total', async () => {
+    const { fixture, element } = await render();
+
+    const search = element.querySelector<HTMLInputElement>('.search-input')!;
+    search.value = 'gela';
+    search.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+
+    expect(element.querySelectorAll('app-expense-card')).toHaveLength(1);
+    expect(element.querySelector('.filtered-total')?.textContent?.replace(/\s+/g, ' ')).toMatch(
+      /1 gasto\s*R\$\s0,00 de R\$\s300,00/,
+    );
+
+    element.querySelector<HTMLButtonElement>('.clear-filters')!.click();
+    fixture.detectChanges();
+    expect(element.querySelectorAll('app-expense-card')).toHaveLength(2);
+    expect(element.querySelector('.filtered-total')).toBeNull();
   });
 
   it('should switch invoices and cards', async () => {

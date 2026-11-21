@@ -1,4 +1,4 @@
-import { CurrencyPipe, formatDate, NgOptimizedImage } from '@angular/common';
+import { CurrencyPipe, formatDate, NgOptimizedImage, NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -6,12 +6,15 @@ import {
   inject,
   linkedSignal,
   LOCALE_ID,
+  signal,
   viewChild,
 } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
+import { LucideChevronDown, LucideSearch } from '@lucide/angular';
 import { tap } from 'rxjs';
 import { DataChanges } from '../../core/data-changes';
 import { EditRequests } from '../../core/edit-requests';
+import { DayLabelPipe } from '../../expenses/day-label-pipe';
 import { Expense } from '../../expenses/expense';
 import { ExpenseCard } from '../../expenses/expense-card/expense-card';
 import { ExpensesApi } from '../../expenses/expenses-api';
@@ -19,13 +22,28 @@ import { todayIsoDate } from '../../expenses/timeline';
 import { PaymentMethod } from '../../payment-methods/payment-method';
 import { PaymentMethodsApi } from '../../payment-methods/payment-methods-api';
 import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
+import { HorizontalWheelScroll } from '../../shared/horizontal-wheel-scroll';
 import {
   SegmentedSelector,
   SelectorOption,
 } from '../../shared/segmented-selector/segmented-selector';
 import { MonthStrip } from '../../shared/month-strip/month-strip';
 import { currentInvoice, Invoice, invoiceStatus, InvoiceStatus } from '../invoice';
+import {
+  categoriesOf,
+  entryTotals,
+  filterEntries,
+  groupInvoiceEntries,
+  InvoiceStatusFilter,
+  isFiltering,
+} from '../invoice-entries';
 import { InvoicesApi } from '../invoices-api';
+
+const STATUS_FILTER_OPTIONS: readonly SelectorOption<InvoiceStatusFilter>[] = [
+  { value: 'all', label: 'Todos' },
+  { value: 'realized', label: 'Realizados' },
+  { value: 'planned', label: 'Planejados' },
+];
 
 const STATUS_LABELS: Readonly<Record<InvoiceStatus, string>> = {
   open: 'Aberta',
@@ -48,8 +66,13 @@ function isoToDate(iso: string): Date {
   imports: [
     ConfirmDialog,
     CurrencyPipe,
+    DayLabelPipe,
     ExpenseCard,
+    HorizontalWheelScroll,
+    LucideChevronDown,
+    LucideSearch,
     NgOptimizedImage,
+    NgTemplateOutlet,
     MonthStrip,
     SegmentedSelector,
   ],
@@ -68,6 +91,10 @@ export class InvoicesPage {
   protected readonly editRequests = inject(EditRequests);
   protected readonly today = todayIsoDate();
   protected readonly statusLabels = STATUS_LABELS;
+  protected readonly statusOptions = STATUS_FILTER_OPTIONS;
+  protected readonly nameQuery = signal('');
+  protected readonly statusFilter = signal<InvoiceStatusFilter>('all');
+  private readonly chosenCategories = signal<readonly string[]>([]);
 
   private readonly methods = rxResource({
     params: () => this.dataChanges.paymentMethods(),
@@ -150,6 +177,44 @@ export class InvoicesPage {
   protected readonly plannedTotal = computed(() =>
     this.planned().reduce((sum, expense) => sum + expense.amount, 0),
   );
+
+  protected readonly allEntries = computed(() => [...this.realized(), ...this.planned()]);
+  protected readonly categories = computed(() => categoriesOf(this.allEntries()));
+  protected readonly selectedCategories = computed(() =>
+    this.chosenCategories().filter((category) => this.categories().includes(category)),
+  );
+  private readonly entryFilter = computed(() => ({
+    name: this.nameQuery(),
+    status: this.statusFilter(),
+    categories: this.selectedCategories(),
+  }));
+  protected readonly filtering = computed(() => isFiltering(this.entryFilter()));
+  protected readonly filteredEntries = computed(() =>
+    filterEntries(this.allEntries(), this.entryFilter()),
+  );
+  protected readonly filteredTotals = computed(() => entryTotals(this.filteredEntries()));
+  protected readonly groups = computed(() => groupInvoiceEntries(this.filteredEntries()));
+  protected readonly datedCount = computed(() =>
+    this.groups().days.reduce((count, day) => count + day.expenses.length, 0),
+  );
+
+  protected toggleCategory(category: string): void {
+    this.chosenCategories.update((current) =>
+      current.includes(category)
+        ? current.filter((chosen) => chosen !== category)
+        : [...current, category],
+    );
+  }
+
+  protected clearFilters(): void {
+    this.nameQuery.set('');
+    this.statusFilter.set('all');
+    this.chosenCategories.set([]);
+  }
+
+  protected textValue(event: Event): string {
+    return (event.target as HTMLInputElement).value;
+  }
 
   protected selectMonth(month: string): void {
     const invoice = this.invoiceList().find(({ dueDate }) => dueDate.startsWith(month));

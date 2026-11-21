@@ -78,48 +78,139 @@
       <div class="entries-area" [class.stale]="entriesStale()" [attr.aria-busy]="entriesStale()">
         @if (!entriesLoaded()) {
           <p class="status" aria-live="polite">Carregando gastos…</p>
-        } @else if (realized().length === 0 && planned().length === 0) {
+        } @else if (allEntries().length === 0) {
           <p class="status">Nenhum gasto nesta fatura.</p>
         } @else {
-          @if (realized().length > 0) {
-            <section class="entries" aria-labelledby="lancados">
-              <h2 class="entries-title" id="lancados">Lançados</h2>
-              <ul class="entry-list" role="list">
-                @for (expense of realized(); track expense.id) {
+          <section class="filters" aria-label="Filtrar gastos da fatura">
+            <label class="search">
+              <svg lucideSearch class="search-icon" aria-hidden="true"></svg>
+              <span class="visually-hidden">Buscar por nome</span>
+              <input
+                type="search"
+                class="search-input"
+                placeholder="Buscar por nome"
+                autocomplete="off"
+                [value]="nameQuery()"
+                (input)="nameQuery.set(textValue($event))"
+              />
+            </label>
+            <app-segmented-selector
+              class="status-filter"
+              label="Situação"
+              [options]="statusOptions"
+              [value]="statusFilter()"
+              (valueChange)="statusFilter.set($event)"
+            />
+            @if (categories().length > 1) {
+              <ul class="category-chips" role="list" appHorizontalWheelScroll>
+                @for (category of categories(); track category) {
                   <li>
-                    <app-expense-card
-                      invoiceView
-                      [expense]="expense"
-                      (editRequested)="editRequests.editExpense(expense)"
-                      (deleteRequested)="confirmDelete(expense)"
-                    />
+                    <button
+                      type="button"
+                      class="category-chip"
+                      [attr.aria-pressed]="selectedCategories().includes(category)"
+                      (click)="toggleCategory(category)"
+                    >
+                      {{ category }}
+                    </button>
                   </li>
                 }
               </ul>
-            </section>
+            }
+            @if (filtering()) {
+              <p class="filtered-total" aria-live="polite">
+                <span
+                  >{{ filteredTotals().count }}
+                  {{ filteredTotals().count === 1 ? 'gasto' : 'gastos' }}</span
+                >
+                <span class="filtered-amount"
+                  >{{ filteredTotals().realized | currency }} de
+                  {{ filteredTotals().planned | currency }}</span
+                >
+                <button type="button" class="clear-filters" (click)="clearFilters()">Limpar</button>
+              </p>
+            }
+          </section>
+
+          @if (filteredEntries().length === 0) {
+            <p class="status">Nenhum gasto encontrado.</p>
           }
-          @if (planned().length > 0) {
-            <section class="entries" aria-labelledby="planejados">
-              <h2 class="entries-title" id="planejados">Planejados</h2>
+          @let entryGroups = groups();
+          @if (entryGroups.installments.length > 0) {
+            <details class="entries" open>
+              <summary class="entries-title">
+                <svg lucideChevronDown class="toggle-icon" aria-hidden="true"></svg>
+                Parcelas
+                <span class="entries-count">{{ entryGroups.installments.length }}</span>
+              </summary>
               <ul class="entry-list" role="list">
-                @for (expense of planned(); track expense.id) {
+                @for (expense of entryGroups.installments; track expense.id) {
                   <li>
-                    <app-expense-card
-                      class="planned"
-                      invoiceView
-                      [expense]="expense"
-                      (editRequested)="editRequests.editExpense(expense)"
-                      (deleteRequested)="confirmDelete(expense)"
+                    <ng-container
+                      [ngTemplateOutlet]="entryCard"
+                      [ngTemplateOutletContext]="{ $implicit: expense }"
                     />
                   </li>
                 }
               </ul>
-            </section>
+            </details>
+          }
+          @if (entryGroups.undated.length > 0) {
+            <details class="entries" open>
+              <summary class="entries-title">
+                <svg lucideChevronDown class="toggle-icon" aria-hidden="true"></svg>
+                Planejados sem data
+                <span class="entries-count">{{ entryGroups.undated.length }}</span>
+              </summary>
+              <ul class="entry-list" role="list">
+                @for (expense of entryGroups.undated; track expense.id) {
+                  <li>
+                    <ng-container
+                      [ngTemplateOutlet]="entryCard"
+                      [ngTemplateOutletContext]="{ $implicit: expense }"
+                    />
+                  </li>
+                }
+              </ul>
+            </details>
+          }
+          @if (entryGroups.days.length > 0) {
+            <details class="entries" open>
+              <summary class="entries-title">
+                <svg lucideChevronDown class="toggle-icon" aria-hidden="true"></svg>
+                Com data
+                <span class="entries-count">{{ datedCount() }}</span>
+              </summary>
+              @for (day of entryGroups.days; track day.key) {
+                <section class="day" [attr.aria-label]="day.date | dayLabel">
+                  <h3 class="day-label">{{ day.date | dayLabel }}</h3>
+                  <ul class="entry-list" role="list">
+                    @for (expense of day.expenses; track expense.id) {
+                      <li>
+                        <ng-container
+                          [ngTemplateOutlet]="entryCard"
+                          [ngTemplateOutletContext]="{ $implicit: expense }"
+                        />
+                      </li>
+                    }
+                  </ul>
+                </section>
+              }
+            </details>
           }
         }
       </div>
     }
   }
 }
+
+<ng-template #entryCard let-expense>
+  <app-expense-card
+    invoiceView
+    [expense]="expense"
+    (editRequested)="editRequests.editExpense(expense)"
+    (deleteRequested)="confirmDelete(expense)"
+  />
+</ng-template>
 
 <app-confirm-dialog />
