@@ -46,4 +46,21 @@
       }
     </ng-template>
   </app-segmented-selector>
+
+  <section class="setting backup" aria-labelledby="configuracoes-dados">
+    <h3 class="section-title" id="configuracoes-dados">Dados</h3>
+    <button
+      type="button"
+      class="backup-button"
+      [disabled]="backupState() === 'loading'"
+      (click)="downloadBackup()"
+    >
+      <svg lucideDownload aria-hidden="true"></svg>
+      {{ backupState() === 'loading' ? 'Gerando backup…' : 'Baixar backup' }}
+    </button>
+    <p class="hint">Um arquivo .zip com uma planilha CSV de cada tabela.</p>
+    @if (backupState() === 'failed') {
+      <p class="form-error" role="alert">Não foi possível gerar o backup. Tente de novo.</p>
+    }
+  </section>
 </app-bottom-sheet>

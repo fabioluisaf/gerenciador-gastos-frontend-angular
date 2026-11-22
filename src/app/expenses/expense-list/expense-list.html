@@ -20,6 +20,7 @@
           <app-expense-card
             [expense]="expense"
             (editRequested)="editRequests.editExpense(expense)"
+            (copyRequested)="editRequests.copyExpense(expense)"
             (deleteRequested)="confirmDelete(expense)"
           />
         </li>

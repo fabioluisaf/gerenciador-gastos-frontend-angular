@@ -1,0 +1,20 @@
+<label class="search">
+  <svg lucideSearch class="search-icon" aria-hidden="true"></svg>
+  <span class="visually-hidden">Buscar gastos por nome</span>
+  <input
+    #input
+    type="search"
+    class="search-input"
+    placeholder="Buscar por nome"
+    autocomplete="off"
+    enterkeyhint="search"
+    [value]="filters.name()"
+    (input)="onInput($event)"
+    (keydown.enter)="onEnter($event)"
+  />
+  @if (filters.name()) {
+    <button type="button" class="clear" aria-label="Limpar busca" (click)="clear(input)">
+      <svg lucideX aria-hidden="true"></svg>
+    </button>
+  }
+</label>

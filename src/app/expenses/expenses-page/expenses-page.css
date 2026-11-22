@@ -5,8 +5,10 @@
 }
 
 .list {
-  --list-top-offset: 3.75rem;
-  --timeline-scrubber-top: 4.75rem;
+  --filter-bar-space: 0rem;
+  --search-space: 0rem;
+  --list-top-offset: calc(3.75rem + var(--filter-bar-space) + var(--search-space));
+  --timeline-scrubber-top: calc(4.75rem + var(--filter-bar-space) + var(--search-space));
   --timeline-scrubber-clearance: calc(var(--control-bar-clearance) + var(--mini-player-height));
 
   padding-block-end: var(--mini-player-height);
@@ -24,8 +26,54 @@
 }
 
 .list.below-filter-bar {
-  --list-top-offset: 7.25rem;
-  --timeline-scrubber-top: 8.25rem;
+  --filter-bar-space: 3.5rem;
+}
+
+.list.below-search {
+  --search-space: 3.25rem;
+}
+
+.header-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.kind-toggle {
+  flex: 1;
+  min-inline-size: 0;
+}
+
+.search-toggle {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  inline-size: 2.875rem;
+  block-size: 2.875rem;
+  padding: 0;
+  border: 1px solid var(--color-floating-border);
+  border-radius: 50%;
+  background-color: var(--color-floating);
+  box-shadow: var(--shadow-floating);
+  color: var(--color-text);
+  cursor: pointer;
+}
+
+.search-toggle svg {
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+}
+
+.search-toggle[aria-expanded='true'] {
+  background-color: var(--color-selected);
+}
+
+.search-toggle:hover {
+  background-color: var(--color-hover);
+}
+
+.search-toggle:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
 }
 
 .side-panel {
@@ -40,6 +88,10 @@
   padding: 1rem 1.25rem 0.75rem;
   border-block-end: 1px solid var(--color-totals-border);
   background-color: var(--totals-surface);
+}
+
+.filtered-total {
+  margin-block-end: 1rem;
 }
 
 .sheet .month-strip {
@@ -154,6 +206,25 @@
 
   .mini-player {
     display: none;
+  }
+}
+
+.invoice-panel {
+  display: none;
+}
+
+@media (min-width: 90rem) {
+  .layout {
+    grid-template-columns: 20rem minmax(0, 40rem) 20rem;
+    padding-inline-end: 0;
+  }
+
+  .invoice-panel {
+    position: sticky;
+    inset-block-start: 1rem;
+    display: block;
+    align-self: start;
+    margin-block-start: 1rem;
   }
 }
 

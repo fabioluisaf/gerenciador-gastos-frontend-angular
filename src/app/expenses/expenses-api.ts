@@ -6,6 +6,7 @@ import {
   byPaymentTypeThenUsage,
   Expense,
   ExpenseFilter,
+  FilteredTotals,
   ExpenseKind,
   ExpensePeriod,
   InstallmentPart,
@@ -71,6 +72,7 @@ interface PurchaseDetailDto {
   quantidadeParcelas: number;
   parcelas: {
     numeroParcela: number;
+    valor: number;
     data: string;
     fatura: InvoiceDto | null;
     realizado: boolean;
@@ -171,12 +173,27 @@ function toExpense(dto: ExpenseDto): Expense {
   };
 }
 
+const FILTER_PARAMS: Readonly<Record<ExpenseFilter['kind'], string>> = {
+  payment: 'metodoPagamentoId',
+  category: 'categoria',
+  name: 'nome',
+};
+
 function withFilters(params: HttpParams, filters: readonly ExpenseFilter[]): HttpParams {
   return filters.reduce(
-    (current, filter) =>
-      current.append(filter.kind === 'payment' ? 'metodoPagamentoId' : 'categoria', filter.id),
+    (current, filter) => current.append(FILTER_PARAMS[filter.kind], filter.id),
     params,
   );
+}
+
+function parcelAmounts({ installmentAmounts }: NewExpense): { valoresParcelas?: number[] } {
+  return installmentAmounts ? { valoresParcelas: installmentAmounts } : {};
+}
+
+function monthParams(periodKey: string): HttpParams {
+  const { year, month } = parsePeriodKey(periodKey);
+  const lastDay = new Date(year, month, 0).getDate();
+  return new HttpParams().set('inicio', `${periodKey}-01`).set('fim', `${periodKey}-${lastDay}`);
 }
 
 @Injectable({ providedIn: 'root' })
@@ -226,6 +243,7 @@ export class ExpensesApi {
             ...common,
             valorTotal: expense.amount,
             quantidadeParcelas: expense.installments,
+            ...parcelAmounts(expense),
             realizado: expense.realized,
           })
         : this.http.post(`${API_URL}/gastos`, {
@@ -243,7 +261,8 @@ export class ExpensesApi {
         .get<ApiResponse<PurchaseDetailDto>>(`${API_URL}/compras-parceladas/${purchaseId}`)
         .pipe(
           map(({ dados }) => {
-            const first = [...dados.parcelas].sort((a, b) => a.numeroParcela - b.numeroParcela)[0];
+            const parcels = [...dados.parcelas].sort((a, b) => a.numeroParcela - b.numeroParcela);
+            const first = parcels[0];
             return {
               name: dados.nome,
               amount: dados.valorTotal,
@@ -253,6 +272,7 @@ export class ExpensesApi {
               description: dados.descricao,
               realized: first?.realizado ?? true,
               installments: dados.quantidadeParcelas,
+              installmentAmounts: parcels.map(({ valor }) => valor),
               invoicePeriod: first?.fatura?.dataFechamento.slice(0, 7) ?? null,
             };
           }),
@@ -289,6 +309,7 @@ export class ExpensesApi {
           ...common,
           valorTotal: changes.amount,
           quantidadeParcelas: changes.installments,
+          ...parcelAmounts(changes),
         })
       : this.http.put(`${API_URL}/gastos/${expense.id}`, { ...common, valor: changes.amount });
     return request.pipe(map(() => undefined));
@@ -333,12 +354,7 @@ export class ExpensesApi {
   }
 
   getMonthTotals(periodKey: string): Observable<MonthTotals> {
-    const { year, month } = parsePeriodKey(periodKey);
-    const lastDay = new Date(year, month, 0).getDate();
-    const params = new HttpParams()
-      .set('inicio', `${periodKey}-01`)
-      .set('fim', `${periodKey}-${lastDay}`)
-      .set('size', TOTALS_PAGE_SIZE);
+    const params = monthParams(periodKey).set('size', TOTALS_PAGE_SIZE);
     return forkJoin([
       this.http.get<ApiPage<CategoryTotalDto>>(`${API_URL}/gastos/totais/categoria`, { params }),
       this.http.get<ApiPage<PaymentTotalDto>>(`${API_URL}/gastos/totais/metodo-pagamento`, {
@@ -350,5 +366,16 @@ export class ExpensesApi {
         toMonthTotals(categories.dados, payments.dados, usage),
       ),
     );
+  }
+
+  getFilteredTotals(
+    periodKey: string,
+    filters: readonly ExpenseFilter[],
+  ): Observable<FilteredTotals> {
+    return this.http
+      .get<ApiResponse<{ realizado: number; planejado: number }>>(`${API_URL}/gastos/totais`, {
+        params: withFilters(monthParams(periodKey), filters),
+      })
+      .pipe(map(({ dados }) => ({ realized: dados.realizado, planned: dados.planejado })));
   }
 }

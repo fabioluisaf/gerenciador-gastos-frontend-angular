@@ -1,0 +1,39 @@
+@if (cards().length > 0) {
+  <section class="month-invoice" aria-label="Fatura do mês">
+    @if (cards().length > 1) {
+      <app-segmented-selector
+        class="cards"
+        label="Cartão da fatura"
+        [scrollable]="cards().length > 2"
+        [options]="cardOptions()"
+        [value]="cardId() ?? undefined"
+        (valueChange)="cardId.set($event)"
+      >
+        <ng-template let-option>
+          @for (item of cards(); track item.id) {
+            @if (item.id === option.value && item.institution.iconUrl) {
+              <img
+                class="card-icon"
+                [ngSrc]="item.institution.iconUrl"
+                width="20"
+                height="20"
+                alt=""
+              />
+            }
+          }
+        </ng-template>
+      </app-segmented-selector>
+    }
+
+    @if (invoice(); as current) {
+      <app-invoice-summary
+        [invoice]="current"
+        [color]="card()?.institution?.color ?? null"
+        [plannedTotal]="plannedTotal()"
+      />
+      <a class="open-invoices" routerLink="/faturas">Ver faturas</a>
+    } @else if (invoicesLoaded()) {
+      <p class="empty">Sem fatura com vencimento em {{ monthLabel() }}.</p>
+    }
+  </section>
+}

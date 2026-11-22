@@ -17,7 +17,13 @@ import {
   untracked,
 } from '@angular/core';
 import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { LucideCheck, LucideClock, LucideMinus, LucidePlus } from '@lucide/angular';
+import {
+  LucideCheck,
+  LucideChevronDown,
+  LucideClock,
+  LucideMinus,
+  LucidePlus,
+} from '@lucide/angular';
 import { Expense, ExpenseKind, NewExpense, PAYMENT_TYPE_LABELS } from '../../expenses/expense';
 import { ExpensesApi } from '../../expenses/expenses-api';
 import { PaymentMethod } from '../../payment-methods/payment-method';
@@ -25,6 +31,8 @@ import { PaymentMethodsApi } from '../../payment-methods/payment-methods-api';
 import { DateField } from '../../shared/date-field/date-field';
 import { DragScroll } from '../../shared/drag-scroll';
 import { HorizontalWheelScroll } from '../../shared/horizontal-wheel-scroll';
+import { matchesText } from '../../shared/text-search';
+import { isEvenSplit, splitEvenly } from './installment-split';
 import {
   SegmentedSelector,
   SelectorOption,
@@ -43,6 +51,11 @@ function today(): string {
   return `${now.getFullYear()}-${month}-${day}`;
 }
 
+function moveCaretToEnd(input: HTMLInputElement): void {
+  const end = input.value.length;
+  input.setSelectionRange(end, end);
+}
+
 let nextId = 0;
 
 @Component({
@@ -53,6 +66,7 @@ let nextId = 0;
     DragScroll,
     HorizontalWheelScroll,
     LucideCheck,
+    LucideChevronDown,
     LucideClock,
     LucideMinus,
     LucidePlus,
@@ -75,6 +89,7 @@ export class ExpenseForm {
   });
 
   readonly expense = input<Expense | null>(null);
+  readonly copyOf = input<Expense | null>(null);
   readonly saved = output<void>();
 
   protected readonly id = `gasto-${nextId++}`;
@@ -87,13 +102,16 @@ export class ExpenseForm {
   private readonly methods = rxResource({ stream: () => this.paymentMethodsApi.list() });
   private readonly categories = rxResource({ stream: () => this.expensesApi.listCategories() });
   private readonly original = rxResource({
-    params: () => this.expense() ?? undefined,
+    params: () => this.expense() ?? this.copyOf() ?? undefined,
     stream: ({ params }) => this.expensesApi.loadForEdit(params),
   });
 
   protected readonly editing = computed(() => this.expense() !== null);
+  protected readonly copying = computed(() => !this.editing() && this.copyOf() !== null);
   protected readonly editingPurchase = computed(() => !!this.expense()?.installment);
-  protected readonly loading = computed(() => this.editing() && !this.original.hasValue());
+  protected readonly loading = computed(
+    () => (this.editing() || this.copying()) && !this.original.hasValue(),
+  );
   protected readonly loadFailed = computed(() => this.original.status() === 'error');
 
   protected readonly amountCents = signal(0);
@@ -145,6 +163,10 @@ export class ExpenseForm {
       : [],
   );
 
+  protected readonly suggestedCategories = computed(() =>
+    this.allCategories().filter((option) => matchesText(option, this.category())),
+  );
+
   protected readonly amountText = computed(() => this.currency.format(this.amountCents() / 100));
   protected readonly isCredit = computed(() => this.selectedMethod()?.paymentType === 'CREDITO');
   protected readonly installmentsAvailable = computed(() =>
@@ -164,6 +186,15 @@ export class ExpenseForm {
   protected readonly installmentAmount = computed(
     () => this.amountCents() / 100 / this.effectiveInstallments(),
   );
+  private readonly customParcelCents = signal<number[] | null>(null);
+  protected readonly parcelCents = computed(() => {
+    const count = this.effectiveInstallments();
+    const custom = this.customParcelCents();
+    return custom?.length === count ? custom : splitEvenly(this.amountCents(), count);
+  });
+  protected readonly parcelsAdjusted = computed(
+    () => this.customParcelCents()?.length === this.effectiveInstallments(),
+  );
 
   protected readonly errors = computed<Record<Field, string | null>>(() => {
     const name = this.name().trim();
@@ -178,6 +209,7 @@ export class ExpenseForm {
   });
 
   protected readonly maxTextLength = MAX_TEXT_LENGTH;
+  private caretToEndOnClick = false;
 
   constructor() {
     effect(() => {
@@ -206,11 +238,52 @@ export class ExpenseForm {
     const input = event.target as HTMLInputElement;
     const digits = input.value.replace(/\D/g, '').slice(0, MAX_AMOUNT_DIGITS);
     this.amountCents.set(Number(digits || '0'));
+    this.customParcelCents.set(null);
     input.value = this.amountText();
+  }
+
+  protected formatCents(cents: number): string {
+    return this.currency.format(cents / 100);
+  }
+
+  protected onParcelInput(index: number, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const digits = input.value.replace(/\D/g, '').slice(0, MAX_AMOUNT_DIGITS);
+    const parcels = [...this.parcelCents()];
+    parcels[index] = Number(digits || '0');
+    this.customParcelCents.set(parcels);
+    this.amountCents.set(parcels.reduce((sum, cents) => sum + cents, 0));
+    input.value = this.formatCents(parcels[index]);
+  }
+
+  protected onParcelFocus(event: FocusEvent): void {
+    const input = event.target as HTMLInputElement;
+    requestAnimationFrame(() => moveCaretToEnd(input));
+  }
+
+  protected splitParcelsEvenly(): void {
+    this.customParcelCents.set(null);
+  }
+
+  protected onAmountPointerDown(event: PointerEvent): void {
+    this.caretToEndOnClick = event.target !== this.host.ownerDocument.activeElement;
+  }
+
+  protected onAmountFocus(event: FocusEvent): void {
+    const input = event.target as HTMLInputElement;
+    requestAnimationFrame(() => moveCaretToEnd(input));
+  }
+
+  protected onAmountClick(event: MouseEvent): void {
+    if (this.caretToEndOnClick) {
+      this.caretToEndOnClick = false;
+      moveCaretToEnd(event.target as HTMLInputElement);
+    }
   }
 
   protected changeInstallments(step: number): void {
     this.installments.update((count) => Math.min(MAX_INSTALLMENTS, Math.max(1, count + step)));
+    this.customParcelCents.set(null);
   }
 
   protected textValue(event: Event): string {
@@ -242,6 +315,9 @@ export class ExpenseForm {
       realized: this.kind() === 'realized',
       installments: this.effectiveInstallments(),
       invoicePeriod: this.isCredit() ? this.invoiceMonth() || null : null,
+      installmentAmounts: this.parcelsAdjusted()
+        ? this.parcelCents().map((cents) => cents / 100)
+        : null,
     };
     (editing ? this.expensesApi.update(editing, changes) : this.expensesApi.create(changes))
       .pipe(takeUntilDestroyed(this.destroyRef))
@@ -258,10 +334,14 @@ export class ExpenseForm {
     this.amountCents.set(Math.round(draft.amount * 100));
     this.name.set(draft.name);
     this.kind.set(draft.realized ? 'realized' : 'planned');
-    this.date.set(draft.date ?? '');
+    this.date.set(this.copying() ? '' : (draft.date ?? ''));
     this.installments.set(draft.installments);
-    this.invoiceMonth.set(draft.invoicePeriod ?? '');
+    this.invoiceMonth.set(this.copying() ? '' : (draft.invoicePeriod ?? ''));
     this.category.set(draft.category);
     this.description.set(draft.description ?? '');
+    const parcels = draft.installmentAmounts?.map((amount) => Math.round(amount * 100)) ?? null;
+    this.customParcelCents.set(
+      parcels && parcels.length > 1 && !isEvenSplit(parcels) ? parcels : null,
+    );
   }
 }

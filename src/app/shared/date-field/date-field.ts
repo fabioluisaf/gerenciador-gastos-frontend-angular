@@ -81,11 +81,12 @@ export class DateField {
   readonly clearLabel = input<string | null>(null);
   readonly invalid = input(false);
   readonly describedBy = input<string | null>(null);
+  readonly startOpen = input(false);
   readonly valueChange = output<string>();
 
   protected readonly id = `data-${nextId++}`;
   protected readonly weekdays = WEEKDAYS;
-  protected readonly open = signal(false);
+  protected readonly open = linkedSignal(() => this.startOpen());
   protected readonly today = isoDate(new Date());
 
   protected readonly view = linkedSignal<string, ViewPosition>({

@@ -163,11 +163,15 @@ body {
 @media (pointer: fine) {
   .drag-scroll {
     cursor: grab;
+    user-select: none;
+  }
+
+  .drag-scroll img {
+    -webkit-user-drag: none;
   }
 
   .drag-scroll.dragging {
     cursor: grabbing;
-    user-select: none;
   }
 }
 

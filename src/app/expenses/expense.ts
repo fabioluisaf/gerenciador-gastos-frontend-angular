@@ -90,7 +90,18 @@ export interface MonthTotals {
 
 export type ExpenseFilter =
   | { kind: 'payment'; id: string; label: string; institution: Institution }
-  | { kind: 'category'; id: string; label: string };
+  | { kind: 'category'; id: string; label: string }
+  | { kind: 'name'; id: string; label: string };
+
+export function nameFilter(query: string): ExpenseFilter {
+  const id = query.trim();
+  return { kind: 'name', id, label: `“${id}”` };
+}
+
+export interface FilteredTotals {
+  realized: number;
+  planned: number;
+}
 
 export function filterKey(filter: ExpenseFilter): string {
   return `${filter.kind}:${filter.id}`;
@@ -106,6 +117,7 @@ export interface NewExpense {
   realized: boolean;
   installments: number;
   invoicePeriod: string | null;
+  installmentAmounts?: number[] | null;
 }
 
 export interface ExpensePeriod {

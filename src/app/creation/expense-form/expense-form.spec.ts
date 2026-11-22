@@ -128,6 +128,37 @@ describe('ExpenseForm', () => {
     expect(saved).toHaveBeenCalledOnce();
   });
 
+  it('should let each installment be edited, making the total their sum', () => {
+    type('.amount-input', '10000');
+    element.querySelector<HTMLButtonElement>('button[aria-label="Mais parcelas"]')!.click();
+    element.querySelector<HTMLButtonElement>('button[aria-label="Mais parcelas"]')!.click();
+    fixture.detectChanges();
+    const parcels = () =>
+      [...element.querySelectorAll<HTMLInputElement>('.parcel-input')].map((input) => input.value);
+    expect(parcels().map((value) => value.replace(/\s/g, ' '))).toEqual([
+      'R$ 33,34',
+      'R$ 33,33',
+      'R$ 33,33',
+    ]);
+
+    type('#' + element.querySelector('.parcel-input')!.id, '5000');
+
+    expect(parcels()[0]).toMatch(/R\$\s50,00/);
+    expect(element.querySelector<HTMLInputElement>('.amount-input')!.value).toMatch(/R\$\s116,66/);
+    expect(element.querySelector('.amount-detail')?.textContent).toContain('valores ajustados');
+
+    type('input[placeholder="Ex.: Mercado do mês"]', 'Sofá');
+    type('input[placeholder="Ex.: Casa"]', 'Casa');
+    submit();
+    expect(created).toEqual([
+      expect.objectContaining({ amount: 116.66, installmentAmounts: [50, 33.33, 33.33] }),
+    ]);
+
+    element.querySelector<HTMLButtonElement>('.split-evenly')!.click();
+    fixture.detectChanges();
+    expect(parcels()[0]).toMatch(/R\$\s38,90/);
+  });
+
   function openDateField(label: string): HTMLElement {
     const field = [...element.querySelectorAll<HTMLElement>('app-date-field')].find(
       (candidate) => candidate.querySelector('.field-label')?.textContent === label,
@@ -240,6 +271,41 @@ describe('ExpenseForm', () => {
     ).toEqual(['Casa', 'Lazer']);
   });
 
+  it('should filter the used categories while typing, without the browser suggestion list', () => {
+    const input = element.querySelector<HTMLInputElement>('input[placeholder="Ex.: Casa"]')!;
+    expect(input.hasAttribute('list')).toBe(false);
+    expect(element.querySelector('datalist')).toBeNull();
+
+    input.value = 'LAZ';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(
+      [...element.querySelectorAll('.categories .chip')].map((chip) => chip.textContent?.trim()),
+    ).toEqual(['Lazer']);
+
+    input.value = 'Nova';
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    expect(element.querySelector('.categories')).toBeNull();
+  });
+
+  it('should move the caret to the end on the first click in the amount', () => {
+    type('.amount-input', '12345');
+    const amount = element.querySelector<HTMLInputElement>('.amount-input')!;
+    (document.activeElement as HTMLElement | null)?.blur();
+
+    amount.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
+    amount.focus();
+    amount.setSelectionRange(1, 1);
+    amount.click();
+    expect(amount.selectionStart).toBe(amount.value.length);
+
+    amount.dispatchEvent(new MouseEvent('pointerdown', { bubbles: true }));
+    amount.setSelectionRange(1, 1);
+    amount.click();
+    expect(amount.selectionStart).toBe(1);
+  });
+
   it('should keep the form and explain when saving fails', () => {
     TestBed.inject(ExpensesApi).create = () => throwError(() => new Error('400'));
     type('.amount-input', '100');
@@ -252,6 +318,42 @@ describe('ExpenseForm', () => {
       'Não foi possível salvar o gasto',
     );
     expect(saved).not.toHaveBeenCalled();
+  });
+
+  it('should copy an expense as a new one, asking for the date with the calendar open', async () => {
+    TestBed.inject(ExpensesApi).loadForEdit = () =>
+      of({
+        name: 'Cinema',
+        amount: 42.5,
+        category: 'Lazer',
+        paymentMethodId: 'credito',
+        date: '2026-11-10',
+        description: 'Com pipoca',
+        realized: true,
+        installments: 3,
+        invoicePeriod: '2026-12',
+      });
+    fixture.componentRef.setInput('copyOf', buildExpense());
+    fixture.detectChanges();
+    await fixture.whenStable();
+    fixture.detectChanges();
+
+    expect(element.querySelector<HTMLInputElement>('.amount-input')!.value).toMatch(/R\$\s42,50/);
+    expect(
+      element
+        .querySelector('app-date-field .trigger, app-date-field button')
+        ?.getAttribute('aria-expanded'),
+    ).toBe('true');
+    expect(element.querySelector('.stepper-value')?.textContent?.trim()).toBe('3x');
+
+    submit();
+    expect(created).toEqual([]);
+    expect(element.querySelector('app-date-field .field-error')?.textContent).toBe(
+      'Informe a data do gasto.',
+    );
+    expect(element.querySelector('button[type="submit"]')?.textContent?.trim()).toBe(
+      'Salvar gasto',
+    );
   });
 
   describe('when editing', () => {

@@ -1,0 +1,16 @@
+<p class="filtered-total" aria-live="polite">
+  <span class="label">
+    Filtrados
+    @if (count() !== null) {
+      <span class="count">· {{ count() }} {{ count() === 1 ? 'gasto' : 'gastos' }}</span>
+    }
+  </span>
+  <span class="amount">
+    @if (realized() !== null && planned() !== null) {
+      <strong>{{ realized() | currency }}</strong> de {{ planned() | currency }} planejados
+    } @else {
+      Calculando…
+    }
+  </span>
+  <button type="button" class="clear" (click)="cleared.emit()">Limpar</button>
+</p>

@@ -11,6 +11,7 @@
       [clearLabel]="dateOptional() ? 'Sem data' : null"
       [invalid]="!!errorFor('date')"
       [describedBy]="id + '-data-detalhe'"
+      [startOpen]="copying()"
       (valueChange)="date.set($event)"
     >
       <p class="field-hint" [id]="id + '-data-detalhe'">
@@ -33,10 +34,15 @@
         [attr.aria-invalid]="errorFor('amount') ? true : null"
         [attr.aria-describedby]="id + '-valor-detalhe'"
         (input)="onAmountInput($event)"
+        (pointerdown)="onAmountPointerDown($event)"
+        (focus)="onAmountFocus($event)"
+        (click)="onAmountClick($event)"
       />
       <p class="amount-detail" [id]="id + '-valor-detalhe'">
         @if (errorFor('amount'); as message) {
           <span class="field-error">{{ message }}</span>
+        } @else if (parcelsAdjusted()) {
+          em {{ effectiveInstallments() }}x com valores ajustados
         } @else if (effectiveInstallments() > 1) {
           em {{ effectiveInstallments() }}x de {{ installmentAmount() | currency }}
         }
@@ -147,6 +153,37 @@
             <svg lucidePlus aria-hidden="true"></svg>
           </button>
         </div>
+        @if (effectiveInstallments() > 1) {
+          <details class="parcels" [open]="parcelsAdjusted()">
+            <summary class="parcels-summary">
+              <svg lucideChevronDown class="parcels-toggle" aria-hidden="true"></svg>
+              Valores das parcelas
+            </summary>
+            <ol class="parcel-list">
+              @for (cents of parcelCents(); track $index) {
+                <li class="parcel">
+                  <label class="parcel-label" [for]="id + '-parcela-' + $index">
+                    {{ $index + 1 }}ª
+                  </label>
+                  <input
+                    class="field-input parcel-input"
+                    inputmode="numeric"
+                    autocomplete="off"
+                    [id]="id + '-parcela-' + $index"
+                    [value]="formatCents(cents)"
+                    (input)="onParcelInput($index, $event)"
+                    (focus)="onParcelFocus($event)"
+                  />
+                </li>
+              }
+            </ol>
+            @if (parcelsAdjusted()) {
+              <button type="button" class="split-evenly" (click)="splitParcelsEvenly()">
+                Dividir igualmente
+              </button>
+            }
+          </details>
+        }
       </div>
     }
 
@@ -179,22 +216,16 @@
         autocomplete="off"
         placeholder="Ex.: Casa"
         [id]="id + '-categoria'"
-        [attr.list]="id + '-categorias'"
         [maxLength]="maxTextLength"
         [value]="category()"
         [attr.aria-invalid]="errorFor('category') ? true : null"
         [attr.aria-describedby]="errorFor('category') ? id + '-categoria-erro' : null"
         (input)="category.set(textValue($event))"
       />
-      <datalist [id]="id + '-categorias'">
-        @for (option of allCategories(); track option) {
-          <option [value]="option"></option>
-        }
-      </datalist>
       @if (errorFor('category'); as message) {
         <p class="field-error" [id]="id + '-categoria-erro'">{{ message }}</p>
       }
-      @if (allCategories().length > 0) {
+      @if (suggestedCategories().length > 0) {
         <div
           class="categories"
           role="group"
@@ -202,7 +233,7 @@
           appHorizontalWheelScroll
           appDragScroll
         >
-          @for (option of allCategories(); track option) {
+          @for (option of suggestedCategories(); track option) {
             <button
               type="button"
               class="chip"

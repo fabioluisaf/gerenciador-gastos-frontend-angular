@@ -31,12 +31,14 @@
 
       <ul class="details" role="list">
         <li class="tag">{{ item.category }}</li>
-        <li class="tag">
-          @if (item.institution.iconUrl; as iconUrl) {
-            <img class="institution-icon" [ngSrc]="iconUrl" width="16" height="16" alt="" />
-          }
-          {{ item.institution.name }} · {{ paymentLabel() }}
-        </li>
+        @if (!invoiceView()) {
+          <li class="tag">
+            @if (item.institution.iconUrl; as iconUrl) {
+              <img class="institution-icon" [ngSrc]="iconUrl" width="16" height="16" alt="" />
+            }
+            {{ item.institution.name }} · {{ paymentLabel() }}
+          </li>
+        }
       </ul>
 
       @if (item.description; as description) {
@@ -92,7 +94,9 @@
     <app-actions-menu
       class="actions-menu"
       label="Ações do gasto"
+      copyable
       (editRequested)="editRequested.emit()"
+      (copyRequested)="copyRequested.emit()"
       (deleteRequested)="deleteRequested.emit()"
     />
   </article>

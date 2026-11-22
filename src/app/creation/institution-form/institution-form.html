@@ -49,16 +49,20 @@
           <span class="visually-hidden">{{ preset }}</span>
         </label>
       }
-      <label class="swatch custom" [class.selected]="customColor() !== null">
-        <input
-          type="color"
-          class="color-picker"
-          aria-label="Outra cor"
-          [value]="customColor() ?? '#7c3aed'"
-          (input)="color.set(textValue($event).toUpperCase())"
-        />
+      <button
+        type="button"
+        class="swatch custom"
+        aria-label="Outra cor"
+        [class.selected]="customColor() !== null"
+        [class.picked]="customColor() !== null"
+        [class.dark-text]="customColor() !== null && darkText()"
+        [style.--swatch]="customColor()"
+        [attr.aria-expanded]="pickerOpen()"
+        [attr.aria-controls]="id + '-seletor'"
+        (click)="togglePicker()"
+      >
         <svg lucidePipette aria-hidden="true"></svg>
-      </label>
+      </button>
       <label class="swatch none" [class.selected]="color() === null">
         <input
           type="radio"
@@ -71,6 +75,15 @@
         <span class="visually-hidden">Sem cor</span>
       </label>
     </div>
+    @if (pickerOpen()) {
+      <app-color-picker
+        class="color-picker"
+        label="Cor da instituição"
+        [id]="id + '-seletor'"
+        [value]="color() ?? defaultCustomColor"
+        (valueChange)="color.set($event)"
+      />
+    }
   </fieldset>
 
   <div class="field">
