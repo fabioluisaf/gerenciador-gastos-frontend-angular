@@ -1,5 +1,21 @@
 # Changelog
 
+## 2.1.0
+- Busca de gastos por nome pela lupa no cabeçalho da lista, sem diferenciar maiúsculas nem acentos; o nome buscado vira um filtro removível.
+- Com filtros ativos, a lista mostra o total dos gastos filtrados no mês do topo, no painel e no card resumido.
+- Em telas largas, a lista ganha uma coluna com a fatura do mês, começando pelo cartão mais usado.
+- Fatura com os gastos agrupados em Parcelas, Planejados sem data e Com data (por dia), cada grupo recolhível.
+- Fatura com filtros por nome, categoria e situação (realizado ou planejado) e total dos filtrados.
+- Totais da fatura no formato do card de totais (realizado de realizado mais planejado), e os gastos da fatura deixam de repetir o método de pagamento.
+- Copiar gasto pelo menu de ações: abre a criação preenchida, com a data vazia e o calendário aberto.
+- Valor de cada parcela editável na criação e na edição de compras parceladas; o total passa a ser a soma das parcelas.
+- Categoria sem o balão de sugestão do navegador: digitar filtra as categorias já usadas.
+- No primeiro clique no valor, o cursor vai para o fim do número.
+- Seletor de cor próprio para a instituição financeira, com quadrado de cor, barra de matiz e campo hex, além das cores prontas.
+- Botão "Baixar backup" nas Configurações, que baixa um zip com um CSV por tabela.
+- Corrigido: arrastar um método de pagamento com o mouse não solta mais sozinho.
+- Requer o backend 2.1.0.
+
 ## 2.0.1
 - Compras parceladas mostram "em Nx" à direita do valor na lista de gastos.
 - Na fatura, a parcela aparece no fim do nome do gasto, como "2/10".
