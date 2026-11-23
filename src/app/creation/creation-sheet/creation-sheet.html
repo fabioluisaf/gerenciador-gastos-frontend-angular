@@ -7,6 +7,10 @@
           <app-expense-form [expense]="request.expense" (saved)="editSaved()" />
         } @else if (request.kind === 'copy-expense') {
           <app-expense-form [copyOf]="request.expense" (saved)="editSaved()" />
+        } @else if (request.kind === 'planned-group') {
+          <app-group-form [group]="request.group" (saved)="editSaved()" />
+        } @else if (request.kind === 'new-planned-group') {
+          <app-group-form (saved)="editSaved()" />
         } @else {
           <app-payment-method-form [method]="request.method" (saved)="editSaved()" />
         }
@@ -33,6 +37,9 @@
           }
           @case ('institution') {
             <svg lucideLandmark class="tab-icon" aria-hidden="true"></svg>
+          }
+          @case ('group') {
+            <svg lucideLayers class="tab-icon" aria-hidden="true"></svg>
           }
         }
       </ng-template>
@@ -67,6 +74,19 @@
       <section class="panel" aria-label="Nova instituição" [hidden]="tab() !== 'institution'">
         @defer (on immediate) {
           <app-institution-form (saved)="institutionSaved()" />
+        } @loading (minimum 200ms) {
+          <p class="loading">Carregando…</p>
+        }
+      </section>
+    }
+    @if (visited().has('group')) {
+      <section
+        class="panel"
+        aria-label="Novo grupo de gastos planejados"
+        [hidden]="tab() !== 'group'"
+      >
+        @defer (on immediate) {
+          <app-group-form (saved)="groupSaved()" />
         } @loading (minimum 200ms) {
           <p class="loading">Carregando…</p>
         }

@@ -1,0 +1,121 @@
+<form class="form" novalidate (submit)="save($event)">
+  <div class="field">
+    <label class="field-label" [for]="id + '-nome'">Nome do grupo</label>
+    <input
+      class="field-input"
+      autocomplete="off"
+      placeholder="Ex.: Contas fixas"
+      [id]="id + '-nome'"
+      [maxLength]="maxTextLength"
+      [value]="name()"
+      [attr.aria-invalid]="submitted() && nameError() ? true : null"
+      [attr.aria-describedby]="submitted() && nameError() ? id + '-nome-erro' : null"
+      (input)="name.set(textValue($event))"
+    />
+    @if (submitted() && nameError(); as message) {
+      <p class="field-error" [id]="id + '-nome-erro'">{{ message }}</p>
+    }
+  </div>
+
+  <section class="items" [attr.aria-labelledby]="id + '-itens'">
+    <div class="items-header">
+      <h3 class="field-label" [id]="id + '-itens'">Gastos planejados</h3>
+      <span class="items-total">{{ totalText() }}</span>
+    </div>
+
+    <datalist [id]="id + '-categorias'">
+      @for (option of categoryOptions(); track option) {
+        <option [value]="option"></option>
+      }
+    </datalist>
+
+    <ol class="item-list" role="list">
+      @for (item of items(); track item.key; let index = $index) {
+        <li class="item">
+          <fieldset class="item-fields">
+            <legend class="visually-hidden">Gasto {{ index + 1 }}</legend>
+            <div class="item-row">
+              <label class="visually-hidden" [for]="id + '-item-nome-' + item.key">Nome</label>
+              <input
+                class="field-input item-name"
+                autocomplete="off"
+                placeholder="Nome"
+                [id]="id + '-item-nome-' + item.key"
+                [maxLength]="maxTextLength"
+                [value]="item.name"
+                [attr.aria-invalid]="errorFor(index, 'name') ? true : null"
+                (input)="updateItem(index, 'name', textValue($event))"
+              />
+              <label class="visually-hidden" [for]="id + '-item-valor-' + item.key">Valor</label>
+              <input
+                class="field-input item-amount"
+                inputmode="numeric"
+                autocomplete="off"
+                [id]="id + '-item-valor-' + item.key"
+                [value]="formatCents(item.amountCents)"
+                [attr.aria-invalid]="errorFor(index, 'amount') ? true : null"
+                (input)="onAmountInput(index, $event)"
+                (focus)="moveCaretToEnd($event)"
+              />
+            </div>
+            <div class="item-row">
+              <label class="visually-hidden" [for]="id + '-item-categoria-' + item.key">
+                Categoria
+              </label>
+              <input
+                class="field-input"
+                autocomplete="off"
+                placeholder="Categoria"
+                [id]="id + '-item-categoria-' + item.key"
+                [attr.list]="id + '-categorias'"
+                [maxLength]="maxTextLength"
+                [value]="item.category"
+                [attr.aria-invalid]="errorFor(index, 'category') ? true : null"
+                (input)="updateItem(index, 'category', textValue($event))"
+              />
+              <label class="visually-hidden" [for]="id + '-item-descricao-' + item.key">
+                Descrição (opcional)
+              </label>
+              <input
+                class="field-input"
+                autocomplete="off"
+                placeholder="Descrição"
+                [id]="id + '-item-descricao-' + item.key"
+                [maxLength]="maxTextLength"
+                [value]="item.description"
+                (input)="updateItem(index, 'description', textValue($event))"
+              />
+            </div>
+            @if (itemError(index); as message) {
+              <p class="field-error">{{ message }}</p>
+            }
+          </fieldset>
+          <button
+            type="button"
+            class="remove"
+            [attr.aria-label]="'Remover gasto ' + (item.name || index + 1)"
+            [disabled]="items().length === 1"
+            (click)="removeItem(index)"
+          >
+            <svg lucideTrash2 aria-hidden="true"></svg>
+          </button>
+        </li>
+      }
+    </ol>
+
+    <button type="button" class="add" (click)="addItem()">
+      <svg lucidePlus aria-hidden="true"></svg>
+      Adicionar gasto
+    </button>
+  </section>
+
+  @if (failed()) {
+    <p class="form-error" role="alert">
+      Não foi possível salvar o grupo. Confira os dados e tente de novo.
+    </p>
+  }
+
+  <button type="submit" class="primary-button" [disabled]="saving()">
+    {{ saving() ? 'Salvando…' : editing() ? 'Salvar alterações' : 'Salvar grupo' }}
+  </button>
+</form>

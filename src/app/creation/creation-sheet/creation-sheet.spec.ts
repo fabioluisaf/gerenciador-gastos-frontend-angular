@@ -68,12 +68,12 @@ describe('CreationSheet', () => {
     return element.querySelector('.panel:not([hidden])')?.getAttribute('aria-label');
   }
 
-  it('should open on the expense tab with the other two kinds as tabs', async () => {
+  it('should open on the expense tab with the other kinds as tabs', async () => {
     const { element } = await openSheet();
 
     expect(
       [...element.querySelectorAll('.tabs label.option')].map((tab) => tab.textContent?.trim()),
-    ).toEqual(['Gasto', 'Método', 'Instituição']);
+    ).toEqual(['Gasto', 'Método', 'Instituição', 'Grupo']);
     expect(element.querySelector<HTMLInputElement>('.tabs input:checked')?.value).toBe('expense');
     expect(visiblePanel(element)).toBe('Novo gasto');
     expect(element.querySelector('app-expense-form')).not.toBeNull();
@@ -173,6 +173,34 @@ describe('CreationSheet', () => {
     fixture.detectChanges();
 
     expect(TestBed.inject(DataChanges).paymentMethods()).toBe(1);
+    expect(element.querySelector('dialog')?.open).toBe(false);
+  });
+
+  it('should edit a planned group and refresh the groups when saved', async () => {
+    const fixture = TestBed.createComponent(CreationSheet);
+    fixture.detectChanges();
+    const element: HTMLElement = fixture.nativeElement;
+
+    TestBed.inject(EditRequests).editPlannedGroup({
+      id: 'contas',
+      name: 'Contas fixas',
+      total: 120,
+      items: [{ name: 'Luz', amount: 120, category: 'Casa', description: null }],
+    });
+    TestBed.tick();
+    await fixture.whenStable();
+    fixture.detectChanges();
+    await renderDeferred(fixture);
+
+    expect(element.querySelector('.edit-title')?.textContent).toBe('Editar grupo');
+    expect(element.querySelector('app-group-form')).not.toBeNull();
+
+    fixture.debugElement
+      .query((node) => node.name === 'app-group-form')
+      .triggerEventHandler('saved');
+    fixture.detectChanges();
+
+    expect(TestBed.inject(DataChanges).plannedGroups()).toBe(1);
     expect(element.querySelector('dialog')?.open).toBe(false);
   });
 });

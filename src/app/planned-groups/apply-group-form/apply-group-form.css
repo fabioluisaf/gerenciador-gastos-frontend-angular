@@ -1,0 +1,133 @@
+:host {
+  display: block;
+}
+
+.option-icon {
+  inline-size: 1.125rem;
+  block-size: 1.125rem;
+}
+
+.review {
+  display: grid;
+  gap: 0.625rem;
+}
+
+.review-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.review-header .field-label {
+  margin: 0;
+}
+
+.review-total {
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.review-list {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.review-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 8.5rem;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.5rem 0.5rem 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 1rem;
+  transition: opacity var(--motion-duration-fast) ease;
+}
+
+.review-item.off {
+  opacity: 0.55;
+}
+
+.review-check {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-inline-size: 0;
+  cursor: pointer;
+}
+
+.check {
+  appearance: none;
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  box-sizing: border-box;
+  inline-size: 1.375rem;
+  block-size: 1.375rem;
+  margin: 0;
+  border: 2px solid var(--color-text-muted);
+  border-radius: 0.375rem;
+  cursor: pointer;
+}
+
+.check::after {
+  inline-size: 0.375rem;
+  block-size: 0.6875rem;
+  margin-block-start: -0.125rem;
+  border: solid var(--color-text-inverse);
+  border-width: 0 2px 2px 0;
+  content: '';
+  rotate: 45deg;
+  scale: 0;
+}
+
+.check:checked {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary);
+}
+
+.check:checked::after {
+  scale: 1;
+}
+
+.check:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.review-text {
+  display: grid;
+  min-inline-size: 0;
+}
+
+.review-name,
+.review-category {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.review-name {
+  font-weight: 600;
+}
+
+.review-category {
+  color: var(--color-text-muted);
+  font-size: calc(0.8125rem * var(--font-scale));
+}
+
+.review-amount {
+  min-block-size: 2.5rem;
+  padding-block: 0.5rem;
+  font-variant-numeric: tabular-nums;
+  text-align: end;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .review-item {
+    transition: none;
+  }
+}

@@ -31,4 +31,12 @@ export const routes: Routes = [
         (m) => m.PaymentMethodsPage,
       ),
   },
+  {
+    path: 'grupos',
+    title: 'Grupos de gastos planejados',
+    loadComponent: () =>
+      import('./planned-groups/planned-groups-page/planned-groups-page').then(
+        (m) => m.PlannedGroupsPage,
+      ),
+  },
 ];

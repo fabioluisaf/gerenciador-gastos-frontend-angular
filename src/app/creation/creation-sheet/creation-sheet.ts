@@ -8,7 +8,12 @@ import {
   untracked,
   viewChild,
 } from '@angular/core';
-import { LucideLandmark, LucideReceiptText, LucideWalletCards } from '@lucide/angular';
+import {
+  LucideLandmark,
+  LucideLayers,
+  LucideReceiptText,
+  LucideWalletCards,
+} from '@lucide/angular';
 import { ControlBarState } from '../../control-bar/control-bar-state';
 import { DataChanges } from '../../core/data-changes';
 import { EditRequest, EditRequests } from '../../core/edit-requests';
@@ -17,16 +22,19 @@ import {
   SegmentedSelector,
   SelectorOption,
 } from '../../shared/segmented-selector/segmented-selector';
+import { GroupForm } from '../../planned-groups/group-form/group-form';
 import { ExpenseForm } from '../expense-form/expense-form';
 import { InstitutionForm } from '../institution-form/institution-form';
 import { PaymentMethodForm } from '../payment-method-form/payment-method-form';
 
-export type CreationTab = 'expense' | 'payment-method' | 'institution';
+export type CreationTab = 'expense' | 'payment-method' | 'institution' | 'group';
 
 const EDIT_TITLES: Readonly<Record<EditRequest['kind'], string>> = {
   expense: 'Editar gasto',
   'copy-expense': 'Copiar gasto',
   'payment-method': 'Editar método',
+  'planned-group': 'Editar grupo',
+  'new-planned-group': 'Novo grupo',
 };
 
 @Component({
@@ -34,8 +42,10 @@ const EDIT_TITLES: Readonly<Record<EditRequest['kind'], string>> = {
   imports: [
     BottomSheet,
     ExpenseForm,
+    GroupForm,
     InstitutionForm,
     LucideLandmark,
+    LucideLayers,
     LucideReceiptText,
     LucideWalletCards,
     PaymentMethodForm,
@@ -70,6 +80,7 @@ export class CreationSheet {
     { value: 'expense', label: 'Gasto' },
     { value: 'payment-method', label: 'Método' },
     { value: 'institution', label: 'Instituição' },
+    { value: 'group', label: 'Grupo' },
   ];
 
   constructor() {
@@ -96,6 +107,8 @@ export class CreationSheet {
     const kind = this.editing()?.kind;
     if (kind === 'expense' || kind === 'copy-expense') {
       this.dataChanges.expenseSaved();
+    } else if (kind === 'planned-group' || kind === 'new-planned-group') {
+      this.dataChanges.plannedGroupSaved();
     } else {
       this.dataChanges.paymentMethodSaved();
     }
@@ -119,6 +132,11 @@ export class CreationSheet {
 
   protected expenseSaved(): void {
     this.dataChanges.expenseSaved();
+    this.sheet().close();
+  }
+
+  protected groupSaved(): void {
+    this.dataChanges.plannedGroupSaved();
     this.sheet().close();
   }
 

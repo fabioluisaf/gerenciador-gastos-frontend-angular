@@ -31,7 +31,7 @@ svg {
   font-weight: 600;
 }
 
-.backup-button {
+.action-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -44,16 +44,17 @@ svg {
   color: var(--color-text);
   font: inherit;
   font-weight: 600;
+  text-decoration: none;
   cursor: pointer;
   transition: border-color var(--motion-duration-fast) ease;
 }
 
-.backup-button:disabled {
+.action-button:disabled {
   opacity: 0.6;
   cursor: progress;
 }
 
-.backup-button:focus-visible {
+.action-button:focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 3px;
 }
@@ -65,13 +66,13 @@ svg {
 }
 
 @media (hover: hover) {
-  .backup-button:not(:disabled):hover {
+  .action-button:not(:disabled):hover {
     border-color: var(--color-primary);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .backup-button {
+  .action-button {
     transition: none;
   }
 }
