@@ -13,7 +13,7 @@ import {
 import { DOCUMENT } from '@angular/common';
 import { ContainScroll } from '../contain-scroll';
 import { SheetHandle } from '../sheet-handle';
-import { isBackdropClick } from '../backdrop-click';
+import { BackdropClick } from '../backdrop-click';
 
 const HALF_RATIO = 0.6;
 const CLOSE_RATIO = 0.75;
@@ -21,7 +21,7 @@ const FULL_GAP_PX = 24;
 
 @Component({
   selector: 'app-bottom-sheet',
-  imports: [ContainScroll, SheetHandle],
+  imports: [BackdropClick, ContainScroll, SheetHandle],
   templateUrl: './bottom-sheet.html',
   styleUrl: './bottom-sheet.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -78,11 +78,5 @@ export class BottomSheet {
   protected onClosed(): void {
     this.dragging.set(false);
     this.closed.emit();
-  }
-
-  protected closeOnBackdropClick(event: MouseEvent): void {
-    if (isBackdropClick(event, this.dialog().nativeElement)) {
-      this.close();
-    }
   }
 }

@@ -14,7 +14,7 @@ import {
   signal,
 } from '@angular/core';
 import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { LucidePlus, LucideTrash2 } from '@lucide/angular';
+import { LucideCopy, LucidePlus, LucideTrash2 } from '@lucide/angular';
 import { ExpensesApi } from '../../expenses/expenses-api';
 import { centsFromInput, moveCaretToEnd } from '../amount-input';
 import { PlannedGroup, PlannedGroupItem } from '../planned-group';
@@ -57,7 +57,7 @@ function emptyItem(): DraftItem {
 
 @Component({
   selector: 'app-group-form',
-  imports: [LucidePlus, LucideTrash2],
+  imports: [LucideCopy, LucidePlus, LucideTrash2],
   templateUrl: './group-form.html',
   styleUrl: './group-form.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -149,14 +149,27 @@ export class GroupForm {
 
   protected addItem(): void {
     this.items.update((items) => [...items, emptyItem()]);
-    afterNextRender(
-      () => this.host.querySelector<HTMLInputElement>('.item:last-of-type .item-name')?.focus(),
-      { injector: this.injector },
-    );
+    this.focusItemName(this.items().length - 1);
+  }
+
+  protected duplicateItem(index: number): void {
+    this.items.update((items) => [
+      ...items.slice(0, index + 1),
+      { ...items[index], key: nextKey++ },
+      ...items.slice(index + 1),
+    ]);
+    this.focusItemName(index + 1);
   }
 
   protected removeItem(index: number): void {
     this.items.update((items) => items.filter((_, position) => position !== index));
+  }
+
+  private focusItemName(index: number): void {
+    afterNextRender(
+      () => this.host.querySelectorAll<HTMLInputElement>('.item-name')[index]?.focus(),
+      { injector: this.injector },
+    );
   }
 
   protected save(event: Event): void {

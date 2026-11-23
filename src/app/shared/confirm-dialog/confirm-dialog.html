@@ -5,7 +5,7 @@
   [attr.aria-labelledby]="titleId"
   [attr.aria-describedby]="messageId"
   (cancel)="preventCloseWhileRunning($event)"
-  (click)="closeOnBackdropClick($event)"
+  (appBackdropClick)="close()"
 >
   @if (request(); as current) {
     <h2 class="title" [id]="titleId">{{ current.title }}</h2>

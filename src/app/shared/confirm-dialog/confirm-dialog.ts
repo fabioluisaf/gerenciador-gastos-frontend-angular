@@ -11,7 +11,7 @@ import {
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Observable } from 'rxjs';
-import { isBackdropClick } from '../backdrop-click';
+import { BackdropClick } from '../backdrop-click';
 
 export interface ConfirmRequest {
   title: string;
@@ -26,6 +26,7 @@ let nextId = 0;
 
 @Component({
   selector: 'app-confirm-dialog',
+  imports: [BackdropClick],
   templateUrl: './confirm-dialog.html',
   styleUrl: './confirm-dialog.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -57,12 +58,6 @@ export class ConfirmDialog {
   protected preventCloseWhileRunning(event: Event): void {
     if (this.running()) {
       event.preventDefault();
-    }
-  }
-
-  protected closeOnBackdropClick(event: MouseEvent): void {
-    if (isBackdropClick(event, this.dialog().nativeElement)) {
-      this.close();
     }
   }
 

@@ -6,7 +6,7 @@
   [class.dragging]="dragging()"
   [style.block-size.px]="height()"
   (close)="onClosed()"
-  (click)="closeOnBackdropClick($event)"
+  (appBackdropClick)="close()"
 >
   <button
     type="button"
