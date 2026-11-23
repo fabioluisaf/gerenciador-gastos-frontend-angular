@@ -47,20 +47,11 @@
     </ng-template>
   </app-segmented-selector>
 
-  <section class="setting" aria-labelledby="configuracoes-planejamento">
-    <h3 class="section-title" id="configuracoes-planejamento">Planejamento</h3>
-    <a class="action-button" routerLink="/grupos" (click)="close()">
-      <svg lucideLayers aria-hidden="true"></svg>
-      Grupos de gastos planejados
-    </a>
-    <p class="hint">Modelos com vários gastos para lançar de uma vez numa fatura ou data.</p>
-  </section>
-
   <section class="setting backup" aria-labelledby="configuracoes-dados">
     <h3 class="section-title" id="configuracoes-dados">Dados</h3>
     <button
       type="button"
-      class="action-button"
+      class="backup-button"
       [disabled]="backupState() === 'loading'"
       (click)="downloadBackup()"
     >

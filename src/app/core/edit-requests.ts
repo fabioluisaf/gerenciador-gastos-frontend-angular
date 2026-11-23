@@ -1,14 +1,11 @@
 import { Injectable, signal } from '@angular/core';
 import { Expense } from '../expenses/expense';
 import { PaymentMethod } from '../payment-methods/payment-method';
-import { PlannedGroup } from '../planned-groups/planned-group';
 
 export type EditRequest =
   | { kind: 'expense'; expense: Expense }
   | { kind: 'copy-expense'; expense: Expense }
-  | { kind: 'payment-method'; method: PaymentMethod }
-  | { kind: 'planned-group'; group: PlannedGroup }
-  | { kind: 'new-planned-group' };
+  | { kind: 'payment-method'; method: PaymentMethod };
 
 @Injectable({ providedIn: 'root' })
 export class EditRequests {
@@ -26,14 +23,6 @@ export class EditRequests {
 
   editPaymentMethod(method: PaymentMethod): void {
     this.pending.set({ kind: 'payment-method', method });
-  }
-
-  editPlannedGroup(group: PlannedGroup): void {
-    this.pending.set({ kind: 'planned-group', group });
-  }
-
-  newPlannedGroup(): void {
-    this.pending.set({ kind: 'new-planned-group' });
   }
 
   consume(): void {

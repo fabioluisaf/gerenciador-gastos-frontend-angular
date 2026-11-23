@@ -7,13 +7,11 @@ import {
   viewChild,
 } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
 import {
   LucideAArrowDown,
   LucideAArrowUp,
   LucideALargeSmall,
   LucideDownload,
-  LucideLayers,
   LucideMoon,
   LucideSun,
   LucideSunMoon,
@@ -38,9 +36,7 @@ import { BackupApi } from '../backup-api';
     LucideAArrowUp,
     LucideALargeSmall,
     LucideDownload,
-    LucideLayers,
     LucideMoon,
-    RouterLink,
     LucideSun,
     LucideSunMoon,
   ],
@@ -90,10 +86,6 @@ export class SettingsSheet {
         },
         error: () => this.backupState.set('failed'),
       });
-  }
-
-  protected close(): void {
-    this.sheet().close();
   }
 
   protected onClosed(): void {

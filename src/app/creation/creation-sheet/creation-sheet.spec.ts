@@ -6,6 +6,7 @@ import { EditRequests } from '../../core/edit-requests';
 import { ExpensesApi } from '../../expenses/expenses-api';
 import { InstitutionsApi } from '../../payment-methods/institutions-api';
 import { PaymentMethodsApi } from '../../payment-methods/payment-methods-api';
+import { PlannedGroupsApi } from '../../planned-groups/planned-groups-api';
 import { stubDialogs } from '../../shared/testing/dialog-stub';
 import { CreationSheet } from './creation-sheet';
 
@@ -30,6 +31,7 @@ describe('CreationSheet', () => {
           provide: InstitutionsApi,
           useValue: { list: () => of([]), create: () => of(undefined) },
         },
+        { provide: PlannedGroupsApi, useValue: { list: () => of([]) } },
       ],
     });
   });
@@ -176,31 +178,19 @@ describe('CreationSheet', () => {
     expect(element.querySelector('dialog')?.open).toBe(false);
   });
 
-  it('should edit a planned group and refresh the groups when saved', async () => {
-    const fixture = TestBed.createComponent(CreationSheet);
-    fixture.detectChanges();
-    const element: HTMLElement = fixture.nativeElement;
+  it('should manage and apply planned groups in the group tab', async () => {
+    const { fixture, element } = await openSheet();
 
-    TestBed.inject(EditRequests).editPlannedGroup({
-      id: 'contas',
-      name: 'Contas fixas',
-      total: 120,
-      items: [{ name: 'Luz', amount: 120, category: 'Casa', description: null }],
-    });
-    TestBed.tick();
-    await fixture.whenStable();
-    fixture.detectChanges();
-    await renderDeferred(fixture);
-
-    expect(element.querySelector('.edit-title')?.textContent).toBe('Editar grupo');
-    expect(element.querySelector('app-group-form')).not.toBeNull();
+    await chooseTab(fixture, 'Grupo');
+    expect(visiblePanel(element)).toBe('Grupos de gastos planejados');
+    expect(element.querySelector('app-groups-panel')).not.toBeNull();
 
     fixture.debugElement
-      .query((node) => node.name === 'app-group-form')
-      .triggerEventHandler('saved');
+      .query((node) => node.name === 'app-groups-panel')
+      .triggerEventHandler('applied');
     fixture.detectChanges();
 
-    expect(TestBed.inject(DataChanges).plannedGroups()).toBe(1);
+    expect(TestBed.inject(DataChanges).expenses()).toBe(1);
     expect(element.querySelector('dialog')?.open).toBe(false);
   });
 });

@@ -1,14 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { ControlBarState } from '../../control-bar/control-bar-state';
 import { DataChanges } from '../../core/data-changes';
-import { EditRequests } from '../../core/edit-requests';
 import { provideAppLocale } from '../../core/locale';
+import { ExpensesApi } from '../../expenses/expenses-api';
 import { PaymentMethodsApi } from '../../payment-methods/payment-methods-api';
 import { stubDialogs } from '../../shared/testing/dialog-stub';
 import { PlannedGroup } from '../planned-group';
 import { PlannedGroupsApi } from '../planned-groups-api';
-import { PlannedGroupsPage } from './planned-groups-page';
+import { GroupsPanel } from './groups-panel';
 
 const GROUP: PlannedGroup = {
   id: 'contas',
@@ -20,7 +19,7 @@ const GROUP: PlannedGroup = {
   ],
 };
 
-describe('PlannedGroupsPage', () => {
+describe('GroupsPanel', () => {
   let restoreDialogs: () => void;
   let groups: PlannedGroup[];
 
@@ -32,6 +31,7 @@ describe('PlannedGroupsPage', () => {
         provideAppLocale(),
         { provide: PlannedGroupsApi, useValue: { list: () => of(groups) } },
         { provide: PaymentMethodsApi, useValue: { list: () => of([]) } },
+        { provide: ExpensesApi, useValue: { listCategories: () => of([]) } },
       ],
     });
   });
@@ -39,65 +39,76 @@ describe('PlannedGroupsPage', () => {
   afterEach(() => restoreDialogs());
 
   async function render() {
-    const fixture = TestBed.createComponent(PlannedGroupsPage);
+    const fixture = TestBed.createComponent(GroupsPanel);
     fixture.detectChanges();
     await fixture.whenStable();
     fixture.detectChanges();
     return { fixture, element: fixture.nativeElement as HTMLElement };
   }
 
-  it('should list the groups with their items and total', async () => {
+  it('should list the groups with how many expenses and their total', async () => {
     const { element } = await render();
 
     expect(element.querySelector('.group-name')?.textContent).toBe('Contas fixas');
     expect(element.querySelector('.group-meta')?.textContent?.replace(/\s+/g, ' ').trim()).toMatch(
       /^2 gastos · R\$\s219,90$/,
     );
-    expect([...element.querySelectorAll('.item-name')].map((item) => item.textContent)).toEqual([
-      'Luz',
-      'Internet',
-    ]);
   });
 
-  it('should explain how to use groups when there is none', async () => {
+  it('should say when there is no group yet', async () => {
     groups = [];
     const { element } = await render();
 
     expect(element.querySelector('.status')?.textContent).toContain('Nenhum grupo ainda.');
   });
 
-  it('should ask for a new group and for editing one', async () => {
+  it('should open the new group form and come back to the list', async () => {
     const { fixture, element } = await render();
-    const requests = TestBed.inject(EditRequests);
 
     element.querySelector<HTMLButtonElement>('.new')!.click();
-    expect(requests.request()).toEqual({ kind: 'new-planned-group' });
+    fixture.detectChanges();
+    expect(element.querySelector('.view-title')?.textContent).toBe('Novo grupo');
+    expect(element.querySelector('app-group-form')).not.toBeNull();
+
+    element.querySelector<HTMLButtonElement>('.back')!.click();
+    fixture.detectChanges();
+    expect(element.querySelector('app-group-form')).toBeNull();
+    expect(element.querySelector('.group-name')).not.toBeNull();
+  });
+
+  it('should edit a group and refresh the list when saved', async () => {
+    const { fixture, element } = await render();
 
     fixture.debugElement
       .query((node) => node.name === 'app-actions-menu')
       .triggerEventHandler('editRequested');
-    expect(requests.request()).toEqual({ kind: 'planned-group', group: GROUP });
+    fixture.detectChanges();
+    expect(element.querySelector('.view-title')?.textContent).toBe('Editar grupo');
+
+    fixture.debugElement
+      .query((node) => node.name === 'app-group-form')
+      .triggerEventHandler('saved');
+    fixture.detectChanges();
+
+    expect(TestBed.inject(DataChanges).plannedGroups()).toBe(1);
+    expect(element.querySelector('.group-name')).not.toBeNull();
   });
 
-  it('should open the apply sheet and confirm what was created', async () => {
+  it('should apply a group and tell the sheet', async () => {
+    const applied = vi.fn();
     const { fixture, element } = await render();
+    fixture.componentInstance.applied.subscribe(applied);
 
     element.querySelector<HTMLButtonElement>('.apply')!.click();
     fixture.detectChanges();
-
-    expect(element.querySelector('.sheet-title')?.textContent).toBe('Aplicar "Contas fixas"');
-    expect(element.querySelector('app-apply-group-form')).not.toBeNull();
-    expect(TestBed.inject(ControlBarState).hidden()).toBe(true);
+    expect(element.querySelector('.view-title')?.textContent).toBe('Aplicar "Contas fixas"');
 
     fixture.debugElement
       .query((node) => node.name === 'app-apply-group-form')
       .triggerEventHandler('applied', 2);
     fixture.detectChanges();
 
-    expect(TestBed.inject(DataChanges).expenses()).toBe(1);
-    expect(element.querySelector('.applied')?.textContent).toBe(
-      '2 gastos planejados de "Contas fixas" foram criados.',
-    );
-    expect(element.querySelector('dialog')?.open).toBe(false);
+    expect(applied).toHaveBeenCalled();
+    expect(element.querySelector('app-apply-group-form')).toBeNull();
   });
 });

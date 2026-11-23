@@ -4,77 +4,89 @@ import {
   Component,
   computed,
   inject,
+  output,
   signal,
   viewChild,
 } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
-import { LucideChevronDown, LucideListPlus } from '@lucide/angular';
+import { LucideArrowLeft, LucideListPlus, LucidePlus } from '@lucide/angular';
 import { tap } from 'rxjs';
-import { ControlBarState } from '../../control-bar/control-bar-state';
 import { DataChanges } from '../../core/data-changes';
-import { EditRequests } from '../../core/edit-requests';
 import { ActionsMenu } from '../../shared/actions-menu/actions-menu';
-import { BottomSheet } from '../../shared/bottom-sheet/bottom-sheet';
 import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
 import { ApplyGroupForm } from '../apply-group-form/apply-group-form';
+import { GroupForm } from '../group-form/group-form';
 import { PlannedGroup } from '../planned-group';
 import { PlannedGroupsApi } from '../planned-groups-api';
 
+type PanelView =
+  | { kind: 'list' }
+  | { kind: 'new' }
+  | { kind: 'edit'; group: PlannedGroup }
+  | { kind: 'apply'; group: PlannedGroup };
+
 @Component({
-  selector: 'app-planned-groups-page',
+  selector: 'app-groups-panel',
   imports: [
     ActionsMenu,
     ApplyGroupForm,
-    BottomSheet,
     ConfirmDialog,
     CurrencyPipe,
-    LucideChevronDown,
+    GroupForm,
+    LucideArrowLeft,
     LucideListPlus,
+    LucidePlus,
   ],
-  templateUrl: './planned-groups-page.html',
-  styleUrl: './planned-groups-page.css',
+  templateUrl: './groups-panel.html',
+  styleUrl: './groups-panel.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class PlannedGroupsPage {
+export class GroupsPanel {
   private readonly api = inject(PlannedGroupsApi);
   private readonly dataChanges = inject(DataChanges);
-  private readonly controlBar = inject(ControlBarState);
   private readonly confirmDialog = viewChild.required(ConfirmDialog);
-  private readonly applySheet = viewChild.required(BottomSheet);
-  protected readonly editRequests = inject(EditRequests);
+
+  readonly applied = output<void>();
 
   protected readonly groups = rxResource({
     params: () => this.dataChanges.plannedGroups(),
     stream: () => this.api.list(),
   });
-  protected readonly applying = signal<PlannedGroup | null>(null);
-  protected readonly applyingList = computed(() => {
-    const group = this.applying();
-    return group ? [group] : [];
+  protected readonly view = signal<PanelView>({ kind: 'list' });
+  protected readonly viewTitle = computed(() => {
+    const view = this.view();
+    switch (view.kind) {
+      case 'new':
+        return 'Novo grupo';
+      case 'edit':
+        return 'Editar grupo';
+      case 'apply':
+        return `Aplicar "${view.group.name}"`;
+      default:
+        return null;
+    }
   });
-  protected readonly appliedMessage = signal<string | null>(null);
+  protected readonly viewGroups = computed(() => {
+    const view = this.view();
+    return view.kind === 'edit' || view.kind === 'apply' ? [view.group] : [];
+  });
 
-  protected openApply(group: PlannedGroup): void {
-    this.appliedMessage.set(null);
-    this.applying.set(group);
-    this.applySheet().open();
-    this.applySheet().expand();
-    this.controlBar.hide();
+  protected show(view: PanelView): void {
+    this.view.set(view);
   }
 
-  protected onApplied(group: PlannedGroup, count: number): void {
-    this.dataChanges.expenseSaved();
-    this.appliedMessage.set(
-      count === 1
-        ? `1 gasto planejado de "${group.name}" foi criado.`
-        : `${count} gastos planejados de "${group.name}" foram criados.`,
-    );
-    this.applySheet().close();
+  protected backToList(): void {
+    this.view.set({ kind: 'list' });
   }
 
-  protected onApplyClosed(): void {
-    this.applying.set(null);
-    this.controlBar.show();
+  protected onSaved(): void {
+    this.dataChanges.plannedGroupSaved();
+    this.backToList();
+  }
+
+  protected onApplied(): void {
+    this.backToList();
+    this.applied.emit();
   }
 
   protected confirmDelete(group: PlannedGroup): void {

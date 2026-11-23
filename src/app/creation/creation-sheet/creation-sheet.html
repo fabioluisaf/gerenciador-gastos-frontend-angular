@@ -7,10 +7,6 @@
           <app-expense-form [expense]="request.expense" (saved)="editSaved()" />
         } @else if (request.kind === 'copy-expense') {
           <app-expense-form [copyOf]="request.expense" (saved)="editSaved()" />
-        } @else if (request.kind === 'planned-group') {
-          <app-group-form [group]="request.group" (saved)="editSaved()" />
-        } @else if (request.kind === 'new-planned-group') {
-          <app-group-form (saved)="editSaved()" />
         } @else {
           <app-payment-method-form [method]="request.method" (saved)="editSaved()" />
         }
@@ -80,13 +76,9 @@
       </section>
     }
     @if (visited().has('group')) {
-      <section
-        class="panel"
-        aria-label="Novo grupo de gastos planejados"
-        [hidden]="tab() !== 'group'"
-      >
+      <section class="panel" aria-label="Grupos de gastos planejados" [hidden]="tab() !== 'group'">
         @defer (on immediate) {
-          <app-group-form (saved)="groupSaved()" />
+          <app-groups-panel (applied)="expenseSaved()" />
         } @loading (minimum 200ms) {
           <p class="loading">Carregando…</p>
         }

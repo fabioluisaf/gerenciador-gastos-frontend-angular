@@ -1,5 +1,4 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
 import { Observable, of, Subject } from 'rxjs';
 import { ControlBarState } from '../../control-bar/control-bar-state';
 import { FontSizeService } from '../../core/font-size';
@@ -23,9 +22,7 @@ describe('SettingsSheet', () => {
   });
 
   async function render(download: () => Observable<Blob> = () => of(new Blob())) {
-    TestBed.configureTestingModule({
-      providers: [provideRouter([]), { provide: BackupApi, useValue: { download } }],
-    });
+    TestBed.configureTestingModule({ providers: [{ provide: BackupApi, useValue: { download } }] });
     const fixture = TestBed.createComponent(SettingsSheet);
     fixture.detectChanges();
     await fixture.whenStable();
@@ -106,7 +103,7 @@ describe('SettingsSheet', () => {
     });
     const fixture = await render(() => of(zip));
 
-    fixture.nativeElement.querySelector('button.action-button').click();
+    fixture.nativeElement.querySelector('.backup-button').click();
 
     expect(URL.createObjectURL).toHaveBeenCalledWith(zip);
     expect(click).toHaveBeenCalledOnce();
@@ -118,7 +115,7 @@ describe('SettingsSheet', () => {
   it('should show progress and an error when the backup fails', async () => {
     const response = new Subject<Blob>();
     const fixture = await render(() => response);
-    const button: HTMLButtonElement = fixture.nativeElement.querySelector('button.action-button');
+    const button: HTMLButtonElement = fixture.nativeElement.querySelector('.backup-button');
 
     button.click();
     fixture.detectChanges();
