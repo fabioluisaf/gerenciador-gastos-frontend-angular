@@ -115,17 +115,6 @@
   font-weight: 600;
 }
 
-.entries-area {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 1.25rem;
-  transition: opacity var(--motion-duration-default) ease;
-}
-
-.entries-area.stale {
-  opacity: 0.55;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .summary {
     animation: none;

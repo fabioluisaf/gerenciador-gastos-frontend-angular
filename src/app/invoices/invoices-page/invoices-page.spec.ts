@@ -117,9 +117,14 @@ describe('InvoicesPage', () => {
 
     expect(
       [...element.querySelectorAll('.entries-title')].map((title) =>
-        title.textContent?.replace(/\s+/g, ' ').trim(),
+        ['.entries-name', '.entries-total', '.entries-count'].map((part) =>
+          title.querySelector(part)?.textContent?.replace(/\s/g, ' ').trim(),
+        ),
       ),
-    ).toEqual(['Parcelas 1', 'Com data 1']);
+    ).toEqual([
+      ['Parcelas', 'R$ 300,00', '1'],
+      ['Realizados', 'R$ 657,08', '1'],
+    ]);
     expect(element.querySelector('.day-label')?.textContent).toContain('19 de nov de 2026');
     const installment = element.querySelectorAll('app-expense-card')[0];
     expect(installment.querySelector('.heading .installment')?.textContent?.trim()).toBe('2/10');

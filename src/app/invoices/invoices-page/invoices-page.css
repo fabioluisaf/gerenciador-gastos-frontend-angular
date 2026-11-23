@@ -28,10 +28,22 @@
   --month-strip-divider: var(--color-border);
 }
 
+.entries-area {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
+  transition: opacity var(--motion-duration-default) ease;
+}
+
+.entries-area.stale {
+  opacity: 0.55;
+}
+
 .filters {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 0.625rem;
+  margin-block-end: 0.75rem;
 }
 
 .search {
@@ -156,6 +168,11 @@
 
 .entries[open] .toggle-icon {
   rotate: 0deg;
+}
+
+.entries-total {
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
 }
 
 .entries-count {

@@ -1,4 +1,4 @@
-import { NgOptimizedImage, NgTemplateOutlet } from '@angular/common';
+import { CurrencyPipe, NgOptimizedImage, NgTemplateOutlet } from '@angular/common';
 import {
   ChangeDetectionStrategy,
   Component,
@@ -21,6 +21,7 @@ import { todayIsoDate } from '../../expenses/timeline';
 import { PaymentMethod } from '../../payment-methods/payment-method';
 import { PaymentMethodsApi } from '../../payment-methods/payment-methods-api';
 import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
+import { DragScroll } from '../../shared/drag-scroll';
 import { FilteredTotal } from '../../shared/filtered-total/filtered-total';
 import { HorizontalWheelScroll } from '../../shared/horizontal-wheel-scroll';
 import {
@@ -35,16 +36,9 @@ import {
   entryTotals,
   filterEntries,
   groupInvoiceEntries,
-  InvoiceStatusFilter,
   isFiltering,
 } from '../invoice-entries';
 import { InvoicesApi } from '../invoices-api';
-
-const STATUS_FILTER_OPTIONS: readonly SelectorOption<InvoiceStatusFilter>[] = [
-  { value: 'all', label: 'Todos' },
-  { value: 'realized', label: 'Realizados' },
-  { value: 'planned', label: 'Planejados' },
-];
 
 interface InvoiceEntries {
   realized: Expense[];
@@ -55,7 +49,9 @@ interface InvoiceEntries {
   selector: 'app-invoices-page',
   imports: [
     ConfirmDialog,
+    CurrencyPipe,
     DayLabelPipe,
+    DragScroll,
     ExpenseCard,
     FilteredTotal,
     HorizontalWheelScroll,
@@ -80,9 +76,7 @@ export class InvoicesPage {
 
   protected readonly editRequests = inject(EditRequests);
   protected readonly today = todayIsoDate();
-  protected readonly statusOptions = STATUS_FILTER_OPTIONS;
   protected readonly nameQuery = signal('');
-  protected readonly statusFilter = signal<InvoiceStatusFilter>('all');
   private readonly chosenCategories = signal<readonly string[]>([]);
 
   private readonly methods = rxResource({
@@ -170,7 +164,6 @@ export class InvoicesPage {
   );
   private readonly entryFilter = computed(() => ({
     name: this.nameQuery(),
-    status: this.statusFilter(),
     categories: this.selectedCategories(),
   }));
   protected readonly filtering = computed(() => isFiltering(this.entryFilter()));
@@ -179,9 +172,6 @@ export class InvoicesPage {
   );
   protected readonly filteredTotals = computed(() => entryTotals(this.filteredEntries()));
   protected readonly groups = computed(() => groupInvoiceEntries(this.filteredEntries()));
-  protected readonly datedCount = computed(() =>
-    this.groups().days.reduce((count, day) => count + day.expenses.length, 0),
-  );
 
   protected toggleCategory(category: string): void {
     this.chosenCategories.update((current) =>
@@ -193,7 +183,6 @@ export class InvoicesPage {
 
   protected clearFilters(): void {
     this.nameQuery.set('');
-    this.statusFilter.set('all');
     this.chosenCategories.set([]);
   }
 

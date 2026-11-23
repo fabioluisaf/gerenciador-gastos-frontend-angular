@@ -70,15 +70,8 @@
                 (input)="nameQuery.set(textValue($event))"
               />
             </label>
-            <app-segmented-selector
-              class="status-filter"
-              label="Situação"
-              [options]="statusOptions"
-              [value]="statusFilter()"
-              (valueChange)="statusFilter.set($event)"
-            />
             @if (categories().length > 1) {
-              <ul class="category-chips" role="list" appHorizontalWheelScroll>
+              <ul class="category-chips" role="list" appHorizontalWheelScroll appDragScroll>
                 @for (category of categories(); track category) {
                   <li>
                     <button
@@ -107,73 +100,96 @@
             <p class="status">Nenhum gasto encontrado.</p>
           }
           @let entryGroups = groups();
-          @if (entryGroups.installments.length > 0) {
-            <details class="entries" open>
-              <summary class="entries-title">
-                <svg lucideChevronDown class="toggle-icon" aria-hidden="true"></svg>
-                Parcelas
-                <span class="entries-count">{{ entryGroups.installments.length }}</span>
-              </summary>
-              <ul class="entry-list" role="list">
-                @for (expense of entryGroups.installments; track expense.id) {
-                  <li>
-                    <ng-container
-                      [ngTemplateOutlet]="entryCard"
-                      [ngTemplateOutletContext]="{ $implicit: expense }"
-                    />
-                  </li>
-                }
-              </ul>
-            </details>
+          @if (entryGroups.installments.count > 0) {
+            <ng-container
+              [ngTemplateOutlet]="listSection"
+              [ngTemplateOutletContext]="{ $implicit: entryGroups.installments, title: 'Parcelas' }"
+            />
           }
-          @if (entryGroups.undated.length > 0) {
-            <details class="entries" open>
-              <summary class="entries-title">
-                <svg lucideChevronDown class="toggle-icon" aria-hidden="true"></svg>
-                Planejados sem data
-                <span class="entries-count">{{ entryGroups.undated.length }}</span>
-              </summary>
-              <ul class="entry-list" role="list">
-                @for (expense of entryGroups.undated; track expense.id) {
-                  <li>
-                    <ng-container
-                      [ngTemplateOutlet]="entryCard"
-                      [ngTemplateOutletContext]="{ $implicit: expense }"
-                    />
-                  </li>
-                }
-              </ul>
-            </details>
+          @if (entryGroups.undated.count > 0) {
+            <ng-container
+              [ngTemplateOutlet]="listSection"
+              [ngTemplateOutletContext]="{
+                $implicit: entryGroups.undated,
+                title: 'Planejados sem data',
+              }"
+            />
           }
-          @if (entryGroups.days.length > 0) {
-            <details class="entries" open>
-              <summary class="entries-title">
-                <svg lucideChevronDown class="toggle-icon" aria-hidden="true"></svg>
-                Com data
-                <span class="entries-count">{{ datedCount() }}</span>
-              </summary>
-              @for (day of entryGroups.days; track day.key) {
-                <section class="day" [attr.aria-label]="day.date | dayLabel">
-                  <h3 class="day-label">{{ day.date | dayLabel }}</h3>
-                  <ul class="entry-list" role="list">
-                    @for (expense of day.expenses; track expense.id) {
-                      <li>
-                        <ng-container
-                          [ngTemplateOutlet]="entryCard"
-                          [ngTemplateOutletContext]="{ $implicit: expense }"
-                        />
-                      </li>
-                    }
-                  </ul>
-                </section>
-              }
-            </details>
+          @if (entryGroups.plannedDays.count > 0) {
+            <ng-container
+              [ngTemplateOutlet]="daySection"
+              [ngTemplateOutletContext]="{
+                $implicit: entryGroups.plannedDays,
+                title: 'Planejados com data',
+              }"
+            />
+          }
+          @if (entryGroups.realizedDays.count > 0) {
+            <ng-container
+              [ngTemplateOutlet]="daySection"
+              [ngTemplateOutletContext]="{
+                $implicit: entryGroups.realizedDays,
+                title: 'Realizados',
+              }"
+            />
           }
         }
       </div>
     }
   }
 }
+
+<ng-template #sectionTitle let-group let-title="title">
+  <summary class="entries-title">
+    <svg lucideChevronDown class="toggle-icon" aria-hidden="true"></svg>
+    <span class="entries-name">{{ title }}</span>
+    <span class="entries-total">{{ group.total | currency }}</span>
+    <span class="entries-count">{{ group.count }}</span>
+  </summary>
+</ng-template>
+
+<ng-template #listSection let-group let-title="title">
+  <details class="entries" open>
+    <ng-container
+      [ngTemplateOutlet]="sectionTitle"
+      [ngTemplateOutletContext]="{ $implicit: group, title }"
+    />
+    <ul class="entry-list" role="list">
+      @for (expense of group.items; track expense.id) {
+        <li>
+          <ng-container
+            [ngTemplateOutlet]="entryCard"
+            [ngTemplateOutletContext]="{ $implicit: expense }"
+          />
+        </li>
+      }
+    </ul>
+  </details>
+</ng-template>
+
+<ng-template #daySection let-group let-title="title">
+  <details class="entries" open>
+    <ng-container
+      [ngTemplateOutlet]="sectionTitle"
+      [ngTemplateOutletContext]="{ $implicit: group, title }"
+    />
+    @for (day of group.items; track day.key) {
+      <section class="day" [attr.aria-label]="day.date | dayLabel">
+        <h3 class="day-label">{{ day.date | dayLabel }}</h3>
+        <ul class="entry-list" role="list">
+          @for (expense of day.expenses; track expense.id) {
+            <li>
+              <ng-container
+                [ngTemplateOutlet]="entryCard"
+                [ngTemplateOutletContext]="{ $implicit: expense }"
+              />
+            </li>
+          }
+        </ul>
+      </section>
+    }
+  </details>
+</ng-template>
 
 <ng-template #entryCard let-expense>
   <app-expense-card

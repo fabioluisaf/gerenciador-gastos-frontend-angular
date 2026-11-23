@@ -1,19 +1,23 @@
-import { Expense, ExpenseKind } from '../expenses/expense';
+import { Expense } from '../expenses/expense';
 import { ExpenseDay, groupByDay } from '../expenses/group-by-day';
 import { matchesText } from '../shared/text-search';
 
-export type InvoiceStatusFilter = 'all' | ExpenseKind;
-
 export interface InvoiceEntryFilter {
   name: string;
-  status: InvoiceStatusFilter;
   categories: readonly string[];
 }
 
+export interface EntryGroup<T> {
+  items: T;
+  count: number;
+  total: number;
+}
+
 export interface InvoiceGroups {
-  installments: Expense[];
-  undated: Expense[];
-  days: ExpenseDay[];
+  installments: EntryGroup<Expense[]>;
+  undated: EntryGroup<Expense[]>;
+  plannedDays: EntryGroup<ExpenseDay[]>;
+  realizedDays: EntryGroup<ExpenseDay[]>;
 }
 
 export interface EntryTotals {
@@ -22,33 +26,54 @@ export interface EntryTotals {
   planned: number;
 }
 
-export const NO_ENTRY_FILTER: InvoiceEntryFilter = { name: '', status: 'all', categories: [] };
+export const NO_ENTRY_FILTER: InvoiceEntryFilter = { name: '', categories: [] };
 
 export function isFiltering(filter: InvoiceEntryFilter): boolean {
-  return filter.name.trim() !== '' || filter.status !== 'all' || filter.categories.length > 0;
+  return filter.name.trim() !== '' || filter.categories.length > 0;
 }
 
 export function filterEntries(expenses: readonly Expense[], filter: InvoiceEntryFilter): Expense[] {
   return expenses.filter(
     (expense) =>
       matchesText(expense.name, filter.name) &&
-      (filter.status === 'all' || (filter.status === 'realized') === expense.realized) &&
       (filter.categories.length === 0 || filter.categories.includes(expense.category)),
   );
 }
 
+function byName(a: Expense, b: Expense): number {
+  return a.name.localeCompare(b.name, 'pt-BR');
+}
+
 function newestFirst(a: Expense, b: Expense): number {
-  return (b.date ?? '').localeCompare(a.date ?? '') || a.name.localeCompare(b.name, 'pt-BR');
+  return (b.date ?? '').localeCompare(a.date ?? '') || byName(a, b);
+}
+
+function oldestFirst(a: Expense, b: Expense): number {
+  return (a.date ?? '').localeCompare(b.date ?? '') || byName(a, b);
+}
+
+function sumOf(expenses: readonly Expense[]): number {
+  return expenses.reduce((sum, { amount }) => sum + amount, 0);
+}
+
+function listGroup(expenses: Expense[]): EntryGroup<Expense[]> {
+  return { items: expenses, count: expenses.length, total: sumOf(expenses) };
+}
+
+function dayGroup(expenses: Expense[]): EntryGroup<ExpenseDay[]> {
+  return { items: groupByDay(expenses), count: expenses.length, total: sumOf(expenses) };
 }
 
 export function groupInvoiceEntries(expenses: readonly Expense[]): InvoiceGroups {
-  const installments = expenses.filter(({ installment }) => installment !== null);
-  const undated = expenses.filter(({ installment, date }) => installment === null && !date);
-  const dated = expenses.filter(({ installment, date }) => installment === null && !!date);
+  const single = expenses.filter(({ installment }) => installment === null);
+  const planned = single.filter(({ realized }) => !realized);
   return {
-    installments: installments.sort(newestFirst),
-    undated: undated.sort((a, b) => a.name.localeCompare(b.name, 'pt-BR')),
-    days: groupByDay(dated.sort(newestFirst)),
+    installments: listGroup(
+      expenses.filter(({ installment }) => installment !== null).sort(newestFirst),
+    ),
+    undated: listGroup(planned.filter(({ date }) => !date).sort(byName)),
+    plannedDays: dayGroup(planned.filter(({ date }) => !!date).sort(oldestFirst)),
+    realizedDays: dayGroup(single.filter(({ realized }) => realized).sort(newestFirst)),
   };
 }
 
