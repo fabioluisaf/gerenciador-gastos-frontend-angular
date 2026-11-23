@@ -35,7 +35,7 @@
 .open-invoices {
   justify-self: end;
   padding: 0.25rem 0.5rem;
-  border-radius: 0.5rem;
+  border-radius: 9999px;
   color: var(--color-primary);
   font-size: calc(0.875rem * var(--font-scale));
   font-weight: 600;

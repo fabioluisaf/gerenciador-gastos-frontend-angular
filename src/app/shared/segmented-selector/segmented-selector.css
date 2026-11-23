@@ -45,7 +45,7 @@
 
 .options.wrapped {
   grid-auto-flow: row;
-  border-radius: 1.25rem;
+  border-radius: calc(var(--selector-option-height) / 2 + 0.25rem);
 }
 
 .option {
