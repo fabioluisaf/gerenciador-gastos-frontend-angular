@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.2
+- Seletores em grade (Tipo e Instituição, na criação de método de pagamento) arredondados como os demais: pílula com uma linha, cantos acompanhando as opções com duas.
+- Opções do seletor de método de pagamento, botão "Baixar backup" e botões de texto ("Limpar", "Ver faturas", "Dividir igualmente") em formato de pílula.
+
 ## 2.2.1
 - Modais e painéis só fecham quando o clique começa e termina fora deles; arrastar de dentro para fora (ou o contrário) não fecha mais.
 - Botão de duplicar ao lado do de remover em cada gasto do grupo planejado; a cópia entra logo abaixo, já com o nome em foco.
