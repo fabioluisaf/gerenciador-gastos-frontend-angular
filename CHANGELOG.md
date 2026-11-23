@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.2.0
+- Grupos de gastos planejados na aba Grupo do botão Criar: criar, editar, excluir e aplicar grupos com vários gastos de uma vez.
+- Aplicar um grupo lança os gastos planejados numa fatura (cartão e mês) ou numa data (qualquer método), com revisão antes: dá para desmarcar itens e ajustar o valor só naquele lançamento.
+- Fatura com as seções Parcelas, Planejados sem data, Planejados com data (do mais antigo para o mais novo) e Realizados (do mais novo para o mais antigo), cada uma com a soma dos seus gastos ao lado do nome.
+- Seleção de gastos na fatura, com um card flutuante acima da barra mostrando quantos estão selecionados e o total.
+- Lista de categorias da fatura arrastável com o mouse; o seletor de situação (Todos, Realizados, Planejados) saiu.
+- Card da fatura ao lado da lista de gastos com um resumo da fatura anterior e da próxima (mês, realizado e total planejado).
+- No celular, as abas do card de criação mostram só o texto, para caberem as quatro.
+- A versão aparece no log de inicialização do container; a Pipeline grava a tag na imagem.
+- Requer o backend 2.2.0.
+
 ## 2.1.0
 - Busca de gastos por nome pela lupa no cabeçalho da lista, sem diferenciar maiúsculas nem acentos; o nome buscado vira um filtro removível.
 - Com filtros ativos, a lista mostra o total dos gastos filtrados no mês do topo, no painel e no card resumido.
