@@ -18,12 +18,13 @@ import {
   SegmentedSelector,
   SelectorOption,
 } from '../../shared/segmented-selector/segmented-selector';
+import { InvoiceBrief } from '../invoice-brief/invoice-brief';
 import { InvoiceSummary } from '../invoice-summary/invoice-summary';
 import { InvoicesApi } from '../invoices-api';
 
 @Component({
   selector: 'app-month-invoice-card',
-  imports: [InvoiceSummary, NgOptimizedImage, RouterLink, SegmentedSelector],
+  imports: [InvoiceBrief, InvoiceSummary, NgOptimizedImage, RouterLink, SegmentedSelector],
   templateUrl: './month-invoice-card.html',
   styleUrl: './month-invoice-card.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -68,10 +69,19 @@ export class MonthInvoiceCard {
   });
 
   protected readonly invoicesLoaded = computed(() => this.invoices.hasValue());
-  protected readonly invoice = computed(() => {
-    const invoices = this.invoices.hasValue() ? this.invoices.value() : [];
-    return invoices.find(({ dueDate }) => dueDate.startsWith(this.period())) ?? null;
-  });
+  private readonly invoiceList = computed(() =>
+    this.invoices.hasValue() ? this.invoices.value() : [],
+  );
+  private readonly invoiceIndex = computed(() =>
+    this.invoiceList().findIndex(({ dueDate }) => dueDate.startsWith(this.period())),
+  );
+  protected readonly invoice = computed(() => this.invoiceList()[this.invoiceIndex()] ?? null);
+  protected readonly previousInvoice = computed(() =>
+    this.invoiceIndex() > 0 ? this.invoiceList()[this.invoiceIndex() - 1] : null,
+  );
+  protected readonly nextInvoice = computed(() =>
+    this.invoiceIndex() >= 0 ? (this.invoiceList()[this.invoiceIndex() + 1] ?? null) : null,
+  );
 
   private readonly entries = rxResource({
     params: () => {

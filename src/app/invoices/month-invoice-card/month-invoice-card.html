@@ -31,6 +31,16 @@
         [color]="card()?.institution?.color ?? null"
         [plannedTotal]="plannedTotal()"
       />
+      @if (previousInvoice() || nextInvoice()) {
+        <div class="neighbours">
+          @if (previousInvoice(); as previous) {
+            <app-invoice-brief class="previous" label="Fatura anterior" [invoice]="previous" />
+          }
+          @if (nextInvoice(); as next) {
+            <app-invoice-brief class="next" label="Próxima fatura" [invoice]="next" />
+          }
+        </div>
+      }
       <a class="open-invoices" routerLink="/faturas">Ver faturas</a>
     } @else if (invoicesLoaded()) {
       <p class="empty">Sem fatura com vencimento em {{ monthLabel() }}.</p>

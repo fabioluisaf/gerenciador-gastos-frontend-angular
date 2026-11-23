@@ -8,6 +8,10 @@
   padding: 1.25rem 1rem 0;
 }
 
+:host(.selecting) {
+  padding-block-end: 5rem;
+}
+
 .title {
   margin: 0;
   font-size: calc(1.5rem * var(--font-scale));
@@ -28,10 +32,22 @@
   --month-strip-divider: var(--color-border);
 }
 
+.entries-area {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
+  transition: opacity var(--motion-duration-default) ease;
+}
+
+.entries-area.stale {
+  opacity: 0.55;
+}
+
 .filters {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 0.625rem;
+  margin-block-end: 0.75rem;
 }
 
 .search {
@@ -158,6 +174,11 @@
   rotate: 0deg;
 }
 
+.entries-total {
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
 .entries-count {
   padding: 0 0.5rem;
   border-radius: 9999px;
@@ -196,7 +217,76 @@
   list-style: none;
 }
 
+.selection {
+  position: fixed;
+  inset-inline: 1rem;
+  bottom: calc(
+    var(--control-bar-offset) + var(--control-bar-height) + 0.75rem + env(safe-area-inset-bottom)
+  );
+  z-index: 9;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  box-sizing: border-box;
+  max-inline-size: 30rem;
+  margin-inline: auto;
+  padding: 0.625rem 0.625rem 0.625rem 1rem;
+  border: 1px solid var(--color-floating-border);
+  border-radius: 1rem;
+  background-color: var(--color-floating);
+  box-shadow: var(--shadow-floating);
+  animation: selection-in var(--motion-duration-default) ease;
+}
+
+@keyframes selection-in {
+  from {
+    opacity: 0;
+    translate: 0 0.75rem;
+  }
+}
+
+.selection-text {
+  display: grid;
+  margin: 0;
+}
+
+.selection-label {
+  color: var(--color-text-muted);
+  font-size: calc(0.8125rem * var(--font-scale));
+}
+
+.selection-total {
+  font-size: calc(1.125rem * var(--font-scale));
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+.selection-clear {
+  padding: 0.5rem 0.75rem;
+  border: 0;
+  border-radius: 0.625rem;
+  background: transparent;
+  color: var(--color-primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.selection-clear:hover {
+  background-color: color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.selection-clear:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
 @media (prefers-reduced-motion: reduce) {
+  .selection {
+    animation: none;
+  }
+
   .entries-area,
   .toggle-icon,
   .category-chip,

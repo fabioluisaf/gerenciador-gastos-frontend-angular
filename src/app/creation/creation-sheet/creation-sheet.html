@@ -34,6 +34,9 @@
           @case ('institution') {
             <svg lucideLandmark class="tab-icon" aria-hidden="true"></svg>
           }
+          @case ('group') {
+            <svg lucideLayers class="tab-icon" aria-hidden="true"></svg>
+          }
         }
       </ng-template>
     </app-segmented-selector>
@@ -67,6 +70,15 @@
       <section class="panel" aria-label="Nova instituição" [hidden]="tab() !== 'institution'">
         @defer (on immediate) {
           <app-institution-form (saved)="institutionSaved()" />
+        } @loading (minimum 200ms) {
+          <p class="loading">Carregando…</p>
+        }
+      </section>
+    }
+    @if (visited().has('group')) {
+      <section class="panel" aria-label="Grupos de gastos planejados" [hidden]="tab() !== 'group'">
+        @defer (on immediate) {
+          <app-groups-panel (applied)="expenseSaved()" />
         } @loading (minimum 200ms) {
           <p class="loading">Carregando…</p>
         }

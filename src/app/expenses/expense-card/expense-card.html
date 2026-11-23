@@ -13,6 +13,16 @@
     [style.--institution-color]="item.institution.color"
     [style.--payment-color]="paymentColor()"
   >
+    @if (selectable()) {
+      <input
+        type="checkbox"
+        class="select"
+        [checked]="selected()"
+        [attr.aria-label]="'Selecionar ' + item.name"
+        (click)="$event.stopPropagation()"
+        (change)="selectedChange.emit($any($event.target).checked)"
+      />
+    }
     <div class="body">
       <div class="summary">
         <div class="heading">

@@ -1,0 +1,134 @@
+<form class="form" novalidate (submit)="save($event)">
+  <app-segmented-selector
+    label="Lançar em"
+    labelVisible
+    [options]="destinationOptions"
+    [value]="destination()"
+    (valueChange)="destination.set($event)"
+  >
+    <ng-template let-option>
+      @if (option.value === 'invoice') {
+        <svg lucideCreditCard class="option-icon" aria-hidden="true"></svg>
+      } @else {
+        <svg lucideCalendar class="option-icon" aria-hidden="true"></svg>
+      }
+    </ng-template>
+  </app-segmented-selector>
+
+  <div class="field">
+    <span class="field-label" [id]="id + '-metodo'">
+      {{ destination() === 'invoice' ? 'Cartão' : 'Método de pagamento' }}
+    </span>
+    @if (methodsFailed()) {
+      <p class="field-hint">Não foi possível carregar os métodos de pagamento.</p>
+    } @else {
+      <app-payment-method-picker
+        [methods]="visibleMethods()"
+        [value]="methodId()"
+        [labelledBy]="id + '-metodo'"
+        [invalid]="!!errorFor('method')"
+        (valueChange)="methodId.set($event)"
+      />
+    }
+    @if (errorFor('method'); as message) {
+      <p class="field-error">{{ message }}</p>
+    }
+  </div>
+
+  @if (destination() === 'invoice') {
+    <app-date-field
+      label="Mês da fatura"
+      mode="month"
+      emptyLabel="Escolha o mês"
+      [value]="invoiceMonth()"
+      [invalid]="!!errorFor('target')"
+      [describedBy]="id + '-destino-detalhe'"
+      (valueChange)="invoiceMonth.set($event)"
+    >
+      <p class="field-hint" [id]="id + '-destino-detalhe'">
+        @if (errorFor('target'); as message) {
+          <span class="field-error">{{ message }}</span>
+        } @else {
+          Os gastos entram nesta fatura, sem data.
+        }
+      </p>
+    </app-date-field>
+  } @else {
+    <app-date-field
+      label="Data"
+      [value]="date()"
+      [invalid]="!!errorFor('target')"
+      [describedBy]="id + '-destino-detalhe'"
+      (valueChange)="date.set($event)"
+    >
+      <p class="field-hint" [id]="id + '-destino-detalhe'">
+        @if (errorFor('target'); as message) {
+          <span class="field-error">{{ message }}</span>
+        }
+      </p>
+    </app-date-field>
+  }
+
+  <section class="review" [attr.aria-labelledby]="id + '-revisao'">
+    <div class="review-header">
+      <h3 class="field-label" [id]="id + '-revisao'">Gastos</h3>
+      <span class="review-total">{{ selectedTotal() }}</span>
+    </div>
+    <ul class="review-list" role="list">
+      @for (entry of review(); track entry.key; let index = $index) {
+        @let item = group().items[entry.key];
+        <li class="review-item" [class.off]="!entry.selected">
+          <label class="review-check">
+            <input
+              type="checkbox"
+              class="check"
+              [checked]="entry.selected"
+              (change)="toggleItem(index, checked($event))"
+            />
+            <span class="review-text">
+              <span class="review-name">{{ item.name }}</span>
+              <span class="review-category">{{ item.category }}</span>
+            </span>
+          </label>
+          <label class="visually-hidden" [for]="id + '-valor-' + entry.key">
+            Valor de {{ item.name }}
+          </label>
+          <input
+            class="field-input review-amount"
+            inputmode="numeric"
+            autocomplete="off"
+            [id]="id + '-valor-' + entry.key"
+            [value]="formatCents(entry.amountCents)"
+            [disabled]="!entry.selected"
+            [attr.aria-invalid]="
+              errorFor('items') && entry.selected && entry.amountCents === 0 ? true : null
+            "
+            (input)="onAmountInput(index, $event)"
+            (focus)="moveCaretToEnd($event)"
+          />
+        </li>
+      }
+    </ul>
+    @if (errorFor('items'); as message) {
+      <p class="field-error">{{ message }}</p>
+    } @else {
+      <p class="field-hint">Os valores mudam só neste lançamento; o grupo continua igual.</p>
+    }
+  </section>
+
+  @if (failed()) {
+    <p class="form-error" role="alert">
+      Não foi possível criar os gastos. Confira os dados e tente de novo.
+    </p>
+  }
+
+  <button type="submit" class="primary-button" [disabled]="saving()">
+    @if (saving()) {
+      Criando…
+    } @else if (selectedCount() === 1) {
+      Criar 1 gasto planejado
+    } @else {
+      Criar {{ selectedCount() }} gastos planejados
+    }
+  </button>
+</form>

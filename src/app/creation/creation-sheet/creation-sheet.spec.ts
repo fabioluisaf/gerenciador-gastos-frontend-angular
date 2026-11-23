@@ -6,6 +6,7 @@ import { EditRequests } from '../../core/edit-requests';
 import { ExpensesApi } from '../../expenses/expenses-api';
 import { InstitutionsApi } from '../../payment-methods/institutions-api';
 import { PaymentMethodsApi } from '../../payment-methods/payment-methods-api';
+import { PlannedGroupsApi } from '../../planned-groups/planned-groups-api';
 import { stubDialogs } from '../../shared/testing/dialog-stub';
 import { CreationSheet } from './creation-sheet';
 
@@ -30,6 +31,7 @@ describe('CreationSheet', () => {
           provide: InstitutionsApi,
           useValue: { list: () => of([]), create: () => of(undefined) },
         },
+        { provide: PlannedGroupsApi, useValue: { list: () => of([]) } },
       ],
     });
   });
@@ -68,12 +70,12 @@ describe('CreationSheet', () => {
     return element.querySelector('.panel:not([hidden])')?.getAttribute('aria-label');
   }
 
-  it('should open on the expense tab with the other two kinds as tabs', async () => {
+  it('should open on the expense tab with the other kinds as tabs', async () => {
     const { element } = await openSheet();
 
     expect(
       [...element.querySelectorAll('.tabs label.option')].map((tab) => tab.textContent?.trim()),
-    ).toEqual(['Gasto', 'Método', 'Instituição']);
+    ).toEqual(['Gasto', 'Método', 'Instituição', 'Grupo']);
     expect(element.querySelector<HTMLInputElement>('.tabs input:checked')?.value).toBe('expense');
     expect(visiblePanel(element)).toBe('Novo gasto');
     expect(element.querySelector('app-expense-form')).not.toBeNull();
@@ -173,6 +175,22 @@ describe('CreationSheet', () => {
     fixture.detectChanges();
 
     expect(TestBed.inject(DataChanges).paymentMethods()).toBe(1);
+    expect(element.querySelector('dialog')?.open).toBe(false);
+  });
+
+  it('should manage and apply planned groups in the group tab', async () => {
+    const { fixture, element } = await openSheet();
+
+    await chooseTab(fixture, 'Grupo');
+    expect(visiblePanel(element)).toBe('Grupos de gastos planejados');
+    expect(element.querySelector('app-groups-panel')).not.toBeNull();
+
+    fixture.debugElement
+      .query((node) => node.name === 'app-groups-panel')
+      .triggerEventHandler('applied');
+    fixture.detectChanges();
+
+    expect(TestBed.inject(DataChanges).expenses()).toBe(1);
     expect(element.querySelector('dialog')?.open).toBe(false);
   });
 });

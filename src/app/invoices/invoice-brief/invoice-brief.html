@@ -1,0 +1,5 @@
+<section class="brief" [attr.aria-label]="label()">
+  <h3 class="brief-month">{{ month() }}</h3>
+  <p class="brief-total">{{ invoice().total | currency }}</p>
+  <p class="brief-planned">de {{ plannedTotal() | currency }}</p>
+</section>
