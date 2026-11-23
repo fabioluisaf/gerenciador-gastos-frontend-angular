@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.2.3
+- Correção do arredondamento dos seletores em grade (Tipo e Instituição, na criação de método de pagamento): o contorno agora usa a altura real das opções, ficando em pílula com uma linha e com os cantos acompanhando o destaque com duas.
+
 ## 2.2.2
 - Seletores em grade (Tipo e Instituição, na criação de método de pagamento) arredondados como os demais: pílula com uma linha, cantos acompanhando as opções com duas.
 - Opções do seletor de método de pagamento, botão "Baixar backup" e botões de texto ("Limpar", "Ver faturas", "Dividir igualmente") em formato de pílula.
