@@ -78,13 +78,25 @@ describe('BottomSheet', () => {
     vi.spyOn(dialog(), 'getBoundingClientRect').mockReturnValue(
       DOMRect.fromRect({ x: 0, y: 400, width: 400, height: 600 }),
     );
-    const click = (clientX: number, clientY: number) =>
-      dialog().dispatchEvent(new MouseEvent('click', { bubbles: true, clientX, clientY }));
+    const click = (down: [number, number], up: [number, number]) => {
+      const [downX, downY] = down;
+      const [upX, upY] = up;
+      dialog().dispatchEvent(
+        new MouseEvent('pointerdown', { bubbles: true, clientX: downX, clientY: downY }),
+      );
+      dialog().dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: upX, clientY: upY }));
+    };
 
-    click(200, 500);
+    click([200, 500], [200, 500]);
     expect(dialog().open).toBe(true);
 
-    click(200, 100);
+    click([200, 500], [200, 100]);
+    expect(dialog().open).toBe(true);
+
+    click([200, 100], [200, 500]);
+    expect(dialog().open).toBe(true);
+
+    click([200, 100], [200, 100]);
     expect(dialog().open).toBe(false);
   });
 
