@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.2.4
+- Pipeline e Release com as actions do Docker nas versões que rodam em Node 24 (`setup-buildx-action@v4`, `login-action@v4`, `metadata-action@v6`, `build-push-action@v7`), sem o aviso de descontinuação do Node 20. Sem mudança no sistema.
+
 ## 2.2.3
 - Correção do arredondamento dos seletores em grade (Tipo e Instituição, na criação de método de pagamento): o contorno agora usa a altura real das opções, ficando em pílula com uma linha e com os cantos acompanhando o destaque com duas.
 
