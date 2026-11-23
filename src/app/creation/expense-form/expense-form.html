@@ -88,38 +88,13 @@
       @if (methodsFailed()) {
         <p class="field-hint">Não foi possível carregar os métodos de pagamento.</p>
       } @else {
-        <div
-          class="methods"
-          role="radiogroup"
-          appHorizontalWheelScroll
-          appDragScroll
-          [attr.aria-labelledby]="id + '-metodo'"
-          [attr.aria-invalid]="errorFor('method') ? true : null"
-        >
-          @for (method of visibleMethods(); track method.id) {
-            <label
-              class="method"
-              [class.selected]="method.id === methodId()"
-              [style.--method-color]="method.institution.color"
-            >
-              <input
-                type="radio"
-                class="visually-hidden"
-                [name]="id + '-metodo'"
-                [value]="method.id"
-                [checked]="method.id === methodId()"
-                (change)="methodId.set(method.id)"
-              />
-              @if (method.institution.iconUrl; as iconUrl) {
-                <img class="method-icon" [ngSrc]="iconUrl" width="24" height="24" alt="" />
-              }
-              <span class="method-text">
-                <span class="method-name">{{ method.name }}</span>
-                <span class="method-type">{{ typeLabels[method.paymentType] }}</span>
-              </span>
-            </label>
-          }
-        </div>
+        <app-payment-method-picker
+          [methods]="visibleMethods()"
+          [value]="methodId()"
+          [labelledBy]="id + '-metodo'"
+          [invalid]="!!errorFor('method')"
+          (valueChange)="methodId.set($event)"
+        />
       }
       @if (errorFor('method'); as message) {
         <p class="field-error">{{ message }}</p>

@@ -1,4 +1,4 @@
-import { CurrencyPipe, NgOptimizedImage } from '@angular/common';
+import { CurrencyPipe } from '@angular/common';
 import {
   afterNextRender,
   ChangeDetectionStrategy,
@@ -24,9 +24,10 @@ import {
   LucideMinus,
   LucidePlus,
 } from '@lucide/angular';
-import { Expense, ExpenseKind, NewExpense, PAYMENT_TYPE_LABELS } from '../../expenses/expense';
+import { Expense, ExpenseKind, NewExpense } from '../../expenses/expense';
 import { ExpensesApi } from '../../expenses/expenses-api';
 import { PaymentMethod } from '../../payment-methods/payment-method';
+import { PaymentMethodPicker } from '../../payment-methods/payment-method-picker/payment-method-picker';
 import { PaymentMethodsApi } from '../../payment-methods/payment-methods-api';
 import { DateField } from '../../shared/date-field/date-field';
 import { DragScroll } from '../../shared/drag-scroll';
@@ -70,7 +71,7 @@ let nextId = 0;
     LucideClock,
     LucideMinus,
     LucidePlus,
-    NgOptimizedImage,
+    PaymentMethodPicker,
     SegmentedSelector,
   ],
   templateUrl: './expense-form.html',
@@ -93,7 +94,6 @@ export class ExpenseForm {
   readonly saved = output<void>();
 
   protected readonly id = `gasto-${nextId++}`;
-  protected readonly typeLabels = PAYMENT_TYPE_LABELS;
   protected readonly kindOptions: SelectorOption<ExpenseKind>[] = [
     { value: 'realized', label: 'Realizado' },
     { value: 'planned', label: 'Planejado' },
