@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.2.1
+- Modais e painéis só fecham quando o clique começa e termina fora deles; arrastar de dentro para fora (ou o contrário) não fecha mais.
+- Botão de duplicar ao lado do de remover em cada gasto do grupo planejado; a cópia entra logo abaixo, já com o nome em foco.
+- Caixas de texto arredondadas como os seletores.
+
 ## 2.2.0
 - Grupos de gastos planejados na aba Grupo do botão Criar: criar, editar, excluir e aplicar grupos com vários gastos de uma vez.
 - Aplicar um grupo lança os gastos planejados numa fatura (cartão e mês) ou numa data (qualquer método), com revisão antes: dá para desmarcar itens e ajustar o valor só naquele lançamento.
