@@ -69,6 +69,8 @@ function isCut(element: HTMLElement | null): boolean {
   host: {
     '[class.planned]': '!expense().realized',
     '[class.expandable]': 'expandable()',
+    '[class.selectable]': 'selectable()',
+    '[class.selected]': 'selectable() && selected()',
     '(click)': 'onClick()',
   },
 })
@@ -80,6 +82,9 @@ export class ExpenseCard {
 
   readonly expense = input.required<Expense>();
   readonly invoiceView = input(false, { transform: booleanAttribute });
+  readonly selectable = input(false, { transform: booleanAttribute });
+  readonly selected = input(false);
+  readonly selectedChange = output<boolean>();
   readonly editRequested = output<void>();
   readonly copyRequested = output<void>();
   readonly deleteRequested = output<void>();

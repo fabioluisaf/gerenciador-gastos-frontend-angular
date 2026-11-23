@@ -169,4 +169,36 @@ describe('InvoicesPage', () => {
       'Este cartão ainda não tem faturas.',
     );
   });
+
+  it('should total the selected entries in a floating card until cleared or the invoice changes', async () => {
+    const { fixture, element } = await render();
+    const settle = async () => {
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+    };
+    const checkboxes = () => [...element.querySelectorAll<HTMLInputElement>('.select')];
+
+    expect(element.querySelector('.selection')).toBeNull();
+    checkboxes().forEach((checkbox) => checkbox.click());
+    await settle();
+    expect(element.querySelector('.selection-label')?.textContent?.trim()).toBe('2 selecionados');
+    expect(element.querySelector('.selection-total')?.textContent).toMatch(/R\$\s957,08/);
+
+    checkboxes()[0].click();
+    await settle();
+    expect(element.querySelector('.selection-label')?.textContent?.trim()).toBe('1 selecionado');
+    expect(element.querySelector('.selection-total')?.textContent).toMatch(/R\$\s657,08/);
+
+    element.querySelector<HTMLButtonElement>('.selection-clear')!.click();
+    await settle();
+    expect(element.querySelector('.selection')).toBeNull();
+    expect(checkboxes().some(({ checked }) => checked)).toBe(false);
+
+    checkboxes()[0].click();
+    await settle();
+    element.querySelector<HTMLButtonElement>('app-month-strip .month')!.click();
+    await settle();
+    expect(element.querySelector('.selection')).toBeNull();
+  });
 });

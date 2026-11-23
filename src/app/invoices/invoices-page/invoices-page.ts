@@ -66,6 +66,7 @@ interface InvoiceEntries {
   templateUrl: './invoices-page.html',
   styleUrl: './invoices-page.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
+  host: { '[class.selecting]': 'selectedExpenses().length > 0' },
 })
 export class InvoicesPage {
   private readonly paymentMethodsApi = inject(PaymentMethodsApi);
@@ -172,6 +173,37 @@ export class InvoicesPage {
   );
   protected readonly filteredTotals = computed(() => entryTotals(this.filteredEntries()));
   protected readonly groups = computed(() => groupInvoiceEntries(this.filteredEntries()));
+
+  private readonly selectedIds = linkedSignal<string | null, ReadonlySet<string>>({
+    source: () => this.invoiceId(),
+    computation: () => new Set<string>(),
+  });
+  protected readonly selectedExpenses = computed(() =>
+    this.allEntries().filter(({ id }) => this.selectedIds().has(id)),
+  );
+  protected readonly selectedTotal = computed(() =>
+    this.selectedExpenses().reduce((sum, { amount }) => sum + amount, 0),
+  );
+
+  protected isSelected(expense: Expense): boolean {
+    return this.selectedIds().has(expense.id);
+  }
+
+  protected setSelected(expense: Expense, selected: boolean): void {
+    this.selectedIds.update((current) => {
+      const next = new Set(current);
+      if (selected) {
+        next.add(expense.id);
+      } else {
+        next.delete(expense.id);
+      }
+      return next;
+    });
+  }
+
+  protected clearSelection(): void {
+    this.selectedIds.set(new Set());
+  }
 
   protected toggleCategory(category: string): void {
     this.chosenCategories.update((current) =>

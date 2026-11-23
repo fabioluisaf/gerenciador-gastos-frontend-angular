@@ -194,11 +194,27 @@
 <ng-template #entryCard let-expense>
   <app-expense-card
     invoiceView
+    selectable
     [expense]="expense"
+    [selected]="isSelected(expense)"
+    (selectedChange)="setSelected(expense, $event)"
     (editRequested)="editRequests.editExpense(expense)"
     (copyRequested)="editRequests.copyExpense(expense)"
     (deleteRequested)="confirmDelete(expense)"
   />
 </ng-template>
+
+@if (selectedExpenses().length > 0) {
+  <section class="selection" aria-label="Gastos selecionados">
+    <p class="selection-text" aria-live="polite">
+      <span class="selection-label">
+        {{ selectedExpenses().length }}
+        {{ selectedExpenses().length === 1 ? 'selecionado' : 'selecionados' }}
+      </span>
+      <span class="selection-total">{{ selectedTotal() | currency }}</span>
+    </p>
+    <button type="button" class="selection-clear" (click)="clearSelection()">Limpar</button>
+  </section>
+}
 
 <app-confirm-dialog />
