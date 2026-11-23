@@ -38,7 +38,7 @@
   gap: 0.5rem;
   padding: 0.75rem;
   border: 1px solid var(--color-border);
-  border-radius: 1rem;
+  border-radius: 2.25rem;
 }
 
 .item-fields {
@@ -61,7 +61,12 @@
   text-align: end;
 }
 
-.remove,
+.item-actions {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.item-action,
 .add {
   display: inline-flex;
   align-items: center;
@@ -73,19 +78,19 @@
   cursor: pointer;
 }
 
-.remove {
-  inline-size: 2.5rem;
-  block-size: 2.5rem;
-  border-radius: 0.75rem;
+.item-action {
+  inline-size: 3rem;
+  block-size: 3rem;
+  border-radius: 9999px;
   color: var(--color-text-muted);
 }
 
-.remove:disabled {
+.item-action:disabled {
   opacity: 0.35;
   cursor: default;
 }
 
-.remove svg,
+.item-action svg,
 .add svg {
   inline-size: 1.125rem;
   block-size: 1.125rem;
@@ -94,14 +99,18 @@
 .add {
   justify-self: start;
   padding: 0.5rem 0.75rem;
-  border-radius: 0.75rem;
+  border-radius: 9999px;
   color: var(--color-primary);
   font-weight: 600;
 }
 
 @media (hover: hover) {
-  .remove:not(:disabled):hover {
+  .item-action:not(:disabled):hover {
     background-color: var(--color-hover);
+    color: var(--color-text);
+  }
+
+  .remove:not(:disabled):hover {
     color: var(--color-danger);
   }
 
@@ -110,7 +119,7 @@
   }
 }
 
-.remove:focus-visible,
+.item-action:focus-visible,
 .add:focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;

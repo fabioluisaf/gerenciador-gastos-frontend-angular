@@ -124,6 +124,30 @@ describe('GroupForm', () => {
     expect(saved).toHaveBeenCalled();
   });
 
+  it('should duplicate an item right after the original', () => {
+    const { fixture, element } = render(GROUP);
+
+    element.querySelectorAll<HTMLButtonElement>('.duplicate')[0].click();
+    fixture.detectChanges();
+
+    expect(element.querySelectorAll('.item')).toHaveLength(3);
+    expect(itemInputs(element, 1).name.value).toBe('Luz');
+    expect(itemInputs(element, 2).name.value).toBe('Internet');
+    expect(element.querySelector('.items-total')?.textContent).toMatch(/R\$\s339,90/);
+
+    type(fixture, itemInputs(element, 1).name, 'Água');
+    submit(fixture);
+
+    expect(update).toHaveBeenCalledWith('contas', {
+      name: 'Contas fixas',
+      items: [
+        { name: 'Luz', amount: 120, category: 'Casa', description: null },
+        { name: 'Água', amount: 120, category: 'Casa', description: null },
+        { name: 'Internet', amount: 99.9, category: 'Casa', description: 'Fibra' },
+      ],
+    });
+  });
+
   it('should tell when saving fails', () => {
     update.mockReturnValue(throwError(() => new Error('falhou')));
     const { fixture, element } = render(GROUP);

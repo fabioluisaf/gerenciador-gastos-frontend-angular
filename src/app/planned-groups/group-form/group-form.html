@@ -90,15 +90,25 @@
               <p class="field-error">{{ message }}</p>
             }
           </fieldset>
-          <button
-            type="button"
-            class="remove"
-            [attr.aria-label]="'Remover gasto ' + (item.name || index + 1)"
-            [disabled]="items().length === 1"
-            (click)="removeItem(index)"
-          >
-            <svg lucideTrash2 aria-hidden="true"></svg>
-          </button>
+          <div class="item-actions">
+            <button
+              type="button"
+              class="item-action remove"
+              [attr.aria-label]="'Remover gasto ' + (item.name || index + 1)"
+              [disabled]="items().length === 1"
+              (click)="removeItem(index)"
+            >
+              <svg lucideTrash2 aria-hidden="true"></svg>
+            </button>
+            <button
+              type="button"
+              class="item-action duplicate"
+              [attr.aria-label]="'Duplicar gasto ' + (item.name || index + 1)"
+              (click)="duplicateItem(index)"
+            >
+              <svg lucideCopy aria-hidden="true"></svg>
+            </button>
+          </div>
         </li>
       }
     </ol>
