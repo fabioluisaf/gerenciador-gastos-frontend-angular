@@ -40,7 +40,11 @@ describe('MonthInvoiceCard', () => {
             list: (id: string) =>
               of(
                 id === 'nubank'
-                  ? [{ id: 'dez', closingDate: '2026-12-14', dueDate: '2026-12-21', total: 100 }]
+                  ? [
+                      { id: 'nov', closingDate: '2026-11-14', dueDate: '2026-11-21', total: 80 },
+                      { id: 'dez', closingDate: '2026-12-14', dueDate: '2026-12-21', total: 100 },
+                      { id: 'fev', closingDate: '2027-02-14', dueDate: '2027-02-21', total: 0 },
+                    ]
                   : [],
               ),
           },
@@ -75,6 +79,28 @@ describe('MonthInvoiceCard', () => {
     expect(element.querySelector('.summary-planned')?.textContent).toMatch(
       /de R\$\s150,00 planejados/,
     );
+  });
+
+  it('should summarize the previous and the next invoices', async () => {
+    const { element } = await render('2026-12');
+
+    const briefs = [...element.querySelectorAll('app-invoice-brief')].map((brief) =>
+      ['.brief-month', '.brief-total', '.brief-planned'].map((part) =>
+        brief.querySelector(part)?.textContent?.replace(/\s/g, ' '),
+      ),
+    );
+    expect(briefs).toEqual([
+      ['novembro', 'R$ 80,00', 'de R$ 130,00'],
+      ['fevereiro', 'R$ 0,00', 'de R$ 50,00'],
+    ]);
+  });
+
+  it('should only show the next invoice when there is no previous one', async () => {
+    const { element } = await render('2026-11');
+
+    const briefs = element.querySelectorAll('app-invoice-brief');
+    expect(briefs).toHaveLength(1);
+    expect(briefs[0].classList).toContain('next');
   });
 
   it('should say when the card has no invoice due in the month', async () => {
