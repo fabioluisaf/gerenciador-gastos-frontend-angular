@@ -1,5 +1,8 @@
 # Changelog
 
+## 2.3.1
+- Correção no Safari (iPhone, iPad e Mac): as abas Faturas e Métodos de pagamento não abriam porque a animação de troca de tela travava a página. Nesses navegadores a troca agora é direta, sem animação; no Chrome, Edge e Android continua igual.
+
 ## 2.3.0
 - Arrastar o card de gasto para a direita mostra Editar, Copiar e, nos planejados, Realizar.
 - Realizar um gasto planejado pede confirmação e mantém a data dele (ou usa a de hoje quando não tem data); numa compra parcelada, realiza a compra inteira. Também disponível no menu de ações do card.
