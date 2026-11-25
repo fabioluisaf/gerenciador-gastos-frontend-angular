@@ -103,7 +103,11 @@
           @if (entryGroups.installments.count > 0) {
             <ng-container
               [ngTemplateOutlet]="listSection"
-              [ngTemplateOutletContext]="{ $implicit: entryGroups.installments, title: 'Parcelas' }"
+              [ngTemplateOutletContext]="{
+                $implicit: entryGroups.installments,
+                title: 'Parcelas',
+                key: 'installments',
+              }"
             />
           }
           @if (entryGroups.undated.count > 0) {
@@ -112,6 +116,7 @@
               [ngTemplateOutletContext]="{
                 $implicit: entryGroups.undated,
                 title: 'Planejados sem data',
+                key: 'undated',
               }"
             />
           }
@@ -121,6 +126,7 @@
               [ngTemplateOutletContext]="{
                 $implicit: entryGroups.plannedDays,
                 title: 'Planejados com data',
+                key: 'plannedDays',
               }"
             />
           }
@@ -130,6 +136,7 @@
               [ngTemplateOutletContext]="{
                 $implicit: entryGroups.realizedDays,
                 title: 'Realizados',
+                key: 'realizedDays',
               }"
             />
           }
@@ -148,8 +155,8 @@
   </summary>
 </ng-template>
 
-<ng-template #listSection let-group let-title="title">
-  <details class="entries" open>
+<ng-template #listSection let-group let-title="title" let-key="key">
+  <details class="entries" [open]="isOpen(key)" (toggle)="sectionToggled(key, $event)">
     <ng-container
       [ngTemplateOutlet]="sectionTitle"
       [ngTemplateOutletContext]="{ $implicit: group, title }"
@@ -167,8 +174,8 @@
   </details>
 </ng-template>
 
-<ng-template #daySection let-group let-title="title">
-  <details class="entries" open>
+<ng-template #daySection let-group let-title="title" let-key="key">
+  <details class="entries" [open]="isOpen(key)" (toggle)="sectionToggled(key, $event)">
     <ng-container
       [ngTemplateOutlet]="sectionTitle"
       [ngTemplateOutletContext]="{ $implicit: group, title }"

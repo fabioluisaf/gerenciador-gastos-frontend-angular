@@ -45,6 +45,13 @@ interface InvoiceEntries {
   planned: Expense[];
 }
 
+interface CardInvoices {
+  cardId: string | null;
+  invoices: Invoice[] | undefined;
+}
+
+type SectionKey = 'installments' | 'undated' | 'plannedDays' | 'realizedDays';
+
 @Component({
   selector: 'app-invoices-page',
   imports: [
@@ -85,9 +92,17 @@ export class InvoicesPage {
     stream: () => this.paymentMethodsApi.list(),
   });
 
-  protected readonly methodsLoaded = computed(() => this.methods.hasValue());
+  private readonly shownMethods = linkedSignal<
+    PaymentMethod[] | undefined,
+    PaymentMethod[] | undefined
+  >({
+    source: () => (this.methods.hasValue() ? this.methods.value() : undefined),
+    computation: (methods, previous) => methods ?? previous?.value,
+  });
+
+  protected readonly methodsLoaded = computed(() => this.shownMethods() !== undefined);
   protected readonly cards = computed(() =>
-    (this.methods.hasValue() ? this.methods.value() : [])
+    (this.shownMethods() ?? [])
       .filter(({ paymentType }) => paymentType === 'CREDITO')
       .sort((a, b) => b.usageCount - a.usageCount),
   );
@@ -111,10 +126,17 @@ export class InvoicesPage {
     stream: ({ params }) => this.invoicesApi.list(params.id),
   });
 
-  protected readonly invoicesLoaded = computed(() => this.invoices.hasValue());
-  protected readonly invoiceList = computed(() =>
-    this.invoices.hasValue() ? this.invoices.value() : [],
-  );
+  private readonly shownInvoices = linkedSignal<CardInvoices, Invoice[] | undefined>({
+    source: () => ({
+      cardId: this.cardId(),
+      invoices: this.invoices.hasValue() ? this.invoices.value() : undefined,
+    }),
+    computation: ({ cardId, invoices }, previous) =>
+      invoices ?? (previous?.source.cardId === cardId ? previous.value : undefined),
+  });
+
+  protected readonly invoicesLoaded = computed(() => this.shownInvoices() !== undefined);
+  protected readonly invoiceList = computed(() => this.shownInvoices() ?? []);
   protected readonly invoiceId = linkedSignal<Invoice[], string | null>({
     source: () => this.invoiceList(),
     computation: (invoices, previous) =>
@@ -173,6 +195,28 @@ export class InvoicesPage {
   );
   protected readonly filteredTotals = computed(() => entryTotals(this.filteredEntries()));
   protected readonly groups = computed(() => groupInvoiceEntries(this.filteredEntries()));
+
+  private readonly openSections = signal<ReadonlySet<SectionKey>>(new Set());
+
+  protected isOpen(section: SectionKey): boolean {
+    return this.openSections().has(section);
+  }
+
+  protected sectionToggled(section: SectionKey, event: Event): void {
+    const open = (event.target as HTMLDetailsElement).open;
+    if (open === this.isOpen(section)) {
+      return;
+    }
+    this.openSections.update((current) => {
+      const next = new Set(current);
+      if (open) {
+        next.add(section);
+      } else {
+        next.delete(section);
+      }
+      return next;
+    });
+  }
 
   private readonly selectedIds = linkedSignal<string | null, ReadonlySet<string>>({
     source: () => this.invoiceId(),

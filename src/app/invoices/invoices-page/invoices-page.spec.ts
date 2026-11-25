@@ -1,5 +1,6 @@
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
+import { of, Subject } from 'rxjs';
+import { DataChanges } from '../../core/data-changes';
 import { provideAppLocale } from '../../core/locale';
 import { Expense } from '../../expenses/expense';
 import { ExpensesApi } from '../../expenses/expenses-api';
@@ -130,6 +131,53 @@ describe('InvoicesPage', () => {
     expect(installment.querySelector('.heading .installment')?.textContent?.trim()).toBe('2/10');
     expect(installment.querySelector('.amount .installment')).toBeNull();
     expect(installment.querySelector('.amount-value')?.textContent).toMatch(/R\$\s300,00/);
+  });
+
+  it('should start with every section collapsed', async () => {
+    const { element } = await render();
+
+    const sections = [...element.querySelectorAll<HTMLDetailsElement>('details.entries')];
+    expect(sections).toHaveLength(2);
+    expect(sections.some(({ open }) => open)).toBe(false);
+  });
+
+  it('should keep the invoice, the open sections and the page mounted when the data changes', async () => {
+    const { fixture, element } = await render();
+    const settle = async () => {
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+    };
+
+    const realized = element.querySelectorAll<HTMLDetailsElement>('details.entries')[1];
+    realized.open = true;
+    realized.dispatchEvent(new Event('toggle'));
+    await settle();
+
+    const reloadedInvoices = new Subject<Invoice[]>();
+    const reloadedEntries = new Subject<{ realized: Expense[]; planned: Expense[] }>();
+    vi.spyOn(TestBed.inject(InvoicesApi), 'list').mockReturnValue(reloadedInvoices);
+    vi.spyOn(TestBed.inject(ExpensesApi), 'listByInvoice').mockReturnValue(reloadedEntries);
+    TestBed.inject(DataChanges).expenseSaved();
+    fixture.detectChanges();
+    expect(element.querySelectorAll('details.entries')[1]).toBe(realized);
+
+    reloadedInvoices.next(invoicesByCard['nubank']);
+    fixture.detectChanges();
+    reloadedEntries.next({
+      ...entries['dez'],
+      realized: [
+        ...entries['dez'].realized,
+        buildExpense({ id: 'n', name: 'Farmácia', amount: 40 }),
+      ],
+    });
+    await settle();
+
+    const sections = [...element.querySelectorAll<HTMLDetailsElement>('details.entries')];
+    expect(sections.map(({ open }) => open)).toEqual([false, true]);
+    expect(sections[1]).toBe(realized);
+    expect(element.querySelector('.summary-title')?.textContent).toBe('Fatura de dezembro de 2026');
+    expect(element.querySelectorAll('app-expense-card')).toHaveLength(3);
   });
 
   it('should filter the invoice entries by name and show the filtered total', async () => {
