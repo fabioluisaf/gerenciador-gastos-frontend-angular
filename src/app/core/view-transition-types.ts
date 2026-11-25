@@ -5,6 +5,10 @@ export const SECTION_BACK = 'section-back';
 
 const SECTION_ORDER = ['gastos', 'metodos-pagamento', 'faturas'];
 
+export function isWebKitEngine(userAgent: string): boolean {
+  return /AppleWebKit/.test(userAgent) && !/Chrome\/|Chromium\//.test(userAgent);
+}
+
 function leafPath(root: ActivatedRouteSnapshot): string {
   let route = root;
   while (route.firstChild) {
@@ -26,6 +30,10 @@ export function sectionSlide(from: string, to: string): string[] {
 }
 
 export function tagViewTransitionTypes({ transition, from, to }: ViewTransitionInfo): void {
+  if (isWebKitEngine(navigator.userAgent)) {
+    transition.skipTransition();
+    return;
+  }
   for (const type of sectionSlide(leafPath(from), leafPath(to))) {
     transition.types?.add(type);
   }

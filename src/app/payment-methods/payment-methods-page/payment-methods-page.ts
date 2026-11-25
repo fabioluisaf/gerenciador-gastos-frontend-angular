@@ -14,6 +14,7 @@ import { LucidePencil, LucideTrash } from '@lucide/angular';
 import { tap } from 'rxjs';
 import { DataChanges } from '../../core/data-changes';
 import { EditRequests } from '../../core/edit-requests';
+import { isWebKitEngine } from '../../core/view-transition-types';
 import { ActionsMenu } from '../../shared/actions-menu/actions-menu';
 import { ConfirmDialog } from '../../shared/confirm-dialog/confirm-dialog';
 import { SwipeActions } from '../../shared/swipe-actions/swipe-actions';
@@ -130,7 +131,11 @@ export class PaymentMethodsPage {
   }
 
   private animate(update: () => void): void {
-    if (!this.document.startViewTransition || this.prefersReducedMotion()) {
+    if (
+      !this.document.startViewTransition ||
+      this.prefersReducedMotion() ||
+      isWebKitEngine(this.document.defaultView?.navigator.userAgent ?? '')
+    ) {
       update();
       return;
     }
