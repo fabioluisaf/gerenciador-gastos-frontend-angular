@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.3.0
+- Arrastar o card de gasto para a direita mostra Editar, Copiar e, nos planejados, Realizar.
+- Realizar um gasto planejado pede confirmação e mantém a data dele (ou usa a de hoje quando não tem data); numa compra parcelada, realiza a compra inteira. Também disponível no menu de ações do card.
+- Fatura com as seções Parcelas, Planejados sem data, Planejados com data e Realizados começando recolhidas.
+- Criar, editar, excluir ou realizar um gasto na fatura mantém a rolagem, as seções abertas e a fatura escolhida.
+
 ## 2.2.4
 - Pipeline e Release com as actions do Docker nas versões que rodam em Node 24 (`setup-buildx-action@v4`, `login-action@v4`, `metadata-action@v6`, `build-push-action@v7`), sem o aviso de descontinuação do Node 20. Sem mudança no sistema.
 
