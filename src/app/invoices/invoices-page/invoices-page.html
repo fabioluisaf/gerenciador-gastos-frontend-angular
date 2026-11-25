@@ -207,6 +207,7 @@
     (selectedChange)="setSelected(expense, $event)"
     (editRequested)="editRequests.editExpense(expense)"
     (copyRequested)="editRequests.copyExpense(expense)"
+    (realizeRequested)="confirmRealize(expense)"
     (deleteRequested)="confirmDelete(expense)"
   />
 </ng-template>

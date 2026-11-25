@@ -37,6 +37,34 @@ function tags(element: HTMLElement): string[] {
 }
 
 describe('ExpenseCard', () => {
+  it('should offer copying when swiped right and realizing only for planned expenses', async () => {
+    const swipeLabels = (element: HTMLElement) =>
+      [...element.querySelectorAll('.swipe-side.start .swipe-action')].map((button) =>
+        normalized(button.textContent),
+      );
+    const realized = await renderFixture(buildExpense());
+    expect(swipeLabels(realized.nativeElement)).toEqual(['Editar', 'Copiar']);
+    TestBed.resetTestingModule();
+
+    const planned = await renderFixture(buildExpense({ realized: false }));
+    const element: HTMLElement = planned.nativeElement;
+    expect(swipeLabels(element)).toEqual(['Editar', 'Copiar', 'Realizar']);
+
+    const copied = vi.fn();
+    const realizeRequested = vi.fn();
+    planned.componentInstance.copyRequested.subscribe(copied);
+    planned.componentInstance.realizeRequested.subscribe(realizeRequested);
+    const [, copy, realize] = element.querySelectorAll<HTMLButtonElement>(
+      '.swipe-side.start .swipe-action',
+    );
+    copy.click();
+    realize.click();
+
+    expect(copied).toHaveBeenCalledTimes(1);
+    expect(realizeRequested).toHaveBeenCalledTimes(1);
+    expect(element.classList).not.toContain('expanded');
+  });
+
   it('should tone down the colors of planned expenses', () => {
     expect(render(buildExpense({ realized: false })).classList).toContain('planned');
     TestBed.resetTestingModule();

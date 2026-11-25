@@ -1,0 +1,50 @@
+:host {
+  display: flex;
+  flex: 1 1 0;
+  flex-direction: column;
+  align-items: center;
+  justify-content: var(--swipe-action-justify, center);
+  gap: 0.25rem;
+  min-inline-size: 0;
+  overflow: hidden;
+  padding: var(--swipe-action-padding, 0);
+  border: 0;
+  border-radius: var(--swipe-radius, 1rem);
+  background-color: var(--swipe-action-color);
+  color: var(--color-text-inverse);
+  font: inherit;
+  font-size: calc(0.8125rem * var(--font-scale));
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    flex-grow var(--motion-duration-default) ease,
+    margin var(--motion-duration-default) ease,
+    filter var(--motion-duration-fast) ease;
+}
+
+:host(:not(.primary)) {
+  flex-grow: var(--swipe-extra-grow, 1);
+  margin-inline-end: var(--swipe-extra-margin, 0);
+}
+
+:host(:hover) {
+  filter: brightness(1.1);
+}
+
+.swipe-icon {
+  display: grid;
+  place-items: center;
+  transition: scale var(--motion-duration-fast) ease;
+}
+
+:host(.primary) .swipe-icon {
+  scale: var(--swipe-icon-scale, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host,
+  .swipe-icon {
+    transition: none;
+  }
+}

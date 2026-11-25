@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
-import { forkJoin, map, Observable } from 'rxjs';
+import { forkJoin, map, Observable, switchMap } from 'rxjs';
 import { API_URL, ApiPage, ApiResponse, Page, toPage } from '../core/api';
 import {
   byPaymentTypeThenUsage,
@@ -313,6 +313,14 @@ export class ExpensesApi {
         })
       : this.http.put(`${API_URL}/gastos/${expense.id}`, { ...common, valor: changes.amount });
     return request.pipe(map(() => undefined));
+  }
+
+  realize(expense: Expense, today: string): Observable<void> {
+    return this.loadForEdit(expense).pipe(
+      switchMap((changes) =>
+        this.update(expense, { ...changes, realized: true, date: changes.date ?? today }),
+      ),
+    );
   }
 
   listByInvoice(invoiceId: string): Observable<{ realized: Expense[]; planned: Expense[] }> {

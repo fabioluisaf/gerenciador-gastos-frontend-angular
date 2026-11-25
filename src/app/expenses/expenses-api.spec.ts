@@ -605,4 +605,70 @@ describe('ExpensesApi', () => {
     single.flush({ dados: {} });
     purchase.flush({ dados: {} });
   });
+
+  it('should realize a planned expense keeping its data, dating it today when undated', () => {
+    const done = vi.fn();
+    api.realize(buildExpense({ id: 'gasto-9', realized: false }), '2026-11-24').subscribe(done);
+
+    http.expectOne('/api/gastos/gasto-9').flush({
+      dados: {
+        data: null,
+        nome: 'Cinema',
+        valor: 25,
+        categoria: 'Lazer',
+        metodoPagamento: { id: 'credito' },
+        fatura: { dataFechamento: '2026-12-14', dataVencimento: '2026-12-21' },
+        descricao: 'Estreia',
+        realizado: false,
+      },
+    });
+    const update = http.expectOne('/api/gastos/gasto-9');
+    expect(update.request.method).toBe('PUT');
+    expect(update.request.body).toEqual({
+      nome: 'Cinema',
+      valor: 25,
+      categoria: 'Lazer',
+      metodoPagamentoId: 'credito',
+      data: '2026-11-24',
+      descricao: 'Estreia',
+      faturaPeriodo: '2026-12',
+      realizado: true,
+    });
+    update.flush({ dados: {} });
+    expect(done).toHaveBeenCalled();
+  });
+
+  it('should realize the whole planned purchase keeping its date', () => {
+    const expense = buildExpense({
+      realized: false,
+      installment: { number: 2, count: 2, purchaseId: 'compra-1', purchaseAmount: 300 },
+    });
+    api.realize(expense, '2026-11-24').subscribe();
+
+    http.expectOne('/api/compras-parceladas/compra-1').flush({
+      dados: {
+        nome: 'Geladeira',
+        categoria: 'Casa',
+        metodoPagamento: { id: 'credito' },
+        descricao: null,
+        valorTotal: 300,
+        quantidadeParcelas: 2,
+        parcelas: [
+          { numeroParcela: 1, valor: 150, data: '10/11/2026', fatura: null, realizado: false },
+          { numeroParcela: 2, valor: 150, data: '10/11/2026', fatura: null, realizado: false },
+        ],
+      },
+    });
+    const update = http.expectOne('/api/compras-parceladas/compra-1');
+    expect(update.request.method).toBe('PUT');
+    expect(update.request.body).toEqual(
+      expect.objectContaining({
+        data: '2026-11-10',
+        realizado: true,
+        valorTotal: 300,
+        quantidadeParcelas: 2,
+      }),
+    );
+    update.flush({ dados: {} });
+  });
 });

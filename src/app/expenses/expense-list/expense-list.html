@@ -21,6 +21,7 @@
             [expense]="expense"
             (editRequested)="editRequests.editExpense(expense)"
             (copyRequested)="editRequests.copyExpense(expense)"
+            (realizeRequested)="confirmRealize(expense)"
             (deleteRequested)="confirmDelete(expense)"
           />
         </li>

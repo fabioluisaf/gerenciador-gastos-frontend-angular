@@ -1,28 +1,25 @@
 @if (startLabel(); as label) {
-  <button
-    type="button"
-    class="swipe-action start"
-    tabindex="-1"
+  <div
+    class="swipe-side start"
     [attr.aria-hidden]="openSide() !== 'start'"
     [attr.inert]="openSide() === 'start' ? null : ''"
-    (click)="trigger('start', $event)"
   >
-    <span class="swipe-icon"><ng-content select="[swipeStartIcon]" /></span>
-    <span class="swipe-label">{{ label }}</span>
-  </button>
+    <button appSwipeAction class="primary start" [label]="label" (click)="trigger('start', $event)">
+      <ng-content select="[swipeStartIcon]" />
+    </button>
+    <ng-content select="[appSwipeAction]" />
+  </div>
 }
 @if (endLabel(); as label) {
-  <button
-    type="button"
-    class="swipe-action end"
-    tabindex="-1"
+  <div
+    class="swipe-side end"
     [attr.aria-hidden]="openSide() !== 'end'"
     [attr.inert]="openSide() === 'end' ? null : ''"
-    (click)="trigger('end', $event)"
   >
-    <span class="swipe-icon"><ng-content select="[swipeEndIcon]" /></span>
-    <span class="swipe-label">{{ label }}</span>
-  </button>
+    <button appSwipeAction class="primary end" [label]="label" (click)="trigger('end', $event)">
+      <ng-content select="[swipeEndIcon]" />
+    </button>
+  </div>
 }
 <div class="swipe-content">
   <ng-content />

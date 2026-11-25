@@ -19,10 +19,11 @@ import {
   LucideCircle,
   LucideCircleCheck,
   LucideCircleDot,
+  LucideCopy,
   LucidePencil,
   LucideTrash2,
 } from '@lucide/angular';
-import { SwipeActions } from '../../shared/swipe-actions/swipe-actions';
+import { SwipeAction, SwipeActions } from '../../shared/swipe-actions/swipe-actions';
 import { Expense, PAYMENT_TYPE_LABELS } from '../expense';
 import { ActionsMenu } from '../../shared/actions-menu/actions-menu';
 import { ExpensesApi } from '../expenses-api';
@@ -59,8 +60,10 @@ function isCut(element: HTMLElement | null): boolean {
     LucideCircle,
     LucideCircleCheck,
     LucideCircleDot,
+    LucideCopy,
     LucidePencil,
     LucideTrash2,
+    SwipeAction,
     SwipeActions,
   ],
   templateUrl: './expense-card.html',
@@ -87,6 +90,7 @@ export class ExpenseCard {
   readonly selectedChange = output<boolean>();
   readonly editRequested = output<void>();
   readonly copyRequested = output<void>();
+  readonly realizeRequested = output<void>();
   readonly deleteRequested = output<void>();
 
   protected readonly detailsId = `gasto-detalhes-${nextId++}`;

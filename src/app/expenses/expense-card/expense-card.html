@@ -7,6 +7,19 @@
 >
   <svg lucidePencil swipeStartIcon class="action-icon" aria-hidden="true"></svg>
   <svg lucideTrash2 swipeEndIcon class="action-icon" aria-hidden="true"></svg>
+  <button appSwipeAction label="Copiar" color="var(--color-info)" (click)="copyRequested.emit()">
+    <svg lucideCopy class="action-icon" aria-hidden="true"></svg>
+  </button>
+  @if (!item.realized) {
+    <button
+      appSwipeAction
+      label="Realizar"
+      color="var(--color-success)"
+      (click)="realizeRequested.emit()"
+    >
+      <svg lucideCircleCheck class="action-icon" aria-hidden="true"></svg>
+    </button>
+  }
   <article
     class="expense-card"
     [class.expanded]="expanded()"
@@ -105,8 +118,10 @@
       class="actions-menu"
       label="Ações do gasto"
       copyable
+      [realizable]="!item.realized"
       (editRequested)="editRequested.emit()"
       (copyRequested)="copyRequested.emit()"
+      (realizeRequested)="realizeRequested.emit()"
       (deleteRequested)="deleteRequested.emit()"
     />
   </article>

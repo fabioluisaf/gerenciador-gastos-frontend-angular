@@ -6,13 +6,19 @@ import {
   output,
   signal,
 } from '@angular/core';
-import { LucideCopy, LucideEllipsis, LucidePencil, LucideTrash } from '@lucide/angular';
+import {
+  LucideCircleCheck,
+  LucideCopy,
+  LucideEllipsis,
+  LucidePencil,
+  LucideTrash,
+} from '@lucide/angular';
 
 let nextId = 0;
 
 @Component({
   selector: 'app-actions-menu',
-  imports: [LucideCopy, LucideEllipsis, LucidePencil, LucideTrash],
+  imports: [LucideCircleCheck, LucideCopy, LucideEllipsis, LucidePencil, LucideTrash],
   templateUrl: './actions-menu.html',
   styleUrl: './actions-menu.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -24,8 +30,10 @@ let nextId = 0;
 export class ActionsMenu {
   readonly label = input.required<string>();
   readonly copyable = input(false, { transform: booleanAttribute });
+  readonly realizable = input(false);
   readonly editRequested = output<void>();
   readonly copyRequested = output<void>();
+  readonly realizeRequested = output<void>();
   readonly deleteRequested = output<void>();
 
   protected readonly menuId = `acoes-${nextId++}`;
@@ -44,6 +52,11 @@ export class ActionsMenu {
   protected requestCopy(menu: HTMLElement): void {
     menu.hidePopover();
     this.copyRequested.emit();
+  }
+
+  protected requestRealize(menu: HTMLElement): void {
+    menu.hidePopover();
+    this.realizeRequested.emit();
   }
 
   protected requestDelete(menu: HTMLElement): void {

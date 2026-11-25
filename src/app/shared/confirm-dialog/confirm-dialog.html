@@ -17,7 +17,12 @@
       <button type="button" class="cancel" autofocus [disabled]="running()" (click)="close()">
         Cancelar
       </button>
-      <button type="button" class="danger" [disabled]="running()" (click)="confirm()">
+      <button
+        type="button"
+        [class]="current.tone ?? 'danger'"
+        [disabled]="running()"
+        (click)="confirm()"
+      >
         {{ running() ? current.runningLabel : current.confirmLabel }}
       </button>
     </div>

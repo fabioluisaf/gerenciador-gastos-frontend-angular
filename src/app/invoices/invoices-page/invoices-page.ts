@@ -5,6 +5,7 @@ import {
   computed,
   inject,
   linkedSignal,
+  LOCALE_ID,
   signal,
   viewChild,
 } from '@angular/core';
@@ -17,6 +18,7 @@ import { DayLabelPipe } from '../../expenses/day-label-pipe';
 import { Expense } from '../../expenses/expense';
 import { ExpenseCard } from '../../expenses/expense-card/expense-card';
 import { ExpensesApi } from '../../expenses/expenses-api';
+import { realizeConfirmation } from '../../expenses/realize-confirmation';
 import { todayIsoDate } from '../../expenses/timeline';
 import { PaymentMethod } from '../../payment-methods/payment-method';
 import { PaymentMethodsApi } from '../../payment-methods/payment-methods-api';
@@ -80,6 +82,7 @@ export class InvoicesPage {
   private readonly invoicesApi = inject(InvoicesApi);
   private readonly expensesApi = inject(ExpensesApi);
   private readonly dataChanges = inject(DataChanges);
+  private readonly locale = inject(LOCALE_ID);
   private readonly confirmDialog = viewChild.required(ConfirmDialog);
 
   protected readonly editRequests = inject(EditRequests);
@@ -271,6 +274,16 @@ export class InvoicesPage {
     if (invoice) {
       this.invoiceId.set(invoice.id);
     }
+  }
+
+  protected confirmRealize(expense: Expense): void {
+    this.confirmDialog().open(
+      realizeConfirmation(expense, this.locale, () =>
+        this.expensesApi
+          .realize(expense, this.today)
+          .pipe(tap(() => this.dataChanges.expenseSaved())),
+      ),
+    );
   }
 
   protected confirmDelete(expense: Expense): void {

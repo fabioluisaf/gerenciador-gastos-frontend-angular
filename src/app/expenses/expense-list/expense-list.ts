@@ -29,8 +29,15 @@ import { DayLabelPipe } from '../day-label-pipe';
 import { Expense, ExpenseFilter, ExpenseKind } from '../expense';
 import { ExpenseCard } from '../expense-card/expense-card';
 import { ExpensesApi } from '../expenses-api';
+import { realizeConfirmation } from '../realize-confirmation';
 import { groupByDay } from '../group-by-day';
-import { buildTimeline, formatMonthTitle, toScrubberMarks, UNDATED_PERIOD_KEY } from '../timeline';
+import {
+  buildTimeline,
+  formatMonthTitle,
+  todayIsoDate,
+  toScrubberMarks,
+  UNDATED_PERIOD_KEY,
+} from '../timeline';
 
 const PAGE_SIZE = 50;
 const SCROLL_CLASS = 'timeline-scroll';
@@ -150,6 +157,14 @@ export class ExpenseList {
 
   protected monthTitle(isoDate: string): string {
     return formatMonthTitle(isoDate, this.locale);
+  }
+
+  protected confirmRealize(expense: Expense): void {
+    this.confirmDialog().open(
+      realizeConfirmation(expense, this.locale, () =>
+        this.api.realize(expense, todayIsoDate()).pipe(tap(() => this.dataChanges.expenseSaved())),
+      ),
+    );
   }
 
   protected confirmDelete(expense: Expense): void {

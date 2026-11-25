@@ -19,6 +19,7 @@ export interface ConfirmRequest {
   confirmLabel: string;
   runningLabel: string;
   errorMessage: string;
+  tone?: 'danger' | 'success';
   run: () => Observable<unknown>;
 }
 

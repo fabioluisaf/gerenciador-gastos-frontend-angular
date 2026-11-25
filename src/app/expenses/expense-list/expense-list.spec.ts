@@ -36,6 +36,7 @@ describe('ExpenseList', () => {
   let periods: ExpensePeriod[];
   let listPeriods: ReturnType<typeof vi.fn>;
   let deleteExpense: ReturnType<typeof vi.fn>;
+  let realize: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.stubGlobal('IntersectionObserver', VisibleIntersectionObserver);
@@ -45,12 +46,13 @@ describe('ExpenseList', () => {
     periods = [];
     listPeriods = vi.fn(() => of(periods));
     deleteExpense = vi.fn(() => of(undefined));
+    realize = vi.fn(() => of(undefined));
     TestBed.configureTestingModule({
       providers: [
         provideAppLocale(),
         {
           provide: ExpensesApi,
-          useValue: { list, listPeriods, delete: deleteExpense },
+          useValue: { list, listPeriods, delete: deleteExpense, realize },
         },
       ],
     });
@@ -344,6 +346,29 @@ describe('ExpenseList', () => {
     ]);
     expect(listPeriods.mock.calls.length).toBe(periodRequests + 1);
     expect(deleted).toHaveBeenCalledTimes(1);
+    expect(element.querySelector('dialog')?.open).toBe(false);
+    restoreDialogs();
+  });
+
+  it('should realize a planned expense after confirmation and reload the list', async () => {
+    const restoreDialogs = stubDialogs();
+    const planned = buildExpense({ id: 'p', name: 'Cinema', date: null, realized: false });
+    list.mockReturnValue(of({ items: [planned], hasNext: false }));
+    const fixture = await render();
+    const element: HTMLElement = fixture.nativeElement;
+    const loads = list.mock.calls.length;
+
+    fixture.debugElement.query(By.directive(ExpenseCard)).componentInstance.realizeRequested.emit();
+    await fixture.whenStable();
+
+    expect(element.querySelector('dialog .message')?.textContent).toBe(
+      '"Cinema" será marcado como realizado com a data de hoje.',
+    );
+    element.querySelector<HTMLButtonElement>('dialog .success')!.click();
+    await fixture.whenStable();
+
+    expect(realize).toHaveBeenCalledWith(planned, expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/));
+    expect(list.mock.calls.length).toBeGreaterThan(loads);
     expect(element.querySelector('dialog')?.open).toBe(false);
     restoreDialogs();
   });

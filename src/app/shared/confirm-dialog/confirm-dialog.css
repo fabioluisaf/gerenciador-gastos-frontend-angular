@@ -108,7 +108,14 @@
   color: var(--color-text-inverse);
 }
 
-.danger:hover:not(:disabled) {
+.success {
+  border: 0;
+  background-color: var(--color-success);
+  color: var(--color-text-inverse);
+}
+
+.danger:hover:not(:disabled),
+.success:hover:not(:disabled) {
   filter: brightness(1.1);
 }
 

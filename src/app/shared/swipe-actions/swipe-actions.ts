@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  contentChildren,
   DestroyRef,
   ElementRef,
   inject,
@@ -14,10 +15,34 @@ export type SwipeSide = 'start' | 'end';
 
 const DIRECTION_LOCK_PX = 8;
 const REVEAL_PX = 96;
+const EXTRA_REVEAL_PX = 80;
+const ARMED_MARGIN_PX = 48;
 const TRIGGER_RATIO = 0.45;
 
 @Component({
+  selector: 'button[appSwipeAction]',
+  template: `
+    <span class="swipe-icon"><ng-content /></span>
+    <span class="swipe-label">{{ label() }}</span>
+  `,
+  styleUrl: './swipe-action.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  host: {
+    type: 'button',
+    class: 'swipe-action',
+    tabindex: '-1',
+    '[style.--swipe-action-color]': 'color()',
+    '(click)': '$event.stopPropagation()',
+  },
+})
+export class SwipeAction {
+  readonly label = input.required<string>();
+  readonly color = input<string | null>(null);
+}
+
+@Component({
   selector: 'app-swipe-actions',
+  imports: [SwipeAction],
   templateUrl: './swipe-actions.html',
   styleUrl: './swipe-actions.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -41,6 +66,8 @@ export class SwipeActions {
   readonly startTriggered = output<void>();
   readonly endTriggered = output<void>();
 
+  private readonly extraStartActions = contentChildren(SwipeAction);
+
   protected readonly offset = signal(0);
   protected readonly dragging = signal(false);
   protected readonly openSide = computed<SwipeSide | null>(() => {
@@ -50,9 +77,14 @@ export class SwipeActions {
     }
     return offset < 0 ? 'end' : null;
   });
-  protected readonly armed = computed(
-    () => Math.abs(this.offset()) >= this.host.clientWidth * TRIGGER_RATIO,
+  private readonly startReveal = computed(
+    () => REVEAL_PX + this.extraStartActions().length * EXTRA_REVEAL_PX,
   );
+  protected readonly armed = computed(() => {
+    const reveal = this.openSide() === 'start' ? this.startReveal() : REVEAL_PX;
+    const threshold = Math.max(this.host.clientWidth * TRIGGER_RATIO, reveal + ARMED_MARGIN_PX);
+    return Math.abs(this.offset()) >= threshold;
+  });
 
   private pointerId: number | null = null;
   private startX = 0;
@@ -118,7 +150,7 @@ export class SwipeActions {
     if (side && this.armed()) {
       this.trigger(side);
     } else if (Math.abs(this.offset()) >= REVEAL_PX / 2) {
-      this.offset.set(side === 'start' ? REVEAL_PX : -REVEAL_PX);
+      this.offset.set(side === 'start' ? this.startReveal() : -REVEAL_PX);
     } else {
       this.close();
     }
@@ -144,6 +176,7 @@ export class SwipeActions {
 
   private swallowClick(event: MouseEvent): void {
     if (this.isOnAction(event)) {
+      this.close();
       return;
     }
     if (this.suppressClick || this.offset() !== 0) {

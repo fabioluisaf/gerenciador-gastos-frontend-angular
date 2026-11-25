@@ -26,6 +26,12 @@
       Copiar
     </button>
   }
+  @if (realizable()) {
+    <button type="button" class="menu-item" (click)="requestRealize(menu)">
+      <svg lucideCircleCheck aria-hidden="true"></svg>
+      Realizar
+    </button>
+  }
   <button type="button" class="menu-item danger" (click)="requestDelete(menu)">
     <svg lucideTrash aria-hidden="true"></svg>
     Excluir
